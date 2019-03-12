@@ -51,8 +51,13 @@ Contains the results from the latest query. (Only if any was generated!)
 
 # How to contribute?
 
-Simply clone the project and install SCons. The SContruct file found in the repository should 
-be sufficient to build the C++ source code to X11, OS or Windows.
+First clone the project and install SCons. Secondly, the C++ bindings have to be build from scratch using the files present in the godot-cpp submodule and following command:
+
+```
+scons platform=<platform> bits=64 generate_bindings=yes use_custom_api_file=yes custom_api_file=../api.json
+```
+
+Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code to X11, OS or Windows, with the help of following command:
 
 ```
 scons p = <platform>
