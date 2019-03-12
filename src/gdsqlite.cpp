@@ -56,7 +56,7 @@ bool SQLite::open_db()
     /* Find the real path */
     path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
 
-    /* C++ Garbage collector deletes CharString object when not assigned explicitely */
+    /* CharString object goes out-of-scope when not assigned explicitely */
     const CharString dummy_path = path.utf8();
     const char *char_path = dummy_path.get_data();
 
@@ -137,7 +137,7 @@ bool SQLite::query(String p_query)
     {
         Godot::print(p_query);
     }
-    /* C++ Garbage collector deletes CharString object when not assigned explicitely */
+    /* CharString object goes out-of-scope when not assigned explicitely */
     const CharString dummy = p_query.utf8();
     sql = dummy.get_data();
 
