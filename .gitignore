@@ -1,32 +1,45 @@
-# Prerequisites
-*.d
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+*.db
 
-# Compiled Object files
-*.slo
-*.lo
+# Compiled source #
+###################
+*.com
+*.class
+*.exe
 *.o
+*.os
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+*.exp
+*.pdb
 *.lib
 
-# Executables
-*.exe
-*.out
-*.app
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Etc
+.import/
+.sconsign.dblite
+demo/.import/
+demo/lib/gdsqlite/*.lib
+lib/*.lib
+
+# VS
+vsproj/.vs/
+vsproj/Debug/
+vsproj/Release/
+vsproj/x64/
+vsproj/x86/
+vsproj/gdsqlite.vcxproj.*
+
+.vscode
