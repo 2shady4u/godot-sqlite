@@ -8,8 +8,6 @@ does not require any additional compilation or mucking about with build scripts.
 - Linux
 - Windows
 
-**DISCLAIMER:** There could be some stability issues until Godot 3.1 officially releases.
-
 # How to use?
 
 Re-building Godot from scratch is **NOT** required just download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract on your system and run the supplied demo-project. Make sure that the Godot is correctly loading the *gdsqlite.gdns*-resource and that it is available in the *res://*-environment.
