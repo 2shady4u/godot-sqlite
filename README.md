@@ -58,6 +58,23 @@ Exports the database structure and content to export_path.json as a backup or fo
 
 - Boolean success = **delete_rows(** String table_name, String query_conditions **)**
 
+# How to export?
+
+All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
+
+The commands to succesfully export a working executable for the demo-project are:
+```
+mkdir build
+godot -s export_data.gd
+godot -e --export-debug "Windows Desktop" build/godot-sqlite.exe
+```
+("Windows Desktop" should be replaced by whatever the name of your relevant build template is.)
+
+The design philosophy behind this is the following:
+
+- Even after exporting the entire game, the data-files can still be easily edited without requiring additional exports for every miniscule edit.
+- Importing a database from a json-file allows the Godot executable to use the full capabilities of the SQLite framework (SELECT, UPDATE, ...), while still allowing writers and other content creators to edit these json-files using their favorite text-based IDE.
+
 # How to contribute?
 
 First clone the project and install SCons. Secondly, the C++ bindings have to be build from scratch using the files present in the godot-cpp submodule and following command:
