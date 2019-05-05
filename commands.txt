@@ -1,3 +1,0 @@
-godot --gdnative-generate-json-api api.json
-cd godot-cpp
-scons platform=windows bits=64 generate_bindings=yes use_custom_api_file=yes custom_api_file=../api.json

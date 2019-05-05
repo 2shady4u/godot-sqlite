@@ -6,4 +6,3 @@
 
 [node name="Database" type="Node" parent="."]
 script = ExtResource( 1 )
-

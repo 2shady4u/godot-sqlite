@@ -28,11 +28,10 @@ ehthumbs.db
 Thumbs.db
 
 # Etc
-.import/
 .sconsign.dblite
 demo/.import/
-demo/lib/gdsqlite/*.lib
-lib/*.lib
+demo/build
+test_backup_new.json
 
 # VS
 vsproj/.vs/

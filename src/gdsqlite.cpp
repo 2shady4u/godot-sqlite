@@ -96,7 +96,7 @@ bool SQLite::import_from_json(String import_path)
     std::ifstream ifs(char_path);
     if (ifs.fail())
     {
-        Godot::print("GDSQLite Error: Can't open specified json-file, file does not exist or is locked");
+        Godot::print("GDSQLite Error: Failed to open specified json-file (" + import_path + ")");
         return false;
     }
     /* Attempt to open the json and, if unsuccessful, throw a parse error specifying the erroneous line */
