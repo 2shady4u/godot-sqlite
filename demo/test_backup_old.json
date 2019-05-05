@@ -1,0 +1,59 @@
+[
+    {
+        "name": "company",
+        "sql": "CREATE TABLE company (id int PRIMARY KEY NOT NULL,name text NOT NULL,age int NOT NULL,address char(50),salary real)",
+        "row_array": [
+            {
+                "address": "California",
+                "age": 31,
+                "id": 1,
+                "name": "Paul",
+                "salary": 20000
+            },
+            {
+                "address": "Columbia",
+                "age": 65,
+                "id": 2,
+                "name": "James",
+                "salary": 70000
+            },
+            {
+                "address": "Richmond",
+                "age": 24,
+                "id": 3,
+                "name": "Mark",
+                "salary": 65000
+            },
+            {
+                "address": "Texas",
+                "age": 29,
+                "id": 4,
+                "name": "Robert",
+                "salary": 65000
+            },
+            {
+                "address": "Atlanta",
+                "age": 62,
+                "id": 5,
+                "name": "Julia",
+                "salary": 65000
+            }
+        ]
+    },
+    {
+        "name": "office_supply",
+        "sql": "CREATE TABLE office_supply (id int PRIMARY KEY NOT NULL,name text NOT NULL,amount int NOT NULL)",
+        "row_array": [
+            {
+                "id": 1,
+                "name": "stapler",
+                "amount": 5
+            },
+            {
+                "id": 2,
+                "name": "binder",
+                "amount": 56
+            }
+        ]
+    }
+]

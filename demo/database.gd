@@ -5,12 +5,13 @@ var db
 #var db_name = "user://test"
 var db_name = "res://test"
 #var db_name = "test"
-var table_name = "Company"
+var json_name = "test_backup"
+var table_name = "company"
 
 var ids = [1,2,3,4,5,6,7]
 var names = ["Paul","Allen","Teddy","Mark","Robert","Julia","Amanda"]
 var ages = [32,25,23,25,30,63,13]
-var addresses = ["California","Texas","Norway","Rich-mond","Texas","Atlanta","New-York"]
+var addresses = ["California","Texas","Baltimore","Richmond","Texas","Atlanta","New-York"]
 var salaries = [20000.00,15000.00,20000.00,65000.00,65000.00,65000.00,65000.00]
 
 func _ready():
@@ -26,7 +27,7 @@ func _ready():
 	db = SQLite.new()
 	db.path = db_name
 	db.verbose_mode = true
-	# Open the database using the db_name and path found in the path variable
+	# Open the database using the db_name found in the path variable
 	db.open_db()
 	# Throw away any table that was already present
 	db.drop_table(table_name)
@@ -90,6 +91,32 @@ func _ready():
 	db.query("PRAGMA encoding;")
 	print("Current database encoding is: ", db.query_result[0]["encoding"])
 	
+	# Export the table to a json-file with a specified name
+	db.export_to_json(json_name + "_new")
+	
+	# Close the current database
+	db.close_db()
+
+	# Import (and, consequently, open) a database from an old backup json-file
+	print("Overwriting database content with old backup...")
+	db.import_from_json(json_name + "_old")
+	
+	# Check which employees were present in this old json-file
+	select_condition = ""
+	selected_array = db.select_rows(table_name, select_condition, ["*"])
+	print("condition: " + select_condition)
+	print("result: ", selected_array)
+	# Check the types of the values in the dictionary
+	print("Types of selected columns:")
+	print("salary: ", typeof(selected_array[0]["salary"]))
+	print("age:    ", typeof(selected_array[0]["age"]))
+	print("name:   ", typeof(selected_array[0]["name"]))
+	
+	# Import the data (in a destructive manner) from the new backup json-file
+	print("Overwriting database content again with latest backup...")
+	db.import_from_json(json_name + "_new")
+	
+	# Close the imported database
 	db.close_db()
 	
 	
