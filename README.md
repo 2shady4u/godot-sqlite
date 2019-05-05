@@ -1,6 +1,6 @@
 # godot-sqlite
 
-This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.1. Additionaly, it 
+This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.1+. Additionaly, it 
 does not require any additional compilation or mucking about with build scripts.
 
 ### Supported operating systems:
@@ -11,6 +11,8 @@ does not require any additional compilation or mucking about with build scripts.
 # How to use?
 
 Re-building Godot from scratch is **NOT** required just download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract on your system and run the supplied demo-project. Make sure that the Godot is correctly loading the *gdsqlite.gdns*-resource and that it is available in the *res://*-environment.
+
+An example project, named "demo", can also be downloaded from the releases tab. 
 
 ## Variables
 
@@ -29,6 +31,14 @@ Contains the results from the latest query and is cleared after every new query.
 ## Functions
 
 - Boolean success = **open_db()**
+
+- Boolean success = **import_from_json(** String import_path **)**
+
+Drops all database tables and imports the database structure and content present inside of import_path.json.
+
+- Boolean success = **export_to_json(** String export_path **)**
+
+Exports the database structure and content to export_path.json as a backup or for ease of editing.
 
 - Boolean success = **close_db()**
 
