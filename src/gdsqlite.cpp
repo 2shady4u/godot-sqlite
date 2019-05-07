@@ -126,7 +126,7 @@ bool SQLite::import_from_json(String import_path)
     for (int i = 0; i <= old_number_of_tables - 1; i++)
     {
         Dictionary table_dict = query_result[i];
-        old_table_names.append(String(table_dict["name"]));
+        old_table_names.append((const String &)table_dict["name"]);
     }
 
     std::vector<table_struct> tables_to_import;
@@ -191,7 +191,7 @@ bool SQLite::export_to_json(String export_path)
         Dictionary table_dict = database_dict[i]; 
         String json_string, query_string; 
  
-        query_string = "SELECT * FROM " + String(table_dict["name"]) + ";"; 
+        query_string = "SELECT * FROM " + (const String &)table_dict["name"] + ";"; 
         query(query_string); 
         table_dict["row_array"] = query_result; 
  
@@ -217,7 +217,7 @@ void SQLite::close_db()
         // Cannot close database!
         if (sqlite3_close_v2(db) != SQLITE_OK)
         {
-            Godot::print("Cannot close database!");
+            Godot::print("GDSQLite Error: Cannot close database!");
         }
         else
         {
@@ -394,7 +394,7 @@ bool SQLite::insert_rows(String p_name, Array p_row_array)
     {
         if (p_row_array[i].get_type() != Variant::DICTIONARY)
         {
-            Godot::print("All elements of the Array should be of type Dictionary");
+            Godot::print("GDSQLite Error: All elements of the Array should be of type Dictionary");
             return false;
         }
         if (!insert_row(p_name, p_row_array[i]))
@@ -417,7 +417,7 @@ Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_ar
     {
         if (p_columns_array[i].get_type() != Variant::STRING)
         {
-            Godot::print("All elements of the Array should be of type String");
+            Godot::print("GDSQLite Error: All elements of the Array should be of type String");
             return query_result;
         }
         query_string += (const String &)p_columns_array[i];

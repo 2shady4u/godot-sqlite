@@ -3,9 +3,9 @@ extends Node
 const SQLite = preload("res://bin/gdsqlite.gdns")
 var db
 #var db_name = "user://test"
-var db_name = "res://test"
+var db_name = "res://data/test"
 #var db_name = "test"
-var json_name = "test_backup"
+var json_name = "data/test_backup"
 var table_name = "company"
 
 var ids = [1,2,3,4,5,6,7]
@@ -92,14 +92,14 @@ func _ready():
 	print("Current database encoding is: ", db.query_result[0]["encoding"])
 	
 	# Export the table to a json-file with a specified name
-	db.export_to_json("data/" + json_name + "_new")
+	db.export_to_json(json_name + "_new")
 	
 	# Close the current database
 	db.close_db()
 
 	# Import (and, consequently, open) a database from an old backup json-file
 	print("Overwriting database content with old backup...")
-	db.import_from_json("data/" + json_name + "_old")
+	db.import_from_json(json_name + "_old")
 	
 	# Check which employees were present in this old json-file
 	select_condition = ""
@@ -114,7 +114,7 @@ func _ready():
 	
 	# Import the data (in a destructive manner) from the new backup json-file
 	print("Overwriting database content again with latest backup...")
-	db.import_from_json("data/" + json_name + "_new")
+	db.import_from_json(json_name + "_new")
 	
 	# Close the imported database
 	db.close_db()
