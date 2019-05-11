@@ -60699,6 +60699,19 @@
 				]
 			},
 			{
+				"name": "is_valid",
+				"return_type": "bool",
+				"is_editor": false,
+				"is_noscript": false,
+				"is_const": true,
+				"is_reverse": false,
+				"is_virtual": false,
+				"has_varargs": false,
+				"is_from_script": false,
+				"arguments": [
+				]
+			},
+			{
 				"name": "set_function",
 				"return_type": "void",
 				"is_editor": false,
@@ -83247,6 +83260,13 @@
 				"index": -1
 			},
 			{
+				"name": "transform_2d_array",
+				"type": "PoolVector2Array",
+				"getter": "_get_transform_2d_array",
+				"setter": "_set_transform_2d_array",
+				"index": -1
+			},
+			{
 				"name": "transform_array",
 				"type": "PoolVector3Array",
 				"getter": "_get_transform_array",
@@ -83287,6 +83307,19 @@
 			{
 				"name": "_get_custom_data_array",
 				"return_type": "PoolColorArray",
+				"is_editor": false,
+				"is_noscript": false,
+				"is_const": true,
+				"is_reverse": false,
+				"is_virtual": true,
+				"has_varargs": false,
+				"is_from_script": false,
+				"arguments": [
+				]
+			},
+			{
+				"name": "_get_transform_2d_array",
+				"return_type": "PoolVector2Array",
 				"is_editor": false,
 				"is_noscript": false,
 				"is_const": true,
@@ -83343,6 +83376,25 @@
 					{
 						"name": "arg0",
 						"type": "PoolColorArray",
+						"has_default_value": false,
+						"default_value": ""
+					}
+				]
+			},
+			{
+				"name": "_set_transform_2d_array",
+				"return_type": "void",
+				"is_editor": false,
+				"is_noscript": false,
+				"is_const": false,
+				"is_reverse": false,
+				"is_virtual": true,
+				"has_varargs": false,
+				"is_from_script": false,
+				"arguments": [
+					{
+						"name": "arg0",
+						"type": "PoolVector2Array",
 						"has_default_value": false,
 						"default_value": ""
 					}
@@ -83532,6 +83584,25 @@
 				"has_varargs": false,
 				"is_from_script": false,
 				"arguments": [
+				]
+			},
+			{
+				"name": "set_as_bulk_array",
+				"return_type": "void",
+				"is_editor": false,
+				"is_noscript": false,
+				"is_const": false,
+				"is_reverse": false,
+				"is_virtual": false,
+				"has_varargs": false,
+				"is_from_script": false,
+				"arguments": [
+					{
+						"name": "array",
+						"type": "PoolRealArray",
+						"has_default_value": false,
+						"default_value": ""
+					}
 				]
 			},
 			{
@@ -91649,7 +91720,7 @@
 				"name": "item_focused",
 				"arguments": [
 					{
-						"name": "ID",
+						"name": "id",
 						"type": "int",
 						"default_value": ""
 					}
@@ -91659,7 +91730,7 @@
 				"name": "item_selected",
 				"arguments": [
 					{
-						"name": "ID",
+						"name": "id",
 						"type": "int",
 						"default_value": ""
 					}
@@ -108579,7 +108650,7 @@
 				"name": "id_focused",
 				"arguments": [
 					{
-						"name": "ID",
+						"name": "id",
 						"type": "int",
 						"default_value": ""
 					}
@@ -108589,7 +108660,7 @@
 				"name": "id_pressed",
 				"arguments": [
 					{
-						"name": "ID",
+						"name": "id",
 						"type": "int",
 						"default_value": ""
 					}

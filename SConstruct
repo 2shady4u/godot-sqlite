@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/env python
 import os, subprocess
 
 opts = Variables([], ARGUMENTS)
@@ -54,10 +54,10 @@ elif env['platform'] in ('x11', 'linux'):
     env['target_path'] += 'x11/'
     cpp_library += '.linux'
     if env['target'] in ('debug', 'd'):
-        env.Append(CCFLAGS = ['-fPIC', '-g3','-Og'])
+        env.Append(CCFLAGS = ['-fPIC','-g3','-Og'])
         env.Append(CXXFLAGS = ['-std=c++17']) 
     else:
-        env.Append(CCFLAGS = ['-fPIC', '-g','-O3'])
+        env.Append(CCFLAGS = ['-fPIC','-g','-O3'])
         env.Append(CXXFLAGS = ['-std=c++17']) 
 
 elif env['platform'] == "windows":

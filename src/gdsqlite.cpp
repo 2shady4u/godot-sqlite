@@ -99,19 +99,21 @@ bool SQLite::import_from_json(String import_path)
         Godot::print("GDSQLite Error: Failed to open specified json-file (" + import_path + ")");
         return false;
     }
+    std::stringstream buffer;
+    buffer << ifs.rdbuf();
+    std::string str = buffer.str();
+    String json_string = String(str.c_str());
+    ifs.close();
+
     /* Attempt to open the json and, if unsuccessful, throw a parse error specifying the erroneous line */
-    json import_json;
-    try
-    {
-        import_json = json::parse(ifs);
-    }
-    catch (json::parse_error &e)
+    Ref<JSONParseResult> result = JSON::get_singleton()->parse(json_string);
+    if (result->get_error()!=Error::OK)
     {
         /* Throw a parsing error */
-        Godot::print("GDSQLite Error: " + String(e.what()));
+        Godot::print("GDSQLite Error: parsing failed! reason: " + result->get_error_string() + ", at line: " + String::num_int64(result->get_error_line()));
         return false;
     }
-    ifs.close();
+    Array import_json = result->get_result();
 
     /* Check if the database is open and, if not, attempt to open it */
     if (db == nullptr)
@@ -119,6 +121,7 @@ bool SQLite::import_from_json(String import_path)
         /* Open the database using the open_db method declared above */
         open_db();
     }
+
     /* Find all tables that are present in this database */
     query(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
     Array old_table_names = Array();
@@ -195,7 +198,7 @@ bool SQLite::export_to_json(String export_path)
         query(query_string); 
         table_dict["row_array"] = query_result; 
  
-        json_string = table_dict.to_json(); 
+        json_string = JSON::get_singleton()->print(table_dict);
         /* CharString object goes out-of-scope when not assigned explicitely */ 
         const CharString dummy_string = json_string.utf8(); 
         const char *json_char = dummy_string.get_data(); 
@@ -497,66 +500,47 @@ String SQLite::get_path()
     return path;
 }
 
-bool SQLite::validate_json(json import_json, std::vector<table_struct> &tables_to_import)
+bool SQLite::validate_json(Array import_json, std::vector<table_struct> &tables_to_import)
 {
-    if (!import_json.is_array())
-    {
-        Godot::print("GDSQlite Error: Supplied json-file should consist of an array of tables");
-        return false;
-    }
-
     /* Start going through all the tables and checking their validity */
-    auto number_of_tables = import_json.size();
-    for (decltype(number_of_tables) i = 0; i <= number_of_tables - 1; i++)
+    int number_of_tables = import_json.size();
+    for (int i = 0; i <= number_of_tables - 1; i++)
     {
+
         /* Create a new table_struct */
         table_struct new_table;
 
+        Dictionary temp_dict = import_json[i];
         /* Get the name of the table */
-        auto it_name = import_json[i].find("name");
-        if (it_name == import_json[i].end())
+        if (!temp_dict.has("name"))
         {
             /* Did not find the necessary key! */
             Godot::print("GDSQlite Error: Did not find required key \"name\" in the supplied json-file");
             return false;
         }
-        std::string string_name = *it_name;
-        const char *char_name = string_name.data();
-        new_table.name = String(char_name);
+        new_table.name = temp_dict["name"];
 
         /* Extract the sql template for generating the table */
-        auto it_sql = import_json[i].find("sql");
-        if (it_sql == import_json[i].end())
+        if (!temp_dict.has("sql"))
         {
             /* Did not find the necessary key! */
             Godot::print("GDSQlite Error: Did not find required key \"sql\" in the supplied json-file");
             return false;
         }
-        std::string string_sql = *it_sql;
-        const char *char_sql = string_sql.data();
-        new_table.sql = String(char_sql);
+        new_table.sql = temp_dict["sql"];
 
-        auto it_rows = import_json[i].find("row_array");
-        if (it_rows == import_json[i].end())
+        if (!temp_dict.has("row_array"))
         {
             /* Did not find the necessary key! */
             Godot::print("GDSQlite Error: Did not find required key \"row_array\" in the supplied json-file");
             return false;
         }
-        if (!import_json[i]["row_array"].is_array())
+        if (Variant(temp_dict["row_array"]).get_type() != Variant::ARRAY)
         {
             Godot::print("GDSQlite Error: The value of the key \"row_array\" should consist of an array of rows");
             return false;
         }
-        /* Get the rows and parse them as an array of dictionaries */
-        Array row_array = Array();
-        auto number_of_rows = import_json[i]["row_array"].size();
-        for (decltype(number_of_rows) j = 0; j <= number_of_rows - 1; j++)
-        {
-            Dictionary row_dict = parse_json(import_json[i]["row_array"][j]);
-            row_array.append(row_dict);
-        }
-        new_table.row_array = row_array;
+        new_table.row_array = temp_dict["row_array"];
 
         /* Add the table to the new tables vector */
         tables_to_import.insert(tables_to_import.end(), new_table);
@@ -574,31 +558,4 @@ Dictionary SQLite::deep_copy(Dictionary original_dict)
         copy_dict[keys[i]] = original_dict[keys[i]];
     }
     return copy_dict;
-}
-
-Dictionary SQLite::parse_json(json json_to_parse)
-{
-    Dictionary parsed_dict = Dictionary();
-    for (auto &item : json_to_parse.items())
-    {
-        /* Do lots of conversion work... */
-        auto string_key = item.key();
-        const char *char_key = string_key.data();
-        /* Add the key and, the correctly casted, value to the Dictionary */
-        if (item.value().is_object())
-        {
-            /* The value is itself a dictionary and has to be correctly casted as well */
-            /* recursive call might be overkill... */
-            Dictionary dict_value = parse_json(item.value());
-            parsed_dict[String(char_key)] = dict_value;
-        }
-        else
-        {
-            auto string_value = item.value().dump();
-            const char *char_value = string_value.data();
-            /* Remove the unnecessary "" coming out of the dump() */
-            parsed_dict[String(char_key)] = String(char_value).replace(String("\""), String(""));
-        }
-    }
-    return parsed_dict;
 }

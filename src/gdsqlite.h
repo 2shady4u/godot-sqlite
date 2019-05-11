@@ -4,12 +4,13 @@
 #include <Godot.hpp>
 #include <Reference.hpp>
 #include <ProjectSettings.hpp>
+#include <JSON.hpp>
+#include <JSONParseResult.hpp>
 
 #include <fstream>
+#include <vector>
+#include <sstream>
 #include <sqlite/sqlite3.h>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
 
 namespace godot {
 
@@ -27,8 +28,7 @@ private:
     bool verbose_mode;
 
     Dictionary deep_copy(Dictionary p_dict);
-    bool validate_json(json import_json, std::vector<table_struct> &tables_to_import);
-    Dictionary parse_json(json json_to_parse);
+    bool validate_json(Array import_json, std::vector<table_struct> &tables_to_import);
 
 public:
     sqlite3 *db;
