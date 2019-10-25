@@ -3,20 +3,21 @@ extends Node
 const SQLite = preload("res://bin/gdsqlite.gdns")
 var db
 #var db_name = "user://test"
-var db_name = "res://data/test"
+var db_name : String = "res://data/test"
 #var db_name = "test"
-var json_name = "data/test_backup"
-var table_name = "company"
+var json_name : String = "data/test_backup"
+var table_name : String = "company"
+var other_table_name : String = "expenses"
 
-var ids = [1,2,3,4,5,6,7]
-var names = ["Paul","Allen","Teddy","Mark","Robert","Julia","Amanda"]
-var ages = [32,25,23,25,30,63,13]
-var addresses = ["California","Texas","Baltimore","Richmond","Texas","Atlanta","New-York"]
-var salaries = [20000.00,15000.00,20000.00,65000.00,65000.00,65000.00,65000.00]
+var ids : Array = [1,2,3,4,5,6,7]
+var names : Array = ["Paul","Allen","Teddy","Mark","Robert","Julia","Amanda"]
+var ages : Array = [32,25,23,25,30,63,13]
+var addresses : Array = ["California","Texas","Baltimore","Richmond","Texas","Atlanta","New-York"]
+var salaries : Array = [20000.00,15000.00,20000.00,65000.00,65000.00,65000.00,65000.00]
 
 func _ready():
 	
-	var table_dict = Dictionary()
+	var table_dict : Dictionary = Dictionary()
 	table_dict["id"] = {"data_type":"int", "primary_key": true, "not_null": true}
 	table_dict["name"] = {"data_type":"text", "not_null": true}
 	table_dict["age"] = {"data_type":"int", "not_null": true}
@@ -34,8 +35,8 @@ func _ready():
 	# Create a table with the structure found in table_dict and add it to the database
 	db.create_table(table_name, table_dict)
 	
-	var row_array = []
-	var row_dict = Dictionary()
+	var row_array : Array = []
+	var row_dict : Dictionary = Dictionary()
 	for i in range(0,ids.size()):
 		row_dict["id"] = ids[i]
 		row_dict["name"] = names[i]
@@ -50,8 +51,8 @@ func _ready():
 	#print(row_array)
 
 	# Select the id and age of the employees that are older than 30
-	var select_condition = "age > 30"
-	var selected_array = db.select_rows(table_name, select_condition, ["id", "age"])
+	var select_condition : String = "age > 30"
+	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "age"])
 	print("condition: " + select_condition)
 	print("result: ", selected_array)
 	
@@ -115,6 +116,10 @@ func _ready():
 	# Import the data (in a destructive manner) from the new backup json-file
 	print("Overwriting database content again with latest backup...")
 	db.import_from_json(json_name + "_new")
+	
+	# Try to delete a non-existant table from the database.
+	if not db.delete_rows(other_table_name, "*"):
+		print("SQL error: " + db.error_message)
 	
 	# Close the imported database
 	db.close_db()

@@ -23,6 +23,7 @@ void SQLite::_register_methods()
 
     register_property<SQLite, String>("path", &SQLite::set_path, &SQLite::get_path, "default");
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
+    register_property<SQLite, String>("error_message", &SQLite::error_message, "");
     register_property<SQLite, Array>("query_result", &SQLite::query_result, Array());
 }
 
@@ -107,7 +108,7 @@ bool SQLite::import_from_json(String import_path)
 
     /* Attempt to open the json and, if unsuccessful, throw a parse error specifying the erroneous line */
     Ref<JSONParseResult> result = JSON::get_singleton()->parse(json_string);
-    if (result->get_error()!=Error::OK)
+    if (result->get_error() != Error::OK)
     {
         /* Throw a parsing error */
         Godot::print("GDSQLite Error: parsing failed! reason: " + result->get_error_string() + ", at line: " + String::num_int64(result->get_error_line()));
@@ -153,65 +154,64 @@ bool SQLite::import_from_json(String import_path)
     return true;
 }
 
+bool SQLite::export_to_json(String export_path)
+{
+    /* Get all names and sql templates for all tables present in the database */
+    query(String("SELECT name,sql FROM sqlite_master WHERE type = 'table';"));
+    int number_of_tables = query_result.size();
+    Array database_dict;
+    for (int i = 0; i <= number_of_tables - 1; i++)
+    {
+        /* Deep copy of the Dictionary is required as Dictionaries are passed with reference */
+        /* Without doing this, future queries would overwrite the table information */
+        database_dict.append(deep_copy(query_result[i]));
+    }
 
-bool SQLite::export_to_json(String export_path) 
-{ 
-    /* Get all names and sql templates for all tables present in the database */ 
-    query(String("SELECT name,sql FROM sqlite_master WHERE type = 'table';")); 
-    int number_of_tables = query_result.size(); 
-    Array database_dict; 
-    for (int i = 0; i <= number_of_tables - 1; i++) 
-    { 
-        /* Deep copy of the Dictionary is required as Dictionaries are passed with reference */ 
-        /* Without doing this, future queries would overwrite the table information */ 
-        database_dict.append(deep_copy(query_result[i])); 
-    } 
- 
     /* Add .json to the import_path String if not present */
-    String ending = String(".json"); 
-    if (!export_path.ends_with(ending)) 
-    { 
-        export_path += ending; 
+    String ending = String(".json");
+    if (!export_path.ends_with(ending))
+    {
+        export_path += ending;
     }
     /* Find the real path */
     export_path = ProjectSettings::get_singleton()->globalize_path(export_path.strip_edges());
- 
-    /* CharString object goes out-of-scope when not assigned explicitely */ 
-    const CharString dummy_path = export_path.utf8(); 
-    const char *char_path = dummy_path.get_data(); 
- 
-    std::ofstream ofs(char_path, std::ios::trunc); 
+
+    /* CharString object goes out-of-scope when not assigned explicitely */
+    const CharString dummy_path = export_path.utf8();
+    const char *char_path = dummy_path.get_data();
+
+    std::ofstream ofs(char_path, std::ios::trunc);
     if (ofs.fail())
     {
         Godot::print("GDSQLite Error: Can't open specified json-file, file does not exist or is locked");
         return false;
     }
 
-    /* Construct a Dictionary for each table, convert it to JSON and write it to file */ 
-    ofs << "["; 
-    for (int i = 0; i <= number_of_tables - 1; i++) 
-    { 
-        Dictionary table_dict = database_dict[i]; 
-        String json_string, query_string; 
- 
-        query_string = "SELECT * FROM " + (const String &)table_dict["name"] + ";"; 
-        query(query_string); 
-        table_dict["row_array"] = query_result; 
- 
+    /* Construct a Dictionary for each table, convert it to JSON and write it to file */
+    ofs << "[";
+    for (int i = 0; i <= number_of_tables - 1; i++)
+    {
+        Dictionary table_dict = database_dict[i];
+        String json_string, query_string;
+
+        query_string = "SELECT * FROM " + (const String &)table_dict["name"] + ";";
+        query(query_string);
+        table_dict["row_array"] = query_result;
+
         json_string = JSON::get_singleton()->print(table_dict);
-        /* CharString object goes out-of-scope when not assigned explicitely */ 
-        const CharString dummy_string = json_string.utf8(); 
-        const char *json_char = dummy_string.get_data(); 
-        ofs << json_char; 
-        if (i != number_of_tables - 1) 
-        { 
-            ofs << ","; 
-        } 
-    } 
-    ofs << "]"; 
-    ofs.close(); 
-    return true; 
-} 
+        /* CharString object goes out-of-scope when not assigned explicitely */
+        const CharString dummy_string = json_string.utf8();
+        const char *json_char = dummy_string.get_data();
+        ofs << json_char;
+        if (i != number_of_tables - 1)
+        {
+            ofs << ",";
+        }
+    }
+    ofs << "]";
+    ofs.close();
+    return true;
+}
 
 void SQLite::close_db()
 {
@@ -246,7 +246,7 @@ static int callback(void *closure, int argc, char **argv, char **azColName)
         switch (sqlite3_column_type(stmt, i))
         {
         case SQLITE_INTEGER:
-            column_value = Variant(sqlite3_column_int(stmt, i));
+            column_value = Variant((int)sqlite3_column_int64(stmt, i));
             break;
 
         case SQLITE_FLOAT:
@@ -289,9 +289,10 @@ bool SQLite::query(String p_query)
     /* Execute SQL statement */
     rc = sqlite3_exec(db, sql, callback, (void *)this, &zErrMsg);
 
+    error_message = String(zErrMsg);
     if (rc != SQLITE_OK)
     {
-        Godot::print(" --> SQL error: " + String(zErrMsg));
+        Godot::print(" --> SQL error: " + error_message);
         sqlite3_free(zErrMsg);
         return false;
     }
@@ -305,7 +306,8 @@ bool SQLite::query(String p_query)
 bool SQLite::create_table(String p_name, Dictionary p_table_dict)
 {
 
-    String query_string;
+    String query_string, type_string;
+    String integer_datatype = "int";
     /* Create SQL statement */
     query_string = "CREATE TABLE IF NOT EXISTS " + p_name + " (";
 
@@ -320,8 +322,18 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
             Godot::print("GDSQLite Error: The field 'data_type' is a required part of the table dictionary");
             return false;
         }
-        query_string += (const String &)columns[i] + " " + column_dict["data_type"];
-
+        query_string += (const String &)columns[i] + " ";
+        type_string = (const String &)column_dict["data_type"];
+        if (type_string.to_lower().begins_with(integer_datatype))
+        {
+            query_string += String("INTEGER");
+        }
+        else
+        {
+            query_string += type_string;
+        }
+        /* Will be cleaned up whenever godot-cpp receives decent Dictionary get() with default... */
+        /* Primary key check */
         if (column_dict.has("primary_key"))
         {
             if (column_dict["primary_key"])
@@ -329,6 +341,20 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
                 query_string += String(" PRIMARY KEY");
             }
         }
+        /* Default check */
+        if (column_dict.has("default"))
+        {
+            query_string += String(" DEFAULT ") + (const String &)column_dict["default"];
+        }
+        /* Autoincrement check */
+        if (column_dict.has("auto_increment"))
+        {
+            if (column_dict["auto_increment"])
+            {
+                query_string += String(" AUTOINCREMENT");
+            }
+        }
+        /* Not null check */
         if (column_dict.has("not_null"))
         {
             if (column_dict["not_null"])
@@ -379,7 +405,7 @@ bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
         {
             value_string += (const String &)values[i];
         }
-        if (i!=number_of_keys-1)
+        if (i != number_of_keys - 1)
         {
             key_string += ",";
             value_string += ",";

@@ -20,9 +20,13 @@ An example project, named "demo", can also be downloaded from the releases tab.
 
 Path to the database, should be set before opening the database with .open_db(). If no database with this name exists, a new one at the supplied path will be created. Both *res://* and *user://* keywords can be used to define the path.
 
+- **error_message** (String, default='')
+
+Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
+
 - **verbose_mode** (Boolean, default=false)
 
-Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your ( possibly faulty) SQLite queries.
+Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
 
 - **query_result** (Array, default=[])
 

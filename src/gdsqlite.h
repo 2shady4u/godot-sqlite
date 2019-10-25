@@ -32,6 +32,7 @@ private:
 
 public:
     sqlite3 *db;
+    String error_message;
     Array query_result;
 
     static void _register_methods();
