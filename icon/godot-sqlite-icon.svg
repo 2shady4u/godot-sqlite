@@ -17,8 +17,8 @@
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
    sodipodi:docname="godot-sqlite-icon.svg"
    inkscape:export-filename="C:\Users\piet.bronders\Documents\Gitkraken\GloomInc\godot-sqlite\icon\godot-sqlite-icon.png"
-   inkscape:export-xdpi="24"
-   inkscape:export-ydpi="24">
+   inkscape:export-xdpi="60"
+   inkscape:export-ydpi="60">
   <defs
      id="defs3032">
     <linearGradient
@@ -71,9 +71,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.24748737"
-     inkscape:cx="270.31264"
-     inkscape:cy="602.07079"
+     inkscape:zoom="0.98994948"
+     inkscape:cx="479.66516"
+     inkscape:cy="349.00415"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -217,7 +217,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:346.66665649px;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';fill:#b4b400;fill-opacity:1;stroke:none;stroke-opacity:1">L</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:346.66665649px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;letter-spacing:0px;word-spacing:0px;fill:#00b400;fill-opacity:1;stroke:#ffffff;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:346.66665649px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;letter-spacing:0px;word-spacing:0px;fill:#00b400;fill-opacity:1;stroke:none;stroke-opacity:1;"
        x="398.24063"
        y="1049.4077"
        id="text1042-8-3"
@@ -227,7 +227,7 @@
          id="tspan1040-7-9"
          x="398.24063"
          y="1049.4077"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:346.66665649px;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';fill:#00b400;fill-opacity:1;stroke:#ffffff;stroke-opacity:1">Q</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:346.66665649px;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';fill:#00b400;fill-opacity:1;stroke:none;stroke-opacity:1;">Q</tspan></text>
     <path
        style="fill:none;stroke:#0000b4;stroke-width:28;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 294.05651,953.49739 88.73124,-5.73496"
