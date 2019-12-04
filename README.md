@@ -1,3 +1,5 @@
+![Godot SQLite banner](icon/godot-sqlite-banner.png?raw=true "Godot SQLite Banner")
+
 # godot-sqlite
 
 This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.1+. Additionaly, it 
@@ -8,9 +10,25 @@ does not require any additional compilation or mucking about with build scripts.
 - Linux
 - Windows
 
-# How to use?
+# How to install?
 
-Re-building Godot from scratch is **NOT** required just download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract on your system and run the supplied demo-project. Make sure that the Godot is correctly loading the *gdsqlite.gdns*-resource and that it is available in the *res://*-environment.
+Re-building Godot from scratch is **NOT** required, the proper way of installing this plugin is to either install it through the Asset Library or to just manually download the build files yourself.
+
+### Godot Asset Library
+
+**Godot-SQLite** is available through the official Godot Asset Library, and can be installed in the following way:
+
+- Click on the 'AssetLib' button at the top of the editor.
+- Search for 'godot-sqlite' and click on the resulting element.
+- In the dialog pop-up, click 'Download'.
+- Once the download is complete, click on the install button...
+- Once more, click on the 'Install' button.
+- Activate the plugin in the 'Project Settings/Plugins'-menu.
+- All done!
+
+### Manually
+
+It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that the Godot is correctly loading the *gdsqlite.gdns*-resource and that it is available in the *res://*-environment.
 
 An example project, named "demo", can also be downloaded from the releases tab. 
 
@@ -84,7 +102,7 @@ The design philosophy behind this is the following:
 First clone the project and install SCons. Secondly, the C++ bindings have to be build from scratch using the files present in the godot-cpp submodule and following command:
 
 ```
-scons p=<platform> bits=64 generate_bindings=yes use_custom_api_file=yes custom_api_file=../api.json
+scons p=<platform> bits=64 generate_bindings=yes
 ```
 
 Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac OS X or Windows, with the help of following command:

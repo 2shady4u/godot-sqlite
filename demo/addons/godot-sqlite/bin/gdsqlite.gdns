@@ -1,0 +1,8 @@
+[gd_resource type="NativeScript" load_steps=2 format=2]
+
+[ext_resource path="res://addons/godot-sqlite/bin/gdsqlite.gdnlib" type="GDNativeLibrary" id=1]
+
+[resource]
+resource_name = "gdsqlite"
+class_name = "SQLite"
+library = ExtResource( 1 )

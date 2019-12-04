@@ -1,6 +1,6 @@
 extends Node
 
-const SQLite = preload("res://bin/gdsqlite.gdns")
+const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
 var db
 #var db_name = "user://test"
 var db_name : String = "res://data/test"
