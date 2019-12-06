@@ -1,0 +1,10 @@
+* linguist-vendored
+*.cpp linguist-vendored=false
+
+# Exclude all top-level files and directories (except addons) from zip downloads.
+# This makes installing through the AssetLib easier, because no files and folders
+# need to be unchecked.
+
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/README.md          export-ignore
