@@ -51,7 +51,7 @@ bool SQLite::open_db()
     int rc;
     /* Add .db to the path String if not present */
     String ending = String(".db");
-    if (!path.ends_with(ending))
+    if (path != ":memory:" && !path.ends_with(ending))
     {
         path += ending;
     }
