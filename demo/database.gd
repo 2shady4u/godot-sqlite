@@ -123,7 +123,51 @@ func _ready():
 	
 	# Close the imported database
 	db.close_db()
-	
-	
-	
-	
+
+# This example demonstrates the in-memory and foreign key support. It's 
+# rather contrived, but it gets the point across.
+func example_of_in_memory_and_foreign_key_support():
+    
+    # Create the database as usual.
+    db = SQLite.new()
+    # Enable in-memory storage.
+    db.path = ":memory:"
+    # Enable foreign keys.
+    db.foreign_keys = true
+    # Open the database as usual.
+    db.open_db()
+    
+    # Create a table for all your friends.
+    db.create_table("friends", {
+        "id": {"data_type": "int", "primary_key": true, "not_null": true},
+        "name": {"data_type": "text", "not_null": true, "unique": true}
+        "hobby": {"data_type": "int", "foreign_key": "hobbies.id", "not_null": true}
+    })
+    
+    # Create a table for all your friends' hobbies.
+    db.create_table("hobbies", {
+        "id": {"data_type": "int", "primary_key": true, "not_null": true},
+        "description": {"data_type": "text", "not_null": true, "unique": true}
+    })
+    
+    # ATTENTION: The important thing to note about the "friends" table is the 
+    # definition of the foreign key "hobbies.id". This tells SQLITE to enforce 
+    # the foreign key constraint, and that the field "friends.hobby" is now 
+    # tied to the field "hobbies.id". Consequently, you are now required to 
+    # specify a valid hobby when adding a friend to the database, which in 
+    # turn means you first need to add some hobbies to the database before 
+    # you can add any of your friends and assign them a hobby.
+    
+    # This won't work! There is no valid hobby with id 23 yet!
+    db.insert_rows("friends", [
+        {"id": 1, "name": "John", "hobby": 23}
+    ])
+    
+    # This will work! You create the hobby with id 23 first, then you can 
+    # create your friend referencing that hobby.
+    db.insert_rows("hobbies", [
+        {"id": 23, "description": "Extreme Relaxing"}
+    ])
+    db.insert_rows("friends", [
+        {"id": 1, "name": "John", "hobby": 23}
+    ])
