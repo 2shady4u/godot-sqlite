@@ -123,13 +123,18 @@ func _ready():
 	
 	# Close the imported database
 	db.close_db()
+	
+	# Invoke example demonstrating in-memory and foreign key support.
+	example_of_in_memory_and_foreign_key_support()
+
 
 # This example demonstrates the in-memory and foreign key support. It's 
 # rather contrived, but it gets the point across.
 func example_of_in_memory_and_foreign_key_support():
     
-    # Create the database as usual.
+    # Create the database as usual, and turn on verbose mode.
     db = SQLite.new()
+    db.verbose_mode = true
     # Enable in-memory storage.
     db.path = ":memory:"
     # Enable foreign keys.
@@ -140,7 +145,7 @@ func example_of_in_memory_and_foreign_key_support():
     # Create a table for all your friends.
     db.create_table("friends", {
         "id": {"data_type": "int", "primary_key": true, "not_null": true},
-        "name": {"data_type": "text", "not_null": true, "unique": true}
+        "name": {"data_type": "text", "not_null": true, "unique": true},
         "hobby": {"data_type": "int", "foreign_key": "hobbies.id", "not_null": true}
     })
     
