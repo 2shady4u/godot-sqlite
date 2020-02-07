@@ -26,6 +26,7 @@ class SQLite : public Reference {
 private:
     String path;
     bool verbose_mode;
+    bool foreign_keys;
 
     Dictionary deep_copy(Dictionary p_dict);
     bool validate_json(Array import_json, std::vector<table_struct> &tables_to_import);

@@ -23,6 +23,7 @@ void SQLite::_register_methods()
 
     register_property<SQLite, String>("path", &SQLite::set_path, &SQLite::get_path, "default");
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
+    register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
     register_property<SQLite, Array>("query_result", &SQLite::query_result, Array());
 }
@@ -42,6 +43,7 @@ void SQLite::_init()
 {
     path = String("default");
     verbose_mode = false;
+    foreign_keys = false;
 }
 
 bool SQLite::open_db()
@@ -74,6 +76,19 @@ bool SQLite::open_db()
     {
         Godot::print("Opened database successfully (" + path + ")");
     }
+
+    /* Try to enable foreign keys. */
+    if (foreign_keys)
+    {
+        rc = sqlite3_exec(db, "PRAGMA foreign_keys=on;", NULL, NULL, &zErrMsg);
+        if (rc != SQLITE_OK)
+        {
+            Godot::print("GDSQLite Error: Can't enable foreign keys: " + String(zErrMsg));
+            sqlite3_free(zErrMsg);
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -362,12 +377,31 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
                 query_string += String(" NOT NULL");
             }
         }
-
+        /* Apply foreign key constraint. */
+        if (foreign_keys)
+        {
+            if (column_dict.has("foreign_key"))
+            {
+                if (column_dict["foreign_key"])
+                {
+                    const String foreign_key_definition = (const String &)(column_dict["foreign_key"]);
+                    const Array foreign_key_elements = foreign_key_definition.split(".");
+                    if (foreign_key_elements.size() == 2)
+                    {
+                        const String column_name = (const String &)(columns[i]);
+                        const String foreign_key_table_name = (const String &)(foreign_key_elements[0]);
+                        const String foreign_key_column_name = (const String &)(foreign_key_elements[1]);
+                        query_string += String(", FOREIGN KEY (" + column_name + ") REFERENCES " + foreign_key_table_name + "(" + foreign_key_column_name + ")");
+                    }   
+                }
+            }
+        }
         if (i != number_of_columns - 1)
         {
             query_string += ",";
         }
     }
+    
     query_string += ");";
 
     return query(query_string);
