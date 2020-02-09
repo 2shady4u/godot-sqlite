@@ -46,6 +46,10 @@ Contains the zErrMsg returned by the SQLite query in human-readable form. An emp
 
 Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
 
+- **foreign_keys** (Boolean, default=false)
+
+Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database. 
+
 - **query_result** (Array, default=[])
 
 Contains the results from the latest query and is cleared after every new query.
