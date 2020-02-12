@@ -8,6 +8,7 @@ var db_name : String = "res://data/test"
 var json_name : String = "data/test_backup"
 var table_name : String = "company"
 var other_table_name : String = "expenses"
+var screentext : RichTextLabel
 
 var ids : Array = [1,2,3,4,5,6,7]
 var names : Array = ["Paul","Allen","Teddy","Mark","Robert","Julia","Amanda"]
@@ -16,12 +17,18 @@ var addresses : Array = ["California","Texas","Baltimore","Richmond","Texas","At
 var salaries : Array = [20000.00,15000.00,20000.00,65000.00,65000.00,65000.00,65000.00]
 
 func _ready():
+	screentext = get_parent().get_child(1)
 	example_of_basic_database_querying()
 	example_of_in_memory_and_foreign_key_support()
 
 # Basic example that goes over all the basic features available in the addon, such
 # as creating and dropping tables, inserting and deleting rows and doing more elementary
 # PRAGMA queries. 
+
+func screen_print(content):
+	screentext.text += content + "\n"
+	print(content)
+
 func example_of_basic_database_querying():
 
 	# Make a big table containing the variable types.
@@ -60,8 +67,8 @@ func example_of_basic_database_querying():
 	# Select the id and age of the employees that are older than 30
 	var select_condition : String = "age > 30"
 	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "age"])
-	print("condition: " + select_condition)
-	print("result: ", selected_array)
+	screen_print("condition: " + select_condition)
+	screen_print("result: " + str(selected_array))
 	
 	# Change name of 'Amanda' to 'Olga' and her age to 30
 	db.update_rows(table_name, "name = 'Amanda'", {"AGE":30, "NAME":"Olga"})
@@ -69,8 +76,8 @@ func example_of_basic_database_querying():
 	# Select the employee with the name Olga and with age 30
 	select_condition = "name = 'Olga' and age = 30"
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
-	print("condition: " + select_condition)
-	print("result: ", selected_array)
+	screen_print("condition: " + select_condition)
+	screen_print("result: " + str(selected_array))
 
 	# Delete the employee named Olga
 	db.delete_rows(table_name, "name = 'Olga'")
@@ -78,13 +85,13 @@ func example_of_basic_database_querying():
 	# Select all employees
 	select_condition = ""
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
-	print("condition: " + select_condition)
-	print("result: ", selected_array)
+	screen_print("condition: " + select_condition)
+	screen_print("result: " + str(selected_array))
 	# Check the types of the values in the dictionary
-	print("Types of selected columns:")
-	print("salary: ", typeof(selected_array[0]["salary"]))
-	print("age:    ", typeof(selected_array[0]["age"]))
-	print("name:   ", typeof(selected_array[0]["name"]))
+	screen_print("Types of selected columns:")
+	screen_print("salary: " + str(typeof(selected_array[0]["salary"])))
+	screen_print("age:    " + str(typeof(selected_array[0]["age"])))
+	screen_print("name:   " + str(typeof(selected_array[0]["name"])))
 
 	# Delete all employees
 	db.delete_rows(table_name, "*")
@@ -94,10 +101,10 @@ func example_of_basic_database_querying():
 
 	# Do a normal query
 	db.query("SELECT COUNT(*) AS 'number_of_employees' FROM " + table_name + ";")
-	print("There are ", db.query_result[0]["number_of_employees"], " employees in the company")
+	screen_print("There are " + str(db.query_result[0]["number_of_employees"], " employees in the company"))
 
 	db.query("PRAGMA encoding;")
-	print("Current database encoding is: ", db.query_result[0]["encoding"])
+	screen_print("Current database encoding is: " + str(db.query_result[0]["encoding"]))
 
 	# Export the table to a json-file with a specified name
 	db.export_to_json(json_name + "_new")
@@ -106,27 +113,27 @@ func example_of_basic_database_querying():
 	db.close_db()
 
 	# Import (and, consequently, open) a database from an old backup json-file
-	print("Overwriting database content with old backup...")
+	screen_print("Overwriting database content with old backup...")
 	db.import_from_json(json_name + "_old")
 
 	# Check which employees were present in this old json-file
 	select_condition = ""
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
-	print("condition: " + select_condition)
-	print("result: ", selected_array)
+	screen_print("condition: " + select_condition)
+	screen_print("result: " + str(selected_array))
 	# Check the types of the values in the dictionary
-	print("Types of selected columns:")
-	print("salary: ", typeof(selected_array[0]["salary"]))
-	print("age:    ", typeof(selected_array[0]["age"]))
-	print("name:   ", typeof(selected_array[0]["name"]))
+	screen_print("Types of selected columns:")
+	screen_print("salary: " + str(typeof(selected_array[0]["salary"])))
+	screen_print("age:    " + str(typeof(selected_array[0]["age"])))
+	screen_print("name:   " + str(typeof(selected_array[0]["name"])))
 
 	# Import the data (in a destructive manner) from the new backup json-file
-	print("Overwriting database content again with latest backup...")
+	screen_print("Overwriting database content again with latest backup...")
 	db.import_from_json(json_name + "_new")
 
 	# Try to delete a non-existant table from the database.
 	if not db.delete_rows(other_table_name, "*"):
-		print("SQL error: " + db.error_message)
+		screen_print("SQL error: " + db.error_message)
 
 	# Close the imported database
 	db.close_db()
