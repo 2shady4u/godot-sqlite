@@ -261,7 +261,7 @@ static int callback(void *closure, int argc, char **argv, char **azColName)
         switch (sqlite3_column_type(stmt, i))
         {
         case SQLITE_INTEGER:
-            column_value = Variant((int)sqlite3_column_int64(stmt, i));
+            column_value = Variant((int64_t)sqlite3_column_int64(stmt, i));
             break;
 
         case SQLITE_FLOAT:
