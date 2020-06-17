@@ -19,6 +19,10 @@ config/name="SQLite Demo"
 run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
 
+[debug]
+
+settings/stdout/verbose_stdout=true
+
 [rendering]
 
 environment/default_environment="res://default_env.tres"

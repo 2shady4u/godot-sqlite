@@ -3,6 +3,7 @@
 
 #include <Godot.hpp>
 #include <Reference.hpp>
+#include <FuncRef.hpp>
 #include <ProjectSettings.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
@@ -27,6 +28,7 @@ private:
     String path;
     bool verbose_mode;
     bool foreign_keys;
+    std::vector<Ref<FuncRef>> function_registry;
 
     Dictionary deep_copy(Dictionary p_dict);
     bool validate_json(Array import_json, std::vector<table_struct> &tables_to_import);
@@ -58,6 +60,9 @@ public:
     Array select_rows(String p_name, String p_conditions, Array p_columns_array);
     bool update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict);
     bool delete_rows(String p_name, String p_conditions);
+
+    bool create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc);
+
     void set_path(String p_path);
     String get_path();
 };

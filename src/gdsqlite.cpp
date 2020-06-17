@@ -21,6 +21,8 @@ void SQLite::_register_methods()
     register_method("update_rows", &SQLite::update_rows);
     register_method("delete_rows", &SQLite::delete_rows);
 
+    register_method("create_function", &SQLite::create_function);
+
     register_property<SQLite, String>("path", &SQLite::set_path, &SQLite::get_path, "default");
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
@@ -36,6 +38,8 @@ SQLite::SQLite()
 
 SQLite::~SQLite()
 {
+    function_registry.clear();
+    function_registry.shrink_to_fit();
     close_db();
 }
 
@@ -548,6 +552,96 @@ bool SQLite::delete_rows(String p_name, String p_conditions)
     query_string += ";";
 
     return query(query_string);
+}
+
+static void function_callback(sqlite3_context *context, int argc, sqlite3_value **argv) {
+    void *temp = sqlite3_user_data(context);
+    Ref<FuncRef> func_ref = *(Ref<FuncRef> *)&temp;
+    /* Can also be done with following single-line statement, but I prefer the above */
+    /* Ref<FuncRef> func_ref = reinterpret_cast<Ref<FuncRef> >(sqlite3_user_data(context)); */
+
+    /* Check validity of the function reference */
+    if (!func_ref->is_valid()) 
+    {
+        Godot::print("GDSQLite Error: Supplied function reference is invalid! Aborting callback...");
+        return;
+    }
+
+    Array argument_array = Array();
+    Variant argument_value;
+    for (int i = 0; i <= argc - 1; i++)
+    {
+        sqlite3_value* value = *argv;
+        /* Check the value type and do correct casting */
+        switch (sqlite3_value_type(value))
+        {
+        case SQLITE_INTEGER:
+            argument_value = Variant((int)sqlite3_value_int64(value));
+            break;
+
+        case SQLITE_FLOAT:
+            argument_value = Variant(sqlite3_value_double(value));
+            break;
+
+        case SQLITE_TEXT:
+            argument_value = Variant((char *)sqlite3_value_text(value));
+            break;
+
+        default:
+            argument_value = Variant((char *)sqlite3_value_text(value));
+            break;
+        }
+        argument_array.append(argument_value);
+        argv += 1;
+    }
+
+    Variant output = func_ref->call_func(argument_array);
+
+    switch (output.get_type())
+    {
+    case Variant::INT, Variant::BOOL:
+        sqlite3_result_int64(context, int64_t(output));
+        break;
+
+    case Variant::REAL:
+        sqlite3_result_double(context, output);
+        break;
+
+    case Variant::STRING:
+        sqlite3_result_text(context, ((String)output).alloc_c_string(), -1, SQLITE_STATIC);
+        break;
+
+    default:
+        sqlite3_result_text(context, ((String)output).alloc_c_string(), -1, SQLITE_STATIC);
+        break;
+    }
+}
+
+bool SQLite::create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc){
+    /* Add the func_ref to a std::vector to increase the ref_count */
+    function_registry.push_back(p_func_ref);
+
+    int rc;
+    /* CharString object goes out-of-scope when not assigned explicitely */
+    const CharString dummy_path = p_name.utf8();
+    const char *zFunctionName = dummy_path.get_data();
+    int nArg = p_argc;
+    int eTextRep = SQLITE_UTF8;
+
+    /* Get a void pointer to the current value stored at the back of the vector */
+    void *pApp = *(void **)&function_registry.back();
+    void (*xFunc)(sqlite3_context*,int,sqlite3_value**) = function_callback;
+    void (*xStep)(sqlite3_context*,int,sqlite3_value**) = NULL;
+    void (*xFinal)(sqlite3_context*) = NULL;
+
+    /* Create the actual function */
+    rc = sqlite3_create_function(db, zFunctionName, nArg, eTextRep, pApp, xFunc, xStep, xFinal);
+    if (rc)
+    {
+        Godot::print("GDSQLite Error: " + String(sqlite3_errmsg(db)));
+        return false;
+    }
+    return true;
 }
 
 void SQLite::set_path(String p_path)

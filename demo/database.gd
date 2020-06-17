@@ -3,21 +3,26 @@ extends Node
 const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
 var db
 #var db_name = "user://test"
-var db_name : String = "res://data/test"
+var db_name := "res://data/test"
 #var db_name = "test"
-var json_name : String = "data/test_backup"
-var table_name : String = "company"
-var other_table_name : String = "expenses"
+var json_name := "data/test_backup"
+var table_name := "company"
+var other_table_name := "expenses"
 
-var ids : Array = [1,2,3,4,5,6,7]
-var names : Array = ["Paul","Allen","Teddy","Mark","Robert","Julia","Amanda"]
-var ages : Array = [32,25,23,25,30,63,13]
-var addresses : Array = ["California","Texas","Baltimore","Richmond","Texas","Atlanta","New-York"]
-var salaries : Array = [20000.00,15000.00,20000.00,65000.00,65000.00,65000.00,65000.00]
+var ids := [1,2,3,4,5,6,7]
+var names := ["Paul","Allen","Teddy","Mark","Robert","Julia","Amanda"]
+var ages := [32,25,23,25,30,63,13]
+var addresses := ["California","Texas","Baltimore","Richmond","Texas","Atlanta","New-York"]
+var salaries := [20000.00,15000.00,20000.00,65000.00,65000.00,65000.00,65000.00]
+
+var percentage_above_thirty := 0.05
+var percentage_below_thirty := 0.1
+var doomed_city := "Texas"
 
 func _ready():
 	example_of_basic_database_querying()
 	example_of_in_memory_and_foreign_key_support()
+	example_of_call_external_functions()
 
 # Basic example that goes over all the basic features available in the addon, such
 # as creating and dropping tables, inserting and deleting rows and doing more elementary
@@ -182,3 +187,61 @@ func example_of_in_memory_and_foreign_key_support():
 
 	# Close the database.
 	db.close_db()
+
+func should_employee_be_fired(address : String) -> bool:
+	if address == doomed_city:
+		return true
+	else:
+		return false
+
+func increase_wages(salary : float, age : int) -> float:
+	if age > 30:
+		return (1.0 + percentage_above_thirty)*salary
+	else:
+		return (1.0 + percentage_below_thirty)*salary
+
+func example_of_call_external_functions():
+	# Make a big table containing the variable types.
+	var table_dict : Dictionary = Dictionary()
+	table_dict["id"] = {"data_type":"int", "primary_key": true, "not_null": true}
+	table_dict["name"] = {"data_type":"text", "not_null": true}
+	table_dict["age"] = {"data_type":"int", "not_null": true}
+	table_dict["address"] = {"data_type":"char(50)"}
+	table_dict["salary"] = {"data_type":"real"}
+
+	db = SQLite.new()
+	db.path = db_name
+	db.verbose_mode = true
+	# Open the database using the db_name found in the path variable
+	db.open_db()
+	# Throw away any table that was already present
+	db.drop_table(table_name)
+	# Create a table with the structure found in table_dict and add it to the database
+	db.create_table(table_name, table_dict)
+
+	var row_array : Array = []
+	var row_dict : Dictionary = Dictionary()
+	for i in range(0,ids.size()):
+		row_dict["id"] = ids[i]
+		row_dict["name"] = names[i]
+		row_dict["age"] = ages[i]
+		row_dict["address"] = addresses[i]
+		row_dict["salary"] = salaries[i]
+		row_array.append(row_dict.duplicate())
+
+		# Insert a new row in the table
+		db.insert_row(table_name, row_dict)
+		row_dict.clear()
+
+	var func_ref := funcref(self, "should_employee_be_fired")
+	db.create_function("should_employee_be_fired", func_ref, 1)
+
+	func_ref = funcref(self, "increase_wages")
+	db.create_function("increase_wages", func_ref, 2)
+
+	db.query("UPDATE company SET salary = increase_wages(salary, age);")
+	db.query("DELETE FROM company WHERE should_employee_be_fired(address);")
+
+	var select_condition := ""
+	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "salary", "name"])
+	print("result: ", selected_array)
