@@ -599,7 +599,8 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 
     switch (output.get_type())
     {
-    case Variant::INT, Variant::BOOL:
+    case Variant::INT:
+    case Variant::BOOL:
         sqlite3_result_int64(context, int64_t(output));
         break;
 
