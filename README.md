@@ -84,6 +84,39 @@ Exports the database structure and content to export_path.json as a backup or fo
 
 - Boolean success = **delete_rows(** String table_name, String query_conditions **)**
 
+- Boolean success = **create_function(** String function_name, FuncRef function_reference, int number_of_arguments **)**
+
+Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
+
+## Frequently Asked Questions (FAQ)
+
+### 1. My query fails and returns syntax errors, what should I do?
+
+There are a couple of things you can do before panicking, namely:  
+- Test out if your query is valid by trying it out online at https://sqliteonline.com/.  
+- Encapsulate all conditional statements in tick-marks ', for example:  
+
+The following statement might not work and throw syntax errors:
+```swift
+var rows = db.select_rows(table_name, "number >= {0} AND number < {0} + {1}".format([i, step]), ["*"])
+```
+
+Encapsulating the conditonal statements with tick-marks ' fixes these syntax errors:
+```swift
+var rows = db.select_rows(table_name, "number >= {0} AND number < {0} + {1}".format([i, step]), ["*"])
+```
+This issue is still open and is being actively worked on.
+
+- Using the **query(** **)**-function instead of the more specialized wrapper function.
+
+After exhausting these options, please open an issue that describes the error in detail.
+
+### 2. When should I create function bindings to augment SQLite's set of native functions?
+
+Preferably never.  
+
+Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
+
 # How to export?
 
 All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
