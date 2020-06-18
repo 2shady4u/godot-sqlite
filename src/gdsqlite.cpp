@@ -64,9 +64,7 @@ bool SQLite::open_db()
     /* Find the real path */
     path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
 
-    /* CharString object goes out-of-scope when not assigned explicitely */
-    const CharString dummy_path = path.utf8();
-    const char *char_path = dummy_path.get_data();
+    const char *char_path = path.alloc_c_string();
 
     /* Try to open the database */
     rc = sqlite3_open(char_path, &db);
@@ -108,9 +106,7 @@ bool SQLite::import_from_json(String import_path)
     /* Find the real path */
     import_path = ProjectSettings::get_singleton()->globalize_path(import_path.strip_edges());
 
-    /* CharString object goes out-of-scope when not assigned explicitely */
-    const CharString dummy_path = import_path.utf8();
-    const char *char_path = dummy_path.get_data();
+    const char *char_path = import_path.alloc_c_string();
 
     /* Open the json-file and parse its contents into a nlohmann json object */
     std::ifstream ifs(char_path);
@@ -194,10 +190,7 @@ bool SQLite::export_to_json(String export_path)
     }
     /* Find the real path */
     export_path = ProjectSettings::get_singleton()->globalize_path(export_path.strip_edges());
-
-    /* CharString object goes out-of-scope when not assigned explicitely */
-    const CharString dummy_path = export_path.utf8();
-    const char *char_path = dummy_path.get_data();
+    const char *char_path = export_path.alloc_c_string();
 
     std::ofstream ofs(char_path, std::ios::trunc);
     if (ofs.fail())
@@ -218,9 +211,7 @@ bool SQLite::export_to_json(String export_path)
         table_dict["row_array"] = query_result;
 
         json_string = JSON::get_singleton()->print(table_dict);
-        /* CharString object goes out-of-scope when not assigned explicitely */
-        const CharString dummy_string = json_string.utf8();
-        const char *json_char = dummy_string.get_data();
+        const char *json_char = json_string.alloc_c_string();
         ofs << json_char;
         if (i != number_of_tables - 1)
         {
@@ -298,9 +289,7 @@ bool SQLite::query(String p_query)
     {
         Godot::print(p_query);
     }
-    /* CharString object goes out-of-scope when not assigned explicitely */
-    const CharString dummy = p_query.utf8();
-    sql = dummy.get_data();
+    sql = p_query.alloc_c_string();
 
     /* Clear the previous query results */
     query_result.clear();
@@ -623,9 +612,7 @@ bool SQLite::create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc)
     function_registry.push_back(p_func_ref);
 
     int rc;
-    /* CharString object goes out-of-scope when not assigned explicitely */
-    const CharString dummy_path = p_name.utf8();
-    const char *zFunctionName = dummy_path.get_data();
+    const char *zFunctionName = p_name.alloc_c_string();
     int nArg = p_argc;
     int eTextRep = SQLITE_UTF8;
 
