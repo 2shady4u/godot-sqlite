@@ -23,6 +23,10 @@ config/icon="res://icon.png"
 
 settings/stdout/verbose_stdout=true
 
+[editor_plugins]
+
+enabled=PoolStringArray( "godot-sqlite" )
+
 [rendering]
 
 environment/default_environment="res://default_env.tres"
