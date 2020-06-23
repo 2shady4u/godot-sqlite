@@ -385,7 +385,7 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
                         const String foreign_key_table_name = (const String &)(foreign_key_elements[0]);
                         const String foreign_key_column_name = (const String &)(foreign_key_elements[1]);
                         query_string += String(", FOREIGN KEY (" + column_name + ") REFERENCES " + foreign_key_table_name + "(" + foreign_key_column_name + ")");
-                    }   
+                    }
                 }
             }
         }
@@ -394,7 +394,7 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
             query_string += ",";
         }
     }
-    
+
     query_string += ");";
 
     return query(query_string);
@@ -550,7 +550,7 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
     /* Ref<FuncRef> func_ref = reinterpret_cast<Ref<FuncRef> >(sqlite3_user_data(context)); */
 
     /* Check validity of the function reference */
-    if (!func_ref->is_valid()) 
+    if (!func_ref->is_valid())
     {
         Godot::print("GDSQLite Error: Supplied function reference is invalid! Aborting callback...");
         return;

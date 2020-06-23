@@ -2,7 +2,7 @@
 
 # godot-sqlite
 
-This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.1+. Additionally, it 
+This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.1+. Additionally, it
 does not require any additional compilation or mucking about with build scripts.
 
 ### Supported operating systems:
@@ -30,7 +30,7 @@ Re-building Godot from scratch is **NOT** required, the proper way of installing
 
 It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the *gdsqlite.gdns*-resource and that it is available in the *res://*-environment.
 
-An example project, named "demo", can also be downloaded from the releases tab. 
+An example project, named "demo", can also be downloaded from the releases tab.
 
 ## Variables
 
@@ -48,7 +48,7 @@ Setting verbose_mode on True results in an information dump in the Godot console
 
 - **foreign_keys** (Boolean, default=false)
 
-Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database. 
+Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database.
 
 - **query_result** (Array, default=[])
 
@@ -92,9 +92,9 @@ Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the databas
 
 ### 1. My query fails and returns syntax errors, what should I do?
 
-There are a couple of things you can do before panicking, namely:  
-- Test out if your query is valid by trying it out online at https://sqliteonline.com/.  
-- Encapsulate all conditional statements in tick-marks ', for example:  
+There are a couple of things you can do before panicking, namely:
+- Test out if your query is valid by trying it out online at https://sqliteonline.com/.
+- Encapsulate all conditional statements in tick-marks ', for example:
 
 The following statement might not work and throw syntax errors:
 ```swift
@@ -113,7 +113,7 @@ After exhausting these options, please open an issue that describes the error in
 
 ### 2. When should I create function bindings to augment SQLite's set of native functions?
 
-Preferably never.  
+Preferably never.
 
 Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
 
@@ -148,5 +148,5 @@ Afterwards, the SContruct file found in the repository should be sufficient to b
 scons p=<platform>
 ```
 
-Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/latest/tutorials/plugins/gdnative/gdnative-cpp-example.html) 
+Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/latest/tutorials/plugins/gdnative/gdnative-cpp-example.html)
 in the Official Godot Documentation. Build files are currently only available for 64-bits systems.
