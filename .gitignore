@@ -1,3 +1,19 @@
+
+# Godot-specific ignores
+.import/
+
+# Imported translations (automatically generated from CSV files)
+*.translation
+
+# Mono-specific ignores
+.mono/
+data_*/
+mono_crash.*.json
+
+# System/tool-specific ignores
+.directory
+*~
+
 # Logs and databases #
 ######################
 *.log
@@ -29,7 +45,6 @@ Thumbs.db
 
 # Etc
 .sconsign.dblite
-demo/.import/
 demo/build
 test_backup_new.json
 
