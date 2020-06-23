@@ -26,7 +26,7 @@ func _ready():
 
 # Basic example that goes over all the basic features available in the addon, such
 # as creating and dropping tables, inserting and deleting rows and doing more elementary
-# PRAGMA queries. 
+# PRAGMA queries.
 func example_of_basic_database_querying():
 
 	# Make a big table containing the variable types.
@@ -136,7 +136,7 @@ func example_of_basic_database_querying():
 	# Close the imported database
 	db.close_db()
 
-# This example demonstrates the in-memory and foreign key support. It's 
+# This example demonstrates the in-memory and foreign key support. It's
 # rather contrived, but it gets the point across.
 func example_of_in_memory_and_foreign_key_support():
 
@@ -163,12 +163,12 @@ func example_of_in_memory_and_foreign_key_support():
 		"description": {"data_type": "text", "not_null": true, "unique": true}
 	})
 
-	# ATTENTION: The important thing to note about the "friends" table is the 
-	# definition of the foreign key "hobbies.id". This tells SQLITE to enforce 
-	# the foreign key constraint, and that the field "friends.hobby" is now 
-	# tied to the field "hobbies.id". Consequently, you are now required to 
-	# specify a valid hobby when adding a friend to the database, which in 
-	# turn means you first need to add some hobbies to the database before 
+	# ATTENTION: The important thing to note about the "friends" table is the
+	# definition of the foreign key "hobbies.id". This tells SQLITE to enforce
+	# the foreign key constraint, and that the field "friends.hobby" is now
+	# tied to the field "hobbies.id". Consequently, you are now required to
+	# specify a valid hobby when adding a friend to the database, which in
+	# turn means you first need to add some hobbies to the database before
 	# you can add any of your friends and assign them a hobby.
 	
 	# This won't work! There is no valid hobby with id 23 yet!
@@ -176,7 +176,7 @@ func example_of_in_memory_and_foreign_key_support():
 		{"id": 1, "name": "John", "hobby": 23}
 	])
 
-	# This will work! You create the hobby with id 23 first, then you can 
+	# This will work! You create the hobby with id 23 first, then you can
 	# create your friend referencing that hobby.
 	db.insert_rows("hobbies", [
 		{"id": 23, "description": "Extreme Relaxing"}
