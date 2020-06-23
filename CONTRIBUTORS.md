@@ -11,3 +11,4 @@ In chronological order based on the first contribution.
 ## Contributors
 
 - [flomar](https://github.com/flomar)
+- [Aaron Franke (aaronfranke)](https://github.com/aaronfranke)
