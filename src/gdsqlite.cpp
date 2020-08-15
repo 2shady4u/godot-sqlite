@@ -318,7 +318,7 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
     String integer_datatype = "int";
     /* Create SQL statement */
     query_string = "CREATE TABLE IF NOT EXISTS " + p_name + " (";
-    key_string = ""
+    key_string = "";
 
     Dictionary column_dict;
     Array columns = p_table_dict.keys();
