@@ -314,10 +314,11 @@ bool SQLite::query(String p_query)
 bool SQLite::create_table(String p_name, Dictionary p_table_dict)
 {
 
-    String query_string, type_string;
+    String query_string, type_string, key_string;
     String integer_datatype = "int";
     /* Create SQL statement */
     query_string = "CREATE TABLE IF NOT EXISTS " + p_name + " (";
+    key_string = ""
 
     Dictionary column_dict;
     Array columns = p_table_dict.keys();
@@ -384,7 +385,7 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
                         const String column_name = (const String &)(columns[i]);
                         const String foreign_key_table_name = (const String &)(foreign_key_elements[0]);
                         const String foreign_key_column_name = (const String &)(foreign_key_elements[1]);
-                        query_string += String(", FOREIGN KEY (" + column_name + ") REFERENCES " + foreign_key_table_name + "(" + foreign_key_column_name + ")");
+                        key_string += String(", FOREIGN KEY (" + column_name + ") REFERENCES " + foreign_key_table_name + "(" + foreign_key_column_name + ")");
                     }
                 }
             }
@@ -395,7 +396,7 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
         }
     }
 
-    query_string += ");";
+    query_string += key_string + ");";
 
     return query(query_string);
 }
