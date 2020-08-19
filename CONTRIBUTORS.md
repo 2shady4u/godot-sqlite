@@ -12,3 +12,4 @@ In chronological order based on the first contribution.
 
 - [flomar](https://github.com/flomar)
 - [Aaron Franke (aaronfranke)](https://github.com/aaronfranke)
+- [Akshay Sunil Masare (aksmas)](https://github.com/aksmas)
