@@ -72,15 +72,68 @@ Exports the database structure and content to export_path.json as a backup or fo
 
 - Boolean success = **create_table(** String table_name, Dictionary table_dictionary **)**
 
+Each key/value pair of the `table_dictionary`-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.
+
+**Required fields**:
+
+- **"data_type"**: type of the column variable, following values are valid\*:
+
+    | value       | SQLite         | Godot       |
+    |:-----------:|:--------------:|:-----------:|
+    | int         | INTEGER        | TYPE_INT    |
+    | real        | REAL           | TYPE_REAL   |
+    | text        | TEXT           | TYPE_STRING |
+    | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING |
+
+    \* *Data types not found in this table are automatically converted to TYPE_STRING*  
+    \*\* *with the question mark being replaced by the maximum amount of characters*
+
+**Optional fields**:
+
+- **"not_null"** *(default = false)*: Is the NULL value an invalid value for this column?
+
+- **"default"**: The default value of the column if not explicitly given.
+
+- **"primary_key"** *(default = false)*: Is this the primary key of this table?  
+Evidently, only a single column can be set as the primary key.
+
+- **"auto_increment"** *(default = false)*: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
+
+    ***NOTE**: Auto-incrementing a column only works when this column is the primary key!*
+
+- **"foreign_key"**: Enforce an "exist" relationship between tables by setting this variable to `foreign_table.foreign_column`. In other words, when adding an additional row, the column value should be an existing value as found in the column with name `foreign_column` of the table with name `foreign_table`.
+
+    ***NOTE**: Availability of foreign keys has to be enabled by setting the `foreign_keys`-variable to `True`.*
+
+**Example usage**:
+
+```Swift
+# Add the row "id" to the table, which is an auto-incremented primary key.
+# When adding additional rows, this value can either by explicitely given or be unfilled.
+table_dictionary["id"] = {
+    "data_type":"int", 
+    "primary_key": true, 
+    "auto_increment":true
+}
+```
+
+For more concrete usage examples see the `database.gd`-file as found in this repository's demo project.
+
 - Boolean success = **drop_table(** String table_name **)**
 
 - Boolean success = **insert_row(** String table_name, Dictionary row_dictionary **)**
+
+Each key/value pair of the `row_dictionary`-variable defines the column values of a single row.  
+
+Columns should adhere to the table schema as instantiated using the `table_dictionary`-variable and are required if their corresponding **"not_null"**-column value is set to `True`.
 
 - Boolean success = **insert_rows(** String table_name, Array row_array **)**
 
 - Array selected_rows = **select_rows(** String table_name, String query_conditions, Array selected_columns **)**
 
 - Boolean success = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary **)**
+
+With the `update_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
 
 - Boolean success = **delete_rows(** String table_name, String query_conditions **)**
 
