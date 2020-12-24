@@ -2,10 +2,10 @@ extends Node
 
 const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
 var db
-#var db_name = "user://test"
+
 var db_name := "res://data/test"
-#var db_name = "test"
-var json_name := "data/test_backup"
+var json_name := "res://data/test_backup"
+
 var table_name := "company"
 var other_table_name := "expenses"
 
@@ -22,6 +22,11 @@ var doomed_city := "Texas"
 signal output_received(text)
 
 func _ready():
+	if OS.get_name() == "Android" or OS.get_name() == "iOS":
+		copy_data_to_user()
+		db_name = "user://data/test"
+		json_name = "user://data/test_backup"
+
 	example_of_basic_database_querying()
 	example_of_in_memory_and_foreign_key_support()
 	example_of_call_external_functions()
@@ -29,6 +34,25 @@ func _ready():
 func cprint(text : String) -> void:
 	print(text)
 	emit_signal("output_received", text)
+
+func copy_data_to_user() -> void:
+	var data_path := "res://data"
+	var copy_path := "user://data"
+
+	var dir = Directory.new()
+	dir.make_dir(copy_path)
+	if dir.open(data_path) == OK:
+		dir.list_dir_begin();
+		var file_name = dir.get_next()
+		while (file_name != ""):
+			if dir.current_is_dir():
+				pass
+			else:
+				cprint("Copying " + file_name + " to /user-folder")
+				dir.copy(data_path + "/" + file_name, copy_path + "/" + file_name)
+			file_name = dir.get_next()
+	else:
+		cprint("An error occurred when trying to access the path.")
 
 # Basic example that goes over all the basic features available in the addon, such
 # as creating and dropping tables, inserting and deleting rows and doing more elementary
