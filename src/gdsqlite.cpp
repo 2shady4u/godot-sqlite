@@ -599,11 +599,11 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
         break;
 
     case Variant::STRING:
-        sqlite3_result_text(context, ((String)output).alloc_c_string(), -1, SQLITE_STATIC);
+        sqlite3_result_text(context, (output.operator String()).alloc_c_string(), -1, SQLITE_STATIC);
         break;
 
     default:
-        sqlite3_result_text(context, ((String)output).alloc_c_string(), -1, SQLITE_STATIC);
+        sqlite3_result_text(context, (output.operator String()).alloc_c_string(), -1, SQLITE_STATIC);
         break;
     }
 }
