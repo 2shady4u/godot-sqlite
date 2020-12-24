@@ -30,6 +30,7 @@ godot-cpp/godot_headers \
 godot-cpp/include/ \
 godot-cpp/include/core \
 godot-cpp/include/gen \
+src/ \
 
 LOCAL_STATIC_LIBRARIES := godot-prebuilt
 
