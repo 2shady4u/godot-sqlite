@@ -1,0 +1,56 @@
+name: 🏁 Windows Builds
+on:
+  push:
+    branches: [ master, main ]
+
+# Global Settings
+env:
+  PROJECT_FOLDER: .
+  TARGET_PATH: demo/addons/godot-sqlite/bin/win64/
+  TARGET_NAME: libgdsqlite
+
+jobs:
+  windows-compilation:
+    name: Windows Compilation
+    runs-on: "windows-latest"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+          submodules: recursive
+
+      # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.x'
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: 'x64'
+
+      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons pywin32
+          python --version
+          scons --version
+
+      - name: Compilation
+        run: |
+          if(-Not (Test-Path -Path ${{env.PROJECT_FOLDER}}\${{env.TARGET_PATH}}))
+          {
+            mkdir ${{env.PROJECT_FOLDER}}\${{env.TARGET_PATH}}
+          }
+          cd ${{env.PROJECT_FOLDER}}
+          cd godot-cpp
+          scons platform=windows bits=64 target=debug generate_bindings=yes -j4
+          cd ..
+          scons platform=windows target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: win64
+          path: ${{env.PROJECT_FOLDER}}\${{env.TARGET_PATH}}

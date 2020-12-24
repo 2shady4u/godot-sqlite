@@ -1,0 +1,61 @@
+name: 🐧 Linux Builds
+on:
+  push:
+    branches: [ master, main ]
+
+# Global Settings
+env:
+  PROJECT_FOLDER: .
+  TARGET_PATH: demo/addons/godot-sqlite/bin/x11/
+  TARGET_NAME: libgdsqlite
+
+jobs:
+  linux-compilation:
+    name: Linux Compilation
+    runs-on: "ubuntu-20.04"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+          submodules: recursive
+
+      # Install all packages (except scons)
+      - name: Configure dependencies
+        run: |
+          sudo apt-get install build-essential pkg-config libx11-dev libxcursor-dev \
+            libxinerama-dev libgl1-mesa-dev libglu-dev libasound2-dev libpulse-dev libudev-dev libxi-dev libxrandr-dev yasm
+
+      # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.x'
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: 'x64'
+
+      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      # Linux shared libraries are humongous (>70MB) for some reason.. don't forget to strip them!
+      - name: Compilation
+        run: |
+          mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
+          cd ${{env.PROJECT_FOLDER}}
+          cd godot-cpp
+          scons platform=linux bits=64 target=debug generate_bindings=yes -j4
+          cd ..
+          scons platform=linux target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
+          strip --strip-all ${{env.TARGET_PATH}}${{env.TARGET_NAME}}.so
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: linux
+          path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
