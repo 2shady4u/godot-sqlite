@@ -9,6 +9,10 @@ does not require any additional compilation or mucking about with build scripts.
 - Mac OS X
 - Linux
 - Windows
+- Android (arm64-v8a, armeabi-v7a & x86)
+- iOS (arm64 & armv7)
+
+_DISLAIMER_: iOS is still untested! (as of 24/12/2020)
 
 # How to install?
 
@@ -170,6 +174,13 @@ Preferably never.
 
 Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
 
+### 2. My Android (or iOS) application cannot access the database!
+
+Android does not allow modification of files in the 'res://'-folder, thus blocking the plugin from writing to and/or reading from this database-file.
+In both cases, the most painless solution is to copy the entire database to the 'user://-folder' as apps have explicit writing privileges there.
+
+If there is a better solution, one that does not involve copying the database to a new location, please do enlighten me.
+
 # How to export?
 
 All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
@@ -192,14 +203,24 @@ The design philosophy behind this is the following:
 First clone the project and install SCons. Secondly, the C++ bindings have to be build from scratch using the files present in the godot-cpp submodule and following command:
 
 ```
-scons p=<platform> bits=64 generate_bindings=yes
+scons p=<platform> bits=64 generate_bindings=yes -j4
 ```
 
-Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac OS X or Windows, with the help of following command:
+In the case of Android and iOS, additional parameters have to be supplied to specify the architecture. In the case of android, the `android_arch`-parameter has to be supplied (with valid values being 'arm64v8', 'armv7' and/or 'x86'), and in the case of iOS, the `ios_arch`-parameter serves similar purposes (with valid values being 'arm64' and/or 'arm7')
+
+Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac OS X, Windows and iOS (for both architectures) with the help of following command:
 
 ```
-scons p=<platform>
+scons p=<platform> target_path=<target_path> target_name=libgdsqlite
 ```
+
+In the case of Android, the [Android NDK](https://developer.android.com/ndk) needs to be installed on a Linux host to allow building for Android targets. Following command then compiles the C++ source code to all three available Android architectures at once:
+
+```
+ $ANDROID_NDK_ROOT/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=<target_path>
+```
+
+For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts, the `SConstruct`-file (for Windows, Linux, Mac OS X and iOs compilation) and both the `Android.mk`- and `jni/Application.mk`-file for the Android build process.
 
 Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/latest/tutorials/plugins/gdnative/gdnative-cpp-example.html)
-in the Official Godot Documentation. Build files are currently only available for 64-bits systems.
+in the Official Godot Documentation.
