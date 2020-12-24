@@ -191,14 +191,12 @@ if env['platform'] == 'linux':
         env['CC'] = 'clang'
         env['CXX'] = 'clang++'
 
-    env.Append(CCFLAGS=['-fPIC', '-g', '-Wwrite-strings'])
+    env.Append(CCFLAGS=['-fPIC'])
     env.Append(CXXFLAGS=['-std=c++17'])
-    env.Append(LINKFLAGS=["-Wl,-R,'$$ORIGIN'"])
-
     if env['target'] == 'debug':
-        env.Append(CCFLAGS=['-Og'])
+        env.Append(CCFLAGS = ['-g3','-Og'])
     elif env['target'] == 'release':
-        env.Append(CCFLAGS=['-O3'])
+        env.Append(CCFLAGS = ['-g','-O3'])
 
     if env['bits'] == '64':
         env.Append(CCFLAGS=['-m64'])
