@@ -7,15 +7,15 @@ reloadable=false
 
 [entry]
 
-Android.arm64-v8a="res://addons/godot-sqlite/bin/android/arm64-v8a/libgdexample.so"
-Android.armeabi-v7a="res://addons/godot-sqlite/bin/android/armeabi-v7a/libgdexample.so"
-Android.x86="res://addons/godot-sqlite/bin/android/x86/libgdexample.so"
+Android.arm64-v8a="res://addons/godot-sqlite/bin/android/arm64-v8a/libgdsqlite.so"
+Android.armeabi-v7a="res://addons/godot-sqlite/bin/android/armeabi-v7a/libgdsqlite.so"
+Android.x86="res://addons/godot-sqlite/bin/android/x86/libgdsqlite.so"
 OSX.64="res://addons/godot-sqlite/bin/osx/libgdsqlite.dylib"
 Windows.64="res://addons/godot-sqlite/bin/win64/libgdsqlite.dll"
 X11.64="res://addons/godot-sqlite/bin/x11/libgdsqlite.so"
 Server="res://addons/godot-sqlite/bin/x11/libgdsqlite.so"
-iOS.arm64="res://addons/godot-sqlite/bin/ios/arm64/lidgdexample.a"
-iOS.armv7="res://addons/godot-sqlite/bin/ios/armv7/lidgdexample.a"
+iOS.arm64="res://addons/godot-sqlite/bin/ios/arm64/libgdsqlite.a"
+iOS.armv7="res://addons/godot-sqlite/bin/ios/armv7/libgdsqlite.a"
 
 [dependencies]
 

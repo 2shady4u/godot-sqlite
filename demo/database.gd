@@ -176,7 +176,7 @@ func example_of_in_memory_and_foreign_key_support():
 	# specify a valid hobby when adding a friend to the database, which in
 	# turn means you first need to add some hobbies to the database before
 	# you can add any of your friends and assign them a hobby.
-	
+
 	# This won't work! There is no valid hobby with id 23 yet!
 	db.insert_rows("friends", [
 		{"id": 1, "name": "John", "hobby": 23}

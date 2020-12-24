@@ -57,5 +57,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
-          name: linux
+          name: x11
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
