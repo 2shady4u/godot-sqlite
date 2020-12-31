@@ -45,9 +45,9 @@ jobs:
           }
           cd ${{env.PROJECT_FOLDER}}
           cd godot-cpp
-          scons platform=windows bits=64 target=debug generate_bindings=yes -j4
+          scons platform=windows bits=64 target=release generate_bindings=yes -j4
           cd ..
-          scons platform=windows target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
+          scons platform=windows target=release target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
