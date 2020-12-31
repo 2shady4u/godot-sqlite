@@ -8,6 +8,7 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/win64/
   TARGET_NAME: libgdsqlite
+  TARGET: release
 
 jobs:
   windows-compilation:
@@ -45,9 +46,9 @@ jobs:
           }
           cd ${{env.PROJECT_FOLDER}}
           cd godot-cpp
-          scons platform=windows bits=64 target=release generate_bindings=yes -j4
+          scons platform=windows bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
           cd ..
-          scons platform=windows target=release target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
+          scons platform=windows target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v1

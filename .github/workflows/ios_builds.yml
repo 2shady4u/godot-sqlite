@@ -8,6 +8,7 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/ios/
   TARGET_NAME: libgdsqlite
+  TARGET: release
 
 jobs:
   ios-compilation:
@@ -43,11 +44,11 @@ jobs:
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}/arm64
           cd ${{env.PROJECT_FOLDER}}
           cd godot-cpp
-          scons platform=ios ios_arch=armv7 bits=64 target=debug generate_bindings=yes -j4
-          scons platform=ios ios_arch=arm64 bits=64 target=debug generate_bindings=yes -j4
+          scons platform=ios ios_arch=armv7 bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
+          scons platform=ios ios_arch=arm64 bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
           cd ..
-          scons platform=ios ios_arch=armv7 target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
-          scons platform=ios ios_arch=arm64 target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
+          scons platform=ios ios_arch=armv7 target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
+          scons platform=ios ios_arch=arm64 target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v1

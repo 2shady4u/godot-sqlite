@@ -8,6 +8,7 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/x11/
   TARGET_NAME: libgdsqlite
+  TARGET: release
 
 jobs:
   linux-compilation:
@@ -49,9 +50,9 @@ jobs:
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
           cd ${{env.PROJECT_FOLDER}}
           cd godot-cpp
-          scons platform=linux bits=64 target=debug generate_bindings=yes -j4
+          scons platform=linux bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
           cd ..
-          scons platform=linux target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
+          scons platform=linux target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
           strip --strip-all ${{env.TARGET_PATH}}${{env.TARGET_NAME}}.so
 
       - name: Upload Artifact
