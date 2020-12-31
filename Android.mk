@@ -4,13 +4,13 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := godot-prebuilt
 ifeq ($(TARGET_ARCH_ABI),x86)
-    LOCAL_SRC_FILES := godot-cpp/bin/libgodot-cpp.android.debug.x86.a
+    LOCAL_SRC_FILES := godot-cpp/bin/libgodot-cpp.android.release.x86.a
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-    LOCAL_SRC_FILES := godot-cpp/bin/libgodot-cpp.android.debug.armv7.a
+    LOCAL_SRC_FILES := godot-cpp/bin/libgodot-cpp.android.release.armv7.a
 endif
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-    LOCAL_SRC_FILES := godot-cpp/bin/libgodot-cpp.android.debug.arm64v8.a
+    LOCAL_SRC_FILES := godot-cpp/bin/libgodot-cpp.android.release.arm64v8.a
 endif
 include $(PREBUILT_STATIC_LIBRARY)
 

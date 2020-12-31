@@ -4,6 +4,7 @@ on:
     branches: [ master, main ]
     
 # Global Settings
+# Only use the release target for android, otherwise further modification of the make-files is required!
 env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/android/
