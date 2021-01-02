@@ -10,6 +10,7 @@ void SQLite::_register_methods()
     register_method("export_to_json", &SQLite::export_to_json);
     register_method("close_db", &SQLite::close_db);
     register_method("query", &SQLite::query);
+    register_method("query_with_bindings", &SQLite::query_with_bindings);
 
     register_method("create_table", &SQLite::create_table);
     register_method("drop_table", &SQLite::drop_table);
@@ -240,48 +241,14 @@ void SQLite::close_db()
     }
 }
 
-static int callback(void *closure, int argc, char **argv, char **azColName)
-{
-
-    Dictionary column_dict;
-    /* Get a reference to the instanced object */
-    SQLite *obj = static_cast<SQLite *>(closure);
-    sqlite3_stmt *stmt = sqlite3_next_stmt(obj->db, NULL);
-    Variant column_value;
-
-    /* Loop over all columns and add them to the Dictionary */
-    for (int i = 0; i < argc; i++)
-    {
-        /* Check the column type and do correct casting */
-        switch (sqlite3_column_type(stmt, i))
-        {
-        case SQLITE_INTEGER:
-            column_value = Variant((int64_t)sqlite3_column_int64(stmt, i));
-            break;
-
-        case SQLITE_FLOAT:
-            column_value = Variant(sqlite3_column_double(stmt, i));
-            break;
-
-        case SQLITE_TEXT:
-            column_value = Variant((char *)sqlite3_column_text(stmt, i));
-            break;
-
-        default:
-            column_value = Variant((char *)sqlite3_column_text(stmt, i));
-            break;
-        }
-        column_dict[String(azColName[i])] = column_value;
-    }
-    /* Add result to query_result Array */
-    obj->query_result.append(column_dict);
-
-    return 0;
-}
-
 bool SQLite::query(String p_query)
 {
-    char *zErrMsg = 0;
+    return query_with_bindings(p_query, Array());
+}
+
+bool SQLite::query_with_bindings(String p_query, Array param_bindings)
+{
+    const char *zErrMsg = 0;
     int rc;
     const char *sql;
 
@@ -294,14 +261,108 @@ bool SQLite::query(String p_query)
     /* Clear the previous query results */
     query_result.clear();
 
-    /* Execute SQL statement */
-    rc = sqlite3_exec(db, sql, callback, (void *)this, &zErrMsg);
+    sqlite3_stmt *stmt;
+    /* Prepare an SQL statement */
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
+    for (int i = 0; i < param_bindings.size(); i++)
+    {
+        switch (param_bindings[i].get_type()){
+            case Variant::NIL:
+				sqlite3_bind_null(stmt, i + 1);
+				break;
+
+			case Variant::BOOL:
+            case Variant::INT:
+                sqlite3_bind_int64(stmt, i + 1, int64_t(param_bindings[i]));
+                break;
+            
+            case Variant::REAL:
+                sqlite3_bind_double(stmt, i + 1, param_bindings[i]);
+                break;
+            
+            case Variant::STRING:
+                sqlite3_bind_text(stmt, i + 1, (param_bindings[i].operator String()).alloc_c_string(), -1, SQLITE_TRANSIENT);
+                break;
+            
+            case Variant::POOL_BYTE_ARRAY: {
+                PoolByteArray binding = ((const PoolByteArray &)param_bindings[i]);
+                PoolByteArray::Read r = binding.read();
+                sqlite3_bind_blob64(stmt, i + 1, r.ptr(), binding.size(), SQLITE_TRANSIENT);
+                break;
+            }
+            
+            default:
+                Godot::print("GDSQLite Error: Binding a parameter of type " + String(std::to_string(param_bindings[i].get_type()).c_str()) + " (TYPE_*) is not supported!");
+                sqlite3_finalize(stmt);
+                return false;
+        }
+    }
+
+    if (verbose_mode)
+    {
+        char* expanded_sql = sqlite3_expanded_sql(stmt);
+        Godot::print(expanded_sql);
+        sqlite3_free(expanded_sql);
+    }
+
+    // Execute the statement and iterate over all the resulting rows.
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        Dictionary column_dict;
+        int argc = sqlite3_column_count(stmt);
+
+        /* Loop over all columns and add them to the Dictionary */
+        for (int i = 0; i < argc; i++)
+        {
+            Variant column_value;
+            /* Check the column type and do correct casting */
+            switch (sqlite3_column_type(stmt, i))
+            {
+            case SQLITE_INTEGER:
+                column_value = Variant((int64_t)sqlite3_column_int64(stmt, i));
+                break;
+
+            case SQLITE_FLOAT:
+                column_value = Variant(sqlite3_column_double(stmt, i));
+                break;
+
+            case SQLITE_TEXT:
+                column_value = Variant((char *)sqlite3_column_text(stmt, i));
+                break;
+
+            case SQLITE_BLOB: {
+                int bytes = sqlite3_column_bytes(stmt, i);
+                PoolByteArray arr = PoolByteArray();
+                arr.resize(bytes);
+                PoolByteArray::Write write = arr.write();
+                memcpy(write.ptr(), (char *)sqlite3_column_blob(stmt, i), bytes);
+                column_value = arr;
+                break;
+            }
+
+            case SQLITE_NULL:
+                break;
+
+            default:
+                break;
+            }
+
+            const char *azColName = sqlite3_column_name(stmt, i);
+            column_dict[String(azColName)] = column_value;
+        }
+        /* Add result to query_result Array */
+        query_result.append(column_dict);
+    }
+
+    // Clean up and delete the resources used by the prepared statement.
+    sqlite3_finalize(stmt);
+
+    rc = sqlite3_errcode(db);
+    zErrMsg = sqlite3_errmsg(db);
     error_message = String(zErrMsg);
     if (rc != SQLITE_OK)
     {
         Godot::print(" --> SQL error: " + error_message);
-        sqlite3_free(zErrMsg);
         return false;
     }
     else if (verbose_mode)
@@ -416,7 +477,7 @@ bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
 
     String query_string, key_string, value_string = "";
     Array keys = p_row_dict.keys();
-    Array values = p_row_dict.values();
+    Array param_bindings = p_row_dict.values();
 
     query_string = "INSERT INTO " + p_name;
 
@@ -425,14 +486,7 @@ bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
     for (int i = 0; i <= number_of_keys - 1; i++)
     {
         key_string += (const String &)keys[i];
-        if (values[i].get_type() == Variant::STRING)
-        {
-            value_string += "'" + (const String &)values[i] + "'";
-        }
-        else
-        {
-            value_string += (const String &)values[i];
-        }
+        value_string += "?";
         if (i != number_of_keys - 1)
         {
             key_string += ",";
@@ -441,7 +495,7 @@ bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
     }
     query_string += " (" + key_string + ") VALUES (" + value_string + ");";
 
-    return query(query_string);
+    return query_with_bindings(query_string, param_bindings);
 }
 
 bool SQLite::insert_rows(String p_name, Array p_row_array)
@@ -566,7 +620,7 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
         switch (sqlite3_value_type(value))
         {
         case SQLITE_INTEGER:
-            argument_value = Variant((int)sqlite3_value_int64(value));
+            argument_value = Variant((int64_t)sqlite3_value_int64(value));
             break;
 
         case SQLITE_FLOAT:

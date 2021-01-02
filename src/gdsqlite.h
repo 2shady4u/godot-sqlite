@@ -50,6 +50,7 @@ public:
     bool export_to_json(String export_path);
     void close_db();
     bool query(String p_query);
+    bool query_with_bindings(String p_query, Array param_bindings);
 
     bool create_table(String p_name, Dictionary p_table_dict);
     bool drop_table(String p_name);

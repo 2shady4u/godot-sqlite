@@ -20,6 +20,7 @@ var percentage_below_thirty := 0.1
 var doomed_city := "Texas"
 
 signal output_received(text)
+signal texture_received(texture)
 
 func _ready():
 	if OS.get_name() == "Android" or OS.get_name() == "iOS":
@@ -30,6 +31,7 @@ func _ready():
 	example_of_basic_database_querying()
 	example_of_in_memory_and_foreign_key_support()
 	example_of_call_external_functions()
+	example_of_blob_io()
 
 func cprint(text : String) -> void:
 	print(text)
@@ -275,3 +277,41 @@ func example_of_call_external_functions():
 	var select_condition := ""
 	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "salary", "name"])
 	cprint("result: {0}".format([String(selected_array)]))
+
+# The BLOB-datatype is useful when lots of raw data has to be stored.
+# For example images fall into this category!
+func example_of_blob_io():
+	# Make a big table containing the variable types.
+	var table_dict : Dictionary = Dictionary()
+	table_dict["id"] = {"data_type":"int", "primary_key": true, "not_null": true}
+	table_dict["data"] = {"data_type":"blob", "not_null": true}
+
+	var texture := preload("res://icon.png")
+	emit_signal("texture_received", texture)
+	var tex_data := texture.get_data().save_png_to_buffer()
+
+	db = SQLite.new()
+	db.path = db_name
+	db.verbose_mode = true
+	# Open the database using the db_name found in the path variable
+	db.open_db()
+	# Throw away any table that was already present
+	db.drop_table(table_name)
+	# Create a table with the structure found in table_dict and add it to the database
+	db.create_table(table_name, table_dict)
+
+	# Insert a new row in the table and bind the texture data to the data column.
+	db.insert_row(table_name, {"id": 1, "data": tex_data})
+
+	var selected_array : Array = db.select_rows(table_name, "", ["data"])
+	for selected_row in selected_array:
+		var selected_data = selected_row.get("data", PoolByteArray())
+
+		var image := Image.new()
+		var _error : int = image.load_png_from_buffer(selected_data)
+		var loaded_texture := ImageTexture.new()
+		loaded_texture.create_from_image(image)
+		emit_signal("texture_received", loaded_texture)
+
+	# Close the current database
+	db.close_db()
