@@ -631,10 +631,23 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
             argument_value = Variant((char *)sqlite3_value_text(value));
             break;
 
-        default:
-            argument_value = Variant((char *)sqlite3_value_text(value));
+        case SQLITE_BLOB: {
+            int bytes = sqlite3_value_bytes(value);
+            PoolByteArray arr = PoolByteArray();
+            arr.resize(bytes);
+            PoolByteArray::Write write = arr.write();
+            memcpy(write.ptr(), (char *)sqlite3_value_blob(value), bytes);
+            argument_value = arr;
             break;
         }
+
+        case SQLITE_NULL:
+            break;
+
+        default:
+            break;
+        }
+
         argument_array.append(argument_value);
         argv += 1;
     }
@@ -643,8 +656,12 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 
     switch (output.get_type())
     {
-    case Variant::INT:
+    case Variant::NIL:
+        sqlite3_result_null(context);
+        break;
+
     case Variant::BOOL:
+    case Variant::INT:
         sqlite3_result_int64(context, int64_t(output));
         break;
 
@@ -656,8 +673,14 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
         sqlite3_result_text(context, (output.operator String()).alloc_c_string(), -1, SQLITE_STATIC);
         break;
 
+    case Variant::POOL_BYTE_ARRAY: {
+        PoolByteArray arr = ((const PoolByteArray &)output);
+        PoolByteArray::Read r = arr.read();
+        sqlite3_result_blob(context, r.ptr(), arr.size(), SQLITE_TRANSIENT);
+        break;
+    }
+
     default:
-        sqlite3_result_text(context, (output.operator String()).alloc_c_string(), -1, SQLITE_STATIC);
         break;
     }
 }
