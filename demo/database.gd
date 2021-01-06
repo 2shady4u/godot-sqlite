@@ -28,8 +28,8 @@ func _ready():
 		json_name = "user://data/test_backup"
 
 	example_of_basic_database_querying()
-	example_of_in_memory_and_foreign_key_support()
-	example_of_call_external_functions()
+	#example_of_in_memory_and_foreign_key_support()
+	#example_of_call_external_functions()
 
 func cprint(text : String) -> void:
 	print(text)
@@ -70,6 +70,8 @@ func example_of_basic_database_querying():
 	db = SQLite.new()
 	db.path = db_name
 	db.verbose_mode = true
+	db.encryption = true
+	db.password = "password123"
 	# Open the database using the db_name found in the path variable
 	db.open_db()
 	# Throw away any table that was already present

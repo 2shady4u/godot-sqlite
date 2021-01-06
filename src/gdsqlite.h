@@ -12,6 +12,7 @@
 #include <vector>
 #include <sstream>
 #include <sqlite/sqlite3.h>
+#include <sqlite/sqleet.h>
 
 namespace godot {
 
@@ -28,6 +29,8 @@ private:
     String path;
     bool verbose_mode;
     bool foreign_keys;
+    bool encryption;
+    String password;
     std::vector<Ref<FuncRef>> function_registry;
 
     Dictionary deep_copy(Dictionary p_dict);

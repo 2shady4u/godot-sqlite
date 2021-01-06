@@ -28,6 +28,9 @@ void SQLite::_register_methods()
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
     register_property<SQLite, Array>("query_result", &SQLite::query_result, Array());
+
+    register_property<SQLite, bool>("encryption", &SQLite::encryption, false);
+    register_property<SQLite, String>("password", &SQLite::password, "");
 }
 
 SQLite::SQLite()
@@ -68,6 +71,14 @@ bool SQLite::open_db()
 
     /* Try to open the database */
     rc = sqlite3_open(char_path, &db);
+
+    if (encryption) {
+        const char* key = password.alloc_c_string();
+        rc = sqlite3_key(db, key, strlen(key));
+        std::cout << rc << std::endl;
+        rc = sqlite3_rekey(db, key, strlen(key));
+        std::cout << rc << std::endl;
+    }
 
     if (rc)
     {
