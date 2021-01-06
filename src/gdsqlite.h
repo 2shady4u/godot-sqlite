@@ -5,6 +5,7 @@
 #include <Reference.hpp>
 #include <FuncRef.hpp>
 #include <ProjectSettings.hpp>
+#include <Directory.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
 
@@ -12,8 +13,22 @@
 #include <vector>
 #include <sstream>
 #include <sqlite/sqlite3.h>
+#include <helpers/current_function.h>
 
 namespace godot {
+
+#define GODOT_LOG(level, message)\
+    switch (level) {\
+        case 0:\
+            Godot::print(message);\
+            break;\
+        case 1:\
+            Godot::print_warning(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__);\
+            break;\
+        case 2:\
+            Godot::print_error(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__);\
+            break;\
+    }\
 
 struct table_struct
 {
@@ -31,6 +46,7 @@ private:
     std::vector<Ref<FuncRef>> function_registry;
 
     Dictionary deep_copy(Dictionary p_dict);
+    Variant get_with_default(Dictionary p_dict, String p_key, Variant p_default);
     bool validate_json(Array import_json, std::vector<table_struct> &tables_to_import);
 
 public:
