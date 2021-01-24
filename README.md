@@ -1,4 +1,4 @@
-![Godot SQLite banner](icon/godot-sqlite-banner.png?raw=true "Godot SQLite Banner")
+![Godot SQLite banner](icon/godot-sqlite-banner-v2.png?raw=true "Godot SQLite Banner")
 
 # godot-sqlite
 
