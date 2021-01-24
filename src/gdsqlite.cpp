@@ -360,6 +360,7 @@ bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
 
 bool SQLite::insert_rows(String p_name, Array p_row_array)
 {
+    query("BEGIN TRANSACTION;");
     int number_of_rows = p_row_array.size();
     for (int i = 0; i <= number_of_rows - 1; i++) {
         if (p_row_array[i].get_type() != Variant::DICTIONARY) {
@@ -367,9 +368,12 @@ bool SQLite::insert_rows(String p_name, Array p_row_array)
             return false;
         }
         if (!insert_row(p_name, p_row_array[i])) {
+            /* Don't forget to close the transaction! */
+            query("END TRANSACTION;");
             return false;
         }
     }
+    query("END TRANSACTION;");
     return true;
 }
 
@@ -403,7 +407,7 @@ Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_ar
 
 bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict)
 {
-    String query_string;
+    String query_string = "BEGIN TRANSACTION;";
     int number_of_keys = p_updated_row_dict.size();
     Array keys = p_updated_row_dict.keys();
     Array values = p_updated_row_dict.values();
@@ -425,13 +429,14 @@ bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_update
         }
     }
     query_string += " WHERE " + p_conditions + ";";
+    query_string += "END TRANSACTION;";
 
     return query(query_string);
 }
 
 bool SQLite::delete_rows(String p_name, String p_conditions)
 {
-    String query_string;
+    String query_string = "BEGIN TRANSACTION;";
 
     /* Create SQL statement */
     query_string = "DELETE FROM " + p_name;
@@ -440,6 +445,7 @@ bool SQLite::delete_rows(String p_name, String p_conditions)
         query_string += " WHERE " + p_conditions;
     }
     query_string += ";";
+    query_string += "END TRANSACTION;";
 
     return query(query_string);
 }
