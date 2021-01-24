@@ -28,10 +28,11 @@ func _ready():
 		db_name = "user://data/test"
 		json_name = "user://data/test_backup"
 
+	# Enable/disable examples here:
 	example_of_basic_database_querying()
-	example_of_in_memory_and_foreign_key_support()
-	example_of_call_external_functions()
-	example_of_blob_io()
+	#example_of_in_memory_and_foreign_key_support()
+	#example_of_call_external_functions()
+	#example_of_blob_io()
 
 func cprint(text : String) -> void:
 	print(text)

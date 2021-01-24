@@ -25,7 +25,9 @@ void SQLite::_register_methods()
 
     register_method("create_function", &SQLite::create_function);
 
-    register_property<SQLite, String>("path", &SQLite::set_path, &SQLite::get_path, "default");
+    register_property<SQLite, int>("last_insert_rowid", &SQLite::set_last_insert_rowid, &SQLite::get_last_insert_rowid, 0);
+
+    register_property<SQLite, String>("path", &SQLite::path, "default");
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
@@ -677,14 +679,14 @@ bool SQLite::export_to_json(String export_path)
     return true;
 }
 
-void SQLite::set_path(String p_path)
+void SQLite::set_last_insert_rowid(int p_last_row_id)
 {
-    path = p_path;
+    GODOT_LOG(2, "GDSQlite Error: Variable `last_insert_rowid` cannot be set externally.")
 }
 
-String SQLite::get_path()
+int SQLite::get_last_insert_rowid()
 {
-    return path;
+    return sqlite3_last_insert_rowid(db);
 }
 
 bool SQLite::validate_json(Array import_json, std::vector<table_struct> &tables_to_import)

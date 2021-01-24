@@ -40,7 +40,7 @@ class SQLite : public Reference {
     GODOT_CLASS(SQLite, Reference)
 
 private:
-    String path;
+    int last_insert_rowid;
     bool verbose_mode;
     bool foreign_keys;
     std::vector<Ref<FuncRef>> function_registry;
@@ -51,7 +51,7 @@ private:
 
 public:
     sqlite3 *db;
-    String error_message;
+    String path, error_message;
     Array query_result;
 
     static void _register_methods();
@@ -80,8 +80,8 @@ public:
 
     bool create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc);
 
-    void set_path(String p_path);
-    String get_path();
+    void set_last_insert_rowid(int p_last_row_id);
+    int get_last_insert_rowid();
 };
 
 }
