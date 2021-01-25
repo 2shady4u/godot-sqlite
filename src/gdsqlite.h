@@ -1,5 +1,6 @@
 #ifndef GDSQLITE_H
 #define GDSQLITE_H
+#define SQLITE_HAS_CODEC
 
 #include <Godot.hpp>
 #include <Reference.hpp>
@@ -11,8 +12,8 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
-#include <sqlite/sqlite3.h>
-#include <sqlite/sqleet.h>
+#include <sqleet/sqlite3.h>
+#include <sqleet/sqleet.h>
 
 namespace godot {
 

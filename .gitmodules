@@ -1,3 +1,7 @@
 [submodule "godot-cpp"]
 	path = godot-cpp
 	url = https://github.com/GodotNativeTools/godot-cpp
+[submodule "src/sqleet"]
+	path = src/sqleet
+	url = https://github.com/resilar/sqleet.git
+	branch = master
