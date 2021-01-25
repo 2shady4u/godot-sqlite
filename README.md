@@ -58,21 +58,34 @@ Enables or disables the availability of [foreign keys](https://www.sqlite.org/fo
 
 Contains the results from the latest query and is cleared after every new query.
 
+- **last_insert_rowid** (Integer, default=0)
+
+Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
+Attempting to modify this variable directly is forbidden and throws an error.
+
 ## Functions
 
 - Boolean success = **open_db()**
 
-- Boolean success = **import_from_json(** String import_path **)**
-
-Drops all database tables and imports the database structure and content present inside of import_path.json.
-
-- Boolean success = **export_to_json(** String export_path **)**
-
-Exports the database structure and content to export_path.json as a backup or for ease of editing.
-
 - Boolean success = **close_db()**
 
 - Boolean success = **query(** String query_string **)**
+
+- Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
+
+Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
+
+**Example usage**:
+
+```Swift
+var query_string : String = "SELECT ? FROM company WHERE age < ?;"
+var param_bindings : Array = ["name", 24]
+var success = db.query_with_bindings(query_string, param_bindings)
+# Executes following query: 
+# SELECT name FROM company WHERE age < 24;
+```
+
+Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 
 - Boolean success = **create_table(** String table_name, Dictionary table_dictionary **)**
 
@@ -82,14 +95,15 @@ Each key/value pair of the `table_dictionary`-variable defines a column of the t
 
 - **"data_type"**: type of the column variable, following values are valid\*:
 
-    | value       | SQLite         | Godot       |
-    |:-----------:|:--------------:|:-----------:|
-    | int         | INTEGER        | TYPE_INT    |
-    | real        | REAL           | TYPE_REAL   |
-    | text        | TEXT           | TYPE_STRING |
-    | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING |
+    | value       | SQLite         | Godot          |
+    |:-----------:|:--------------:|:--------------:|
+    | int         | INTEGER        | TYPE_INT       |
+    | real        | REAL           | TYPE_REAL      |
+    | text        | TEXT           | TYPE_STRING    |
+    | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING    |
+    | blob        | BLOB           | TYPE_RAW_ARRAY |
 
-    \* *Data types not found in this table are automatically converted to TYPE_STRING*  
+    \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.  
     \*\* *with the question mark being replaced by the maximum amount of characters*
 
 **Optional fields**:
@@ -140,6 +154,14 @@ Columns should adhere to the table schema as instantiated using the `table_dicti
 With the `update_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
 
 - Boolean success = **delete_rows(** String table_name, String query_conditions **)**
+
+- Boolean success = **import_from_json(** String import_path **)**
+
+Drops all database tables and imports the database structure and content present inside of import_path.json.
+
+- Boolean success = **export_to_json(** String export_path **)**
+
+Exports the database structure and content to export_path.json as a backup or for ease of editing.
 
 - Boolean success = **create_function(** String function_name, FuncRef function_reference, int number_of_arguments **)**
 
