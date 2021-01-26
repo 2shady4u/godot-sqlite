@@ -46,6 +46,7 @@ jobs:
           cd godot-cpp
           scons platform=ios ios_arch=armv7 bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
           scons platform=ios ios_arch=arm64 bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
+          ls bin/
           cd ..
           scons platform=ios ios_arch=armv7 target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
           scons platform=ios ios_arch=arm64 target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
