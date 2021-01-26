@@ -40,9 +40,7 @@ class SQLite : public Reference {
     GODOT_CLASS(SQLite, Reference)
 
 private:
-    int last_insert_rowid;
-    bool verbose_mode;
-    bool foreign_keys;
+    sqlite3 *db;
     std::vector<Ref<FuncRef>> function_registry;
 
     Dictionary deep_copy(Dictionary p_dict);
@@ -50,7 +48,8 @@ private:
     bool validate_json(Array import_json, std::vector<table_struct> &tables_to_import);
 
 public:
-    sqlite3 *db;
+    int last_insert_rowid;
+    bool verbose_mode, foreign_keys;
     String path, error_message;
     Array query_result;
 
@@ -62,8 +61,6 @@ public:
     void _init();
 
     bool open_db();
-    bool import_from_json(String import_path);
-    bool export_to_json(String export_path);
     void close_db();
     bool query(String p_query);
     bool query_with_bindings(String p_query, Array param_bindings);
@@ -79,6 +76,9 @@ public:
     bool delete_rows(String p_name, String p_conditions);
 
     bool create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc);
+
+    bool import_from_json(String import_path);
+    bool export_to_json(String export_path);
 
     void set_last_insert_rowid(int p_last_row_id);
     int get_last_insert_rowid();

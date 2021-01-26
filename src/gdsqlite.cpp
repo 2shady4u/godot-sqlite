@@ -20,17 +20,19 @@ void SQLite::_register_methods()
     register_method("update_rows", &SQLite::update_rows);
     register_method("delete_rows", &SQLite::delete_rows);
 
+    register_method("create_function", &SQLite::create_function);
+
     register_method("import_from_json", &SQLite::import_from_json);
     register_method("export_to_json", &SQLite::export_to_json);
 
-    register_method("create_function", &SQLite::create_function);
-
     register_property<SQLite, int>("last_insert_rowid", &SQLite::set_last_insert_rowid, &SQLite::get_last_insert_rowid, 0);
 
-    register_property<SQLite, String>("path", &SQLite::path, "default");
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
+
+    register_property<SQLite, String>("path", &SQLite::path, "default");
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
+
     register_property<SQLite, Array>("query_result", &SQLite::query_result, Array());
 }
 
