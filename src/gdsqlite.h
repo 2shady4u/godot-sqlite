@@ -6,16 +6,30 @@
 #include <Reference.hpp>
 #include <FuncRef.hpp>
 #include <ProjectSettings.hpp>
+#include <Directory.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
 
 #include <fstream>
 #include <vector>
 #include <sstream>
-#include <sqleet/sqlite3.h>
 #include <sqleet/sqleet.h>
+#include <helpers/current_function.h>
 
 namespace godot {
+
+#define GODOT_LOG(level, message)\
+    switch (level) {\
+        case 0:\
+            Godot::print(message);\
+            break;\
+        case 1:\
+            Godot::print_warning(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__);\
+            break;\
+        case 2:\
+            Godot::print_error(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__);\
+            break;\
+    }\
 
 struct table_struct
 {
@@ -27,20 +41,21 @@ class SQLite : public Reference {
     GODOT_CLASS(SQLite, Reference)
 
 private:
-    String path;
-    bool verbose_mode;
-    bool foreign_keys;
-    bool encryption;
-    String password;
+    sqlite3 *db;
     std::vector<Ref<FuncRef>> function_registry;
 
     Dictionary deep_copy(Dictionary p_dict);
+    Variant get_with_default(Dictionary p_dict, String p_key, Variant p_default);
     bool validate_json(Array import_json, std::vector<table_struct> &tables_to_import);
 
 public:
-    sqlite3 *db;
-    String error_message;
+    int last_insert_rowid;
+    bool verbose_mode, foreign_keys;
+    String path, error_message;
     Array query_result;
+
+    bool encryption;
+    String password;
 
     static void _register_methods();
 
@@ -50,10 +65,9 @@ public:
     void _init();
 
     bool open_db();
-    bool import_from_json(String import_path);
-    bool export_to_json(String export_path);
     void close_db();
     bool query(String p_query);
+    bool query_with_bindings(String p_query, Array param_bindings);
 
     bool create_table(String p_name, Dictionary p_table_dict);
     bool drop_table(String p_name);
@@ -67,8 +81,11 @@ public:
 
     bool create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc);
 
-    void set_path(String p_path);
-    String get_path();
+    bool import_from_json(String import_path);
+    bool export_to_json(String export_path);
+
+    void set_last_insert_rowid(int p_last_row_id);
+    int get_last_insert_rowid();
 };
 
 }
