@@ -205,6 +205,8 @@ If there is a better solution, one that does not involve copying the database to
 
 # How to export?
 
+**NOTE**: On mobile platforms (Android & iOS) this is not possible and the 'res://data/'-folder has to be copied to the 'user://-folder' in its entirety instead (see FAQ above).
+
 All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
 
 The commands to succesfully export a working executable for the demo-project are:
