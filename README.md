@@ -196,7 +196,7 @@ Preferably never.
 
 Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
 
-### 2. My Android (or iOS) application cannot access the database!
+### 3. My Android (or iOS) application cannot access the database!
 
 Android does not allow modification of files in the 'res://'-folder, thus blocking the plugin from writing to and/or reading from this database-file.
 In both cases, the most painless solution is to copy the entire database to the 'user://-folder' as apps have explicit writing privileges there.
