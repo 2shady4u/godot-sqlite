@@ -70,22 +70,25 @@ bool SQLite::open_db()
 
         /* Find the real path */
         path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
-        /* Make the necessary empty directories if they do not exist yet */
-        Ref<Directory> dir = Directory::_new();
-        PoolStringArray split_array = path.split("/", false);
-        /* Remove the database filename */
-        split_array.remove(split_array.size()-1);
-	    String path_without_file = "";
-        for (int i = 0; i < split_array.size(); i++) {
-           path_without_file += split_array[i] + "/";
-        }
-        Error error = dir->make_dir_recursive(path_without_file);
-        if (error != Error::OK){
-            GODOT_LOG(2, "GDSQLite Error: Can't make necessary folders for path (ERROR = "
-            + String(std::to_string(static_cast<int>(error)).c_str()) 
-            + ")")
-            return false;
-        }
+        /* This part does weird things on Android! Leave it out for now! */
+        #ifndef __ANDROID__
+            /* Make the necessary empty directories if they do not exist yet */
+            Ref<Directory> dir = Directory::_new();
+            PoolStringArray split_array = path.split("/", false);
+            /* Remove the database filename */
+            split_array.remove(split_array.size()-1);
+            String path_without_file = "";
+            for (int i = 0; i < split_array.size(); i++) {
+                path_without_file += split_array[i] + "/";
+            }
+            Error error = dir->make_dir_recursive(path_without_file);
+            if (error != Error::OK){
+                GODOT_LOG(2, "GDSQLite Error: Can't make necessary folders for path (ERROR = "
+                + String(std::to_string(static_cast<int>(error)).c_str()) 
+                + ")")
+                return false;
+            }
+        #endif
     }
 
     const char *char_path = path.alloc_c_string();
@@ -411,13 +414,16 @@ Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_ar
 
 bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict)
 {
-    String query_string = "BEGIN TRANSACTION;";
+    String query_string;
+    bool success;
+
     int number_of_keys = p_updated_row_dict.size();
     Array keys = p_updated_row_dict.keys();
     Array values = p_updated_row_dict.values();
 
+    query("BEGIN TRANSACTION;");
     /* Create SQL statement */
-    query_string = "UPDATE " + p_name + " SET ";
+    query_string += "UPDATE " + p_name + " SET ";
 
     for (int i = 0; i <= number_of_keys - 1; i++) {
         query_string += (const String &)keys[i] + "=";
@@ -433,15 +439,18 @@ bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_update
         }
     }
     query_string += " WHERE " + p_conditions + ";";
-    query_string += "END TRANSACTION;";
 
-    return query(query_string);
+    success = query(query_string);
+    query("END TRANSACTION;");
+    return success;
 }
 
 bool SQLite::delete_rows(String p_name, String p_conditions)
 {
-    String query_string = "BEGIN TRANSACTION;";
+    String query_string;
+    bool success;
 
+    query("BEGIN TRANSACTION;");
     /* Create SQL statement */
     query_string = "DELETE FROM " + p_name;
     /* If it's empty or * everything is to be deleted */
@@ -449,9 +458,10 @@ bool SQLite::delete_rows(String p_name, String p_conditions)
         query_string += " WHERE " + p_conditions;
     }
     query_string += ";";
-    query_string += "END TRANSACTION;";
 
-    return query(query_string);
+    success = query(query_string);
+    query("END TRANSACTION;");
+    return success;
 }
 
 static void function_callback(sqlite3_context *context, int argc, sqlite3_value **argv) 
