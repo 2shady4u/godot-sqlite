@@ -30,9 +30,9 @@ func _ready():
 
 	# Enable/disable examples here:
 	example_of_basic_database_querying()
-	#example_of_in_memory_and_foreign_key_support()
-	#example_of_call_external_functions()
-	#example_of_blob_io()
+	example_of_in_memory_and_foreign_key_support()
+	example_of_call_external_functions()
+	example_of_blob_io()
 
 func cprint(text : String) -> void:
 	print(text)
@@ -289,7 +289,7 @@ func example_of_blob_io():
 
 	var texture := preload("res://icon.png")
 	emit_signal("texture_received", texture)
-	var tex_data := texture.get_data().save_png_to_buffer()
+	var tex_data : PoolByteArray = texture.get_data().save_png_to_buffer()
 
 	db = SQLite.new()
 	db.path = db_name
