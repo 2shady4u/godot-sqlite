@@ -326,6 +326,8 @@ env.Append(LIBPATH=[cpp_bindings_path + 'bin/'])
 env.Append(CPPPATH=['src/'])
 sources = [Glob('src/*.cpp'), 'src/sqleet/sqleet.c']
 
+env.Append(CPPDEFINES=['SKIP_HEADER_BYTES=24'])
+
 ###############
 #BUILD LIB#####
 ###############
