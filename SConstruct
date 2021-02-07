@@ -196,7 +196,8 @@ if env['platform'] == 'linux':
     if env['target'] == 'debug':
         env.Append(CCFLAGS = ['-g3','-Og'])
     elif env['target'] == 'release':
-        env.Append(CCFLAGS = ['-g','-O3'])
+        env.Append(CCFLAGS = ['-O3'])
+        env.Append(LINKFLAGS = ['-s'])
 
     if env['bits'] == '64':
         env.Append(CCFLAGS=['-m64'])

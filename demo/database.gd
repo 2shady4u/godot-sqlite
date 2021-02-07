@@ -291,7 +291,7 @@ func example_of_blob_io():
 
 	var texture := preload("res://icon.png")
 	emit_signal("texture_received", texture)
-	var tex_data := texture.get_data().save_png_to_buffer()
+	var tex_data : PoolByteArray = texture.get_data().save_png_to_buffer()
 
 	db = SQLite.new()
 	db.path = db_name
