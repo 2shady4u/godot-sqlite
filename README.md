@@ -196,7 +196,7 @@ Preferably never.
 
 Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
 
-### 2. My Android (or iOS) application cannot access the database!
+### 3. My Android (or iOS) application cannot access the database!
 
 Android does not allow modification of files in the 'res://'-folder, thus blocking the plugin from writing to and/or reading from this database-file.
 In both cases, the most painless solution is to copy the entire database to the 'user://-folder' as apps have explicit writing privileges there.
@@ -204,6 +204,8 @@ In both cases, the most painless solution is to copy the entire database to the 
 If there is a better solution, one that does not involve copying the database to a new location, please do enlighten me.
 
 # How to export?
+
+**NOTE**: On mobile platforms (Android & iOS) this is not possible and the 'res://data/'-folder has to be copied to the 'user://-folder' in its entirety instead (see FAQ above).
 
 All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
 

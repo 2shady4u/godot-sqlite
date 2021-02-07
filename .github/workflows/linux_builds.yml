@@ -54,7 +54,6 @@ jobs:
           scons platform=linux bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
           cd ..
           scons platform=linux target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
-          strip --strip-all ${{env.TARGET_PATH}}${{env.TARGET_NAME}}.so
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
