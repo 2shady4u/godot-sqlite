@@ -33,9 +33,11 @@ namespace godot
         break;                                                                     \
     }
 
-    struct table_struct
+    enum OBJECT_TYPE { TABLE, TRIGGER };
+    struct object_struct
     {
         String name, sql;
+        OBJECT_TYPE type;
         Array base64_columns, row_array;
     };
 
@@ -49,7 +51,7 @@ namespace godot
 
         Dictionary deep_copy(Dictionary p_dict);
         Variant get_with_default(Dictionary p_dict, String p_key, Variant p_default);
-        bool validate_json(Array import_json, std::vector<table_struct> &tables_to_import);
+        bool validate_json(Array import_json, std::vector<object_struct> &tables_to_import);
 
     public:
         int last_insert_rowid;

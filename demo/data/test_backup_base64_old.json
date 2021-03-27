@@ -1,6 +1,7 @@
 [{
 	"name": "company",
 	"sql": "CREATE TABLE company (id INTEGER PRIMARY KEY NOT NULL,data blob NOT NULL)",
+	"type": "table",
 	"base64_columns": [
 		"data"
 	],

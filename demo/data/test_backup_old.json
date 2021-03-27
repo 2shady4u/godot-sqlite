@@ -1,6 +1,7 @@
 [
     {
         "name": "company",
+        "type": "table",
         "sql": "CREATE TABLE company (id int PRIMARY KEY NOT NULL,name text NOT NULL,age int NOT NULL,address char(50),salary real)",
         "row_array": [
             {
@@ -42,6 +43,7 @@
     },
     {
         "name": "office_supply",
+        "type": "table",
         "sql": "CREATE TABLE office_supply (id int PRIMARY KEY NOT NULL,name text NOT NULL,amount int NOT NULL)",
         "row_array": [
             {
