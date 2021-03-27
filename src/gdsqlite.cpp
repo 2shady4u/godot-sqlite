@@ -434,10 +434,10 @@ Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_ar
 
         if (i != number_of_columns - 1)
         {
-            query_string += ",";
+            query_string += ", ";
         }
     }
-    query_string += " from " + p_name;
+    query_string += " FROM " + p_name;
     if (!p_conditions.empty())
     {
         query_string += " WHERE " + p_conditions;
@@ -451,6 +451,7 @@ Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_ar
 bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict)
 {
     String query_string;
+    Array param_bindings;
     bool success;
 
     int number_of_keys = p_updated_row_dict.size();
@@ -463,24 +464,16 @@ bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_update
 
     for (int i = 0; i <= number_of_keys - 1; i++)
     {
-        query_string += (const String &)keys[i] + "=";
-        if (values[i].get_type() == Variant::STRING)
-        {
-            query_string += "'" + (const String &)values[i] + "'";
-        }
-        else
-        {
-            query_string += (const String &)values[i];
-        }
-
+        query_string += (const String &)keys[i] + "=?";
+        param_bindings.append(values[i]);
         if (i != number_of_keys - 1)
         {
-            query_string += ",";
+            query_string += ", ";
         }
     }
     query_string += " WHERE " + p_conditions + ";";
 
-    success = query(query_string);
+    success = query_with_bindings(query_string, param_bindings);
     /* Stop the error_message from being overwritten! */
     String previous_error_message = error_message;
     query("END TRANSACTION;");
