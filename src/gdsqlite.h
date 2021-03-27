@@ -13,76 +13,82 @@
 #include <vector>
 #include <sstream>
 #include <sqlite/sqlite3.h>
+#include <base64/base64.h>
 #include <helpers/current_function.h>
 
-namespace godot {
-
-#define GODOT_LOG(level, message)\
-    switch (level) {\
-        case 0:\
-            Godot::print(message);\
-            break;\
-        case 1:\
-            Godot::print_warning(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__);\
-            break;\
-        case 2:\
-            Godot::print_error(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__);\
-            break;\
-    }\
-
-struct table_struct
+namespace godot
 {
-	String name, sql;
-    Array row_array;
-};
 
-class SQLite : public Reference {
-    GODOT_CLASS(SQLite, Reference)
+#define GODOT_LOG(level, message)                                                  \
+    switch (level)                                                                 \
+    {                                                                              \
+    case 0:                                                                        \
+        Godot::print(message);                                                     \
+        break;                                                                     \
+    case 1:                                                                        \
+        Godot::print_warning(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__); \
+        break;                                                                     \
+    case 2:                                                                        \
+        Godot::print_error(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__);   \
+        break;                                                                     \
+    }
 
-private:
-    sqlite3 *db;
-    std::vector<Ref<FuncRef>> function_registry;
+    enum OBJECT_TYPE { TABLE, TRIGGER };
+    struct object_struct
+    {
+        String name, sql;
+        OBJECT_TYPE type;
+        Array base64_columns, row_array;
+    };
 
-    Dictionary deep_copy(Dictionary p_dict);
-    Variant get_with_default(Dictionary p_dict, String p_key, Variant p_default);
-    bool validate_json(Array import_json, std::vector<table_struct> &tables_to_import);
+    class SQLite : public Reference
+    {
+        GODOT_CLASS(SQLite, Reference)
 
-public:
-    int last_insert_rowid;
-    bool verbose_mode, foreign_keys;
-    String path, error_message;
-    Array query_result;
+    private:
+        sqlite3 *db;
+        std::vector<Ref<FuncRef>> function_registry;
 
-    static void _register_methods();
+        Dictionary deep_copy(Dictionary p_dict);
+        Variant get_with_default(Dictionary p_dict, String p_key, Variant p_default);
+        bool validate_json(Array import_json, std::vector<object_struct> &tables_to_import);
 
-    SQLite();
-    ~SQLite();
+    public:
+        int last_insert_rowid;
+        bool verbose_mode, foreign_keys;
+        String path, error_message;
+        Array query_result;
 
-    void _init();
+        static void _register_methods();
 
-    bool open_db();
-    void close_db();
-    bool query(String p_query);
-    bool query_with_bindings(String p_query, Array param_bindings);
+        SQLite();
+        ~SQLite();
 
-    bool create_table(String p_name, Dictionary p_table_dict);
-    bool drop_table(String p_name);
+        void _init();
 
-    bool insert_row(String p_name, Dictionary p_row_dict);
-    bool insert_rows(String p_name, Array p_row_array);
+        bool open_db();
+        void close_db();
+        bool query(String p_query);
+        bool query_with_bindings(String p_query, Array param_bindings);
 
-    Array select_rows(String p_name, String p_conditions, Array p_columns_array);
-    bool update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict);
-    bool delete_rows(String p_name, String p_conditions);
+        bool create_table(String p_name, Dictionary p_table_dict);
+        bool drop_table(String p_name);
 
-    bool create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc);
+        bool insert_row(String p_name, Dictionary p_row_dict);
+        bool insert_rows(String p_name, Array p_row_array);
 
-    bool import_from_json(String import_path);
-    bool export_to_json(String export_path);
+        Array select_rows(String p_name, String p_conditions, Array p_columns_array);
+        bool update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict);
+        bool delete_rows(String p_name, String p_conditions);
 
-    void set_last_insert_rowid(int p_last_row_id);
-    int get_last_insert_rowid();
-};
+        bool create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc);
+
+        bool import_from_json(String import_path);
+        bool export_to_json(String export_path);
+
+        void set_last_insert_rowid(int p_last_row_id);
+        int get_last_insert_rowid();
+    };
 
 }
 

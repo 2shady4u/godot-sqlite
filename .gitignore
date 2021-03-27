@@ -47,6 +47,7 @@ Thumbs.db
 .sconsign.dblite
 demo/build
 test_backup_new.json
+test_backup_base64_new.json
 
 # VS
 vsproj/.vs/

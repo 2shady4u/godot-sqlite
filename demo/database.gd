@@ -314,5 +314,22 @@ func example_of_blob_io():
 		loaded_texture.create_from_image(image)
 		emit_signal("texture_received", loaded_texture)
 
+	# Export the table to a json-file and automatically encode BLOB data to base64.
+	db.export_to_json(json_name + "_base64_new")
+
+	# Import again!
+	db.import_from_json(json_name + "_base64_old")
+
+	# Check out the 'old' icon stored in this backup file!
+	selected_array = db.select_rows(table_name, "", ["data"])
+	for selected_row in selected_array:
+		var selected_data = selected_row.get("data", PoolByteArray())
+
+		var image := Image.new()
+		var _error : int = image.load_png_from_buffer(selected_data)
+		var loaded_texture := ImageTexture.new()
+		loaded_texture.create_from_image(image)
+		emit_signal("texture_received", loaded_texture)
+
 	# Close the current database
 	db.close_db()
