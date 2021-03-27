@@ -87,6 +87,8 @@ var success = db.query_with_bindings(query_string, param_bindings)
 
 Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 
+***NOTE**: Binding column names is not possible due SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
+
 - Boolean success = **create_table(** String table_name, Dictionary table_dictionary **)**
 
 Each key/value pair of the `table_dictionary`-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.

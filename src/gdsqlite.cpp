@@ -722,7 +722,7 @@ bool SQLite::import_from_json(String import_path)
 
                 if (row.has(key))
                 {
-                    std::string input = String(row[key]).alloc_c_string();
+                    std::string input = ((const String &)row[key]).alloc_c_string();
                     std::string output;
                     macaron::Base64::Decode(input, output);
 
