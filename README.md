@@ -56,7 +56,9 @@ Enables or disables the availability of [foreign keys](https://www.sqlite.org/fo
 
 - **query_result** (Array, default=[])
 
-Contains the results from the latest query and is cleared after every new query.
+Contains the results from the latest query and is cleared after every new query. 
+
+***NOTE:** If you want your result to persist after running additional queries you'll have to **duplicate()** this array yourself!*
 
 - **last_insert_rowid** (Integer, default=0)
 
@@ -192,9 +194,25 @@ In both cases, the most painless solution is to copy the entire database to the 
 
 If there is a better solution, one that does not involve copying the database to a new location, please do enlighten me.
 
+### 4. Is this plugin compatible with a Godot Server binary? How to set it up?
+
+This plugin is fully compatible with the Godot Server binary.  
+Follow these steps to create a working Linux Server for your project:
+
+1. Export your project's `*.pck` using Godot's export functionalities for Linux.
+2. Alongside the exported package, paste the following files:
+    - `libgdsqlite.so` (as found in `addons/godot-sqlite/bin/x11/`)
+    - Your project's database(s) (`*.db`)
+    - The Godot Server binary as downloadable [here](https://godotengine.org/download/server)
+3. Rename the Godot Server binary to have the exact same name as the exported `*.pck`  
+(for example if your package is called `game.pck`, your binary should be named `game.x64`)
+4. Done!
+
+***NOTE**: If you are using an older version of Linux on your server machine (with glibc version < 2.28), the plugin crashes due to the compiled version of glibc being too recent. In that case you can either recompile the Linux plugin binary yourself or you can download the legacy binaries (Ubuntu 16.04 with glibc version == 2.23) as found [here](https://github.com/2shady4u/godot-sqlite/actions/workflows/linux_builds.yml).* 
+
 # How to export?
 
-**NOTE**: On mobile platforms (Android & iOS) this is not possible and the 'res://data/'-folder has to be copied to the 'user://-folder' in its entirety instead (see FAQ above).
+***NOTE**: On mobile platforms (Android & iOS) the method discussed here is not possible and the contents of the `res://data/`-folder has to be copied to the `user://-folder` in its entirety instead (see FAQ above).*
 
 All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
 
