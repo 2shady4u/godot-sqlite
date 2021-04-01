@@ -175,22 +175,9 @@ Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the databas
 
 There are a couple of things you can do before panicking, namely:
 - Test out if your query is valid by trying it out online at https://sqliteonline.com/.
-- Encapsulate all conditional statements in tick-marks ', for example:
+- Use the **query(** **)** or **query_with_bindings(** **)**-function instead of the more specialized wrapper function.
 
-The following statement might not work and throw syntax errors:
-```swift
-var rows = db.select_rows(table_name, "number >= {0} AND number < {0} + {1}".format([i, step]), ["*"])
-```
-
-Encapsulating the conditonal statements with tick-marks ' fixes these syntax errors:
-```swift
-var rows = db.select_rows(table_name, "number >= {0} AND number < {0} + {1}".format([i, step]), ["*"])
-```
-This issue is still open and is being actively worked on.
-
-- Using the **query(** **)**-function instead of the more specialized wrapper function.
-
-After exhausting these options, please open an issue that describes the error in detail.
+After exhausting these options, please open an issue that describes the error in proper detail.
 
 ### 2. When should I create function bindings to augment SQLite's set of native functions?
 
