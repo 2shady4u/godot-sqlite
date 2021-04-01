@@ -58,7 +58,7 @@ Enables or disables the availability of [foreign keys](https://www.sqlite.org/fo
 
 Contains the results from the latest query and is cleared after every new query. 
 
-***NOTE:** If you want your result to persist after running additional queries you'll have to **duplicate()** this array yourself!*
+***NOTE:** If you want your result to persist you'll have to **duplicate()** this array yourself BEFORE running additional queries.*
 
 - **last_insert_rowid** (Integer, default=0)
 
@@ -181,20 +181,40 @@ There are a couple of things you can do before panicking, namely:
 
 After exhausting these options, please open an issue that describes the error in proper detail.
 
-### 2. When should I create function bindings to augment SQLite's set of native functions?
+### 2. Your plugin fails to load on my Windows machine!
+
+Basically if your Windows machine device doesn't have the required VC++ redistributables installed, the dynamic library will fail to load and throw an error of the following sort:
+
+```
+ERROR: GDNative::get_symbol: No valid library handle, can't get symbol from GDNative object
+At: modules\gdnative\gdnative.cpp:315
+ERROR: NativeScriptLanguage::init_library: No nativescript_init in "res://addons/godot-sqlite/bin/win64/libgdsqlite.dll" found
+At: modules\gdnative\nativescript\nativescript.cpp:1054
+```
+
+This is an open issue that is still under consideration (see https://github.com/2shady4u/godot-sqlite/issues/33).
+
+Some possible solutions/work-arounds exist:
+- Install the missing VC++ redistributables (downloadable [here](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0))
+- Recompile the plugin using the MinGW compiler instead (**WARNING:** currently results in a >15MB library).
+- Recompile the plugin (and the bindings) using the `/MT`-flag instead of the `/MD`-flag as discussed [here](https://docs.microsoft.com/en-us/cpp/build/reference/md-mt-ld-use-run-time-library?view=msvc-160).
+
+If the console error is of an entirely different nature, please open an issue.
+
+### 3. When should I create function bindings to augment SQLite's set of native functions?
 
 Preferably never.
 
 Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
 
-### 3. My Android (or iOS) application cannot access the database!
+### 4. My Android (or iOS) application cannot access the database!
 
 Android does not allow modification of files in the 'res://'-folder, thus blocking the plugin from writing to and/or reading from this database-file.
 In both cases, the most painless solution is to copy the entire database to the 'user://-folder' as apps have explicit writing privileges there.
 
 If there is a better solution, one that does not involve copying the database to a new location, please do enlighten me.
 
-### 4. Is this plugin compatible with a Godot Server binary? How to set it up?
+### 5. Is this plugin compatible with a Godot Server binary? How to set it up?
 
 This plugin is fully compatible with the Godot Server binary.  
 Follow these steps to create a working Linux Server for your project:
