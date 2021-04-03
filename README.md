@@ -187,7 +187,7 @@ There are a couple of things you can do before panicking, namely:
     table_dict["first_name"] = {"data_type":"text", "default": "Long John"}
     table_dict["area"] = {"data_type":"text", "default": ""}
     table_dict["color"] = {"data_type":"text", "default": "0,0,0,0"}
-    db.create_table("table_name", table_dict)
+    db.create_table(table_name, table_dict)
     ```
 
     Adding some well-placed single quotation marks fixes this issue:
