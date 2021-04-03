@@ -178,6 +178,48 @@ Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the databas
 There are a couple of things you can do before panicking, namely:
 - Test out if your query is valid by trying it out online at https://sqliteonline.com/.
 - Use the **query(** **)** or **query_with_bindings(** **)**-function instead of the more specialized wrapper function.
+- Your query might be missing some quotation marks. For example, following queries will fail due to missing encapsulation of the `default`-field:
+
+    ```gdscript
+    var table_name := "characters"
+    var table_dict : Dictionary
+    table_dict["last_name"] = {"data_type":"text", "default": "Silver"}
+    table_dict["first_name"] = {"data_type":"text", "default": "Long John"}
+    table_dict["area"] = {"data_type":"text", "default": ""}
+    table_dict["color"] = {"data_type":"text", "default": "0,0,0,0"}
+    db.create_table("table_name", table_dict)
+    ```
+
+    Adding some well-placed single quotation marks fixes this issue:
+
+    ```gdscript
+    var table_name := "characters"
+    var table_dict : Dictionary
+    table_dict["last_name"] = {"data_type":"text", "default": "Silver"}
+    table_dict["first_name"] = {"data_type":"text", "default": "'Long John'"}
+    table_dict["area"] = {"data_type":"text", "default": "''"}
+    table_dict["color"] = {"data_type":"text", "default": "'0,0,0,0'"}
+    db.create_table(table_name, table_dict)
+    ```
+
+    Basically you'll need to use single quotation marks whenever:
+    - The string is empty
+    - The string contains syntax restricted symbols such as commas or spaces
+
+- SQLite restricts dynamically binding the names of tables and columns, thus following query will fail due to syntax errors:
+    ```gdscript
+    var table_name := "characters"
+    var column_name := "level"
+    db.query_with_bindings("UPDATE ? SET ?=? WHERE id=?", [table_name, column_name, 100, 1])
+    ```
+
+    This is forbidden SQLite syntax as both the `table_name`- and `column_name`-variables cannot be bound! If dynamic modification of names of tables and columns is required for purposes of your code, then use following work-around:
+
+    ```gdscript
+    var table_name := "characters"
+    var column_name := "level"
+    db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?", [100, 1])
+    ```
 
 After exhausting these options, please open an issue that describes the error in proper detail.
 
