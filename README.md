@@ -56,7 +56,9 @@ Enables or disables the availability of [foreign keys](https://www.sqlite.org/fo
 
 - **query_result** (Array, default=[])
 
-Contains the results from the latest query and is cleared after every new query.
+Contains the results from the latest query and is cleared after every new query. 
+
+***NOTE:** If you want your result to persist you'll have to **duplicate()** this array yourself BEFORE running additional queries.*
 
 - **last_insert_rowid** (Integer, default=0)
 
@@ -86,6 +88,8 @@ var success = db.query_with_bindings(query_string, param_bindings)
 ```
 
 Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+
+***NOTE**: Binding column names is not possible due SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
 
 - Boolean success = **create_table(** String table_name, Dictionary table_dictionary **)**
 
@@ -173,39 +177,104 @@ Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the databas
 
 There are a couple of things you can do before panicking, namely:
 - Test out if your query is valid by trying it out online at https://sqliteonline.com/.
-- Encapsulate all conditional statements in tick-marks ', for example:
+- Use the **query(** **)** or **query_with_bindings(** **)**-function instead of the more specialized wrapper function.
+- Your query might be missing some quotation marks. For example, following queries will fail due to missing encapsulation of the `default`-field:
 
-The following statement might not work and throw syntax errors:
-```swift
-var rows = db.select_rows(table_name, "number >= {0} AND number < {0} + {1}".format([i, step]), ["*"])
+    ```gdscript
+    var table_name := "characters"
+    var table_dict : Dictionary
+    table_dict["last_name"] = {"data_type":"text", "default": "Silver"}
+    table_dict["first_name"] = {"data_type":"text", "default": "Long John"}
+    table_dict["area"] = {"data_type":"text", "default": ""}
+    table_dict["color"] = {"data_type":"text", "default": "0,0,0,0"}
+    db.create_table(table_name, table_dict)
+    ```
+
+    Adding some well-placed single quotation marks fixes this issue:
+
+    ```gdscript
+    var table_name := "characters"
+    var table_dict : Dictionary
+    table_dict["last_name"] = {"data_type":"text", "default": "Silver"}
+    table_dict["first_name"] = {"data_type":"text", "default": "'Long John'"}
+    table_dict["area"] = {"data_type":"text", "default": "''"}
+    table_dict["color"] = {"data_type":"text", "default": "'0,0,0,0'"}
+    db.create_table(table_name, table_dict)
+    ```
+
+    Basically you'll need to use single quotation marks whenever:
+    - The string is empty
+    - The string contains syntax restricted symbols such as commas or spaces
+
+- SQLite restricts dynamically binding the names of tables and columns, thus following query will fail due to syntax errors:
+    ```gdscript
+    var table_name := "characters"
+    var column_name := "level"
+    db.query_with_bindings("UPDATE ? SET ?=? WHERE id=?", [table_name, column_name, 100, 1])
+    ```
+
+    This is forbidden SQLite syntax as both the `table_name`- and `column_name`-variables cannot be bound! If dynamic modification of names of tables and columns is required for purposes of your code, then use following work-around:
+
+    ```gdscript
+    var table_name := "characters"
+    var column_name := "level"
+    db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?", [100, 1])
+    ```
+
+After exhausting these options, please open an issue that describes the error in proper detail.
+
+### 2. Your plugin fails to load on my Windows machine!
+
+Basically if your Windows machine device doesn't have the required VC++ redistributables installed, the dynamic library will fail to load and throw an error of the following sort:
+
+```
+ERROR: GDNative::get_symbol: No valid library handle, can't get symbol from GDNative object
+At: modules\gdnative\gdnative.cpp:315
+ERROR: NativeScriptLanguage::init_library: No nativescript_init in "res://addons/godot-sqlite/bin/win64/libgdsqlite.dll" found
+At: modules\gdnative\nativescript\nativescript.cpp:1054
 ```
 
-Encapsulating the conditonal statements with tick-marks ' fixes these syntax errors:
-```swift
-var rows = db.select_rows(table_name, "number >= {0} AND number < {0} + {1}".format([i, step]), ["*"])
-```
-This issue is still open and is being actively worked on.
+This is an open issue that is still under consideration (see https://github.com/2shady4u/godot-sqlite/issues/33).
 
-- Using the **query(** **)**-function instead of the more specialized wrapper function.
+Some possible solutions/work-arounds exist:
+- Install the missing VC++ redistributables (downloadable [here](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0))
+- Recompile the plugin using the MinGW compiler instead (**WARNING:** currently results in a >15MB library).
+- Recompile the plugin (and the bindings) using the `/MT`-flag instead of the `/MD`-flag as discussed [here](https://docs.microsoft.com/en-us/cpp/build/reference/md-mt-ld-use-run-time-library?view=msvc-160).
 
-After exhausting these options, please open an issue that describes the error in detail.
+If the console error is of an entirely different nature, please open an issue.
 
-### 2. When should I create function bindings to augment SQLite's set of native functions?
+### 3. When should I create function bindings to augment SQLite's set of native functions?
 
 Preferably never.
 
 Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
 
-### 3. My Android (or iOS) application cannot access the database!
+### 4. My Android (or iOS) application cannot access the database!
 
 Android does not allow modification of files in the 'res://'-folder, thus blocking the plugin from writing to and/or reading from this database-file.
 In both cases, the most painless solution is to copy the entire database to the 'user://-folder' as apps have explicit writing privileges there.
 
 If there is a better solution, one that does not involve copying the database to a new location, please do enlighten me.
 
+### 5. Is this plugin compatible with a Godot Server binary? How to set it up?
+
+This plugin is fully compatible with the Godot Server binary.  
+Follow these steps to create a working Linux Server for your project:
+
+1. Export your project's `*.pck` using Godot's export functionalities for Linux.
+2. Alongside the exported package, paste the following files:
+    - `libgdsqlite.so` (as found in `addons/godot-sqlite/bin/x11/`)
+    - Your project's database(s) (`*.db`)
+    - The Godot Server binary as downloadable [here](https://godotengine.org/download/server)
+3. Rename the Godot Server binary to have the exact same name as the exported `*.pck`  
+(for example if your package is called `game.pck`, your binary should be named `game.x64`)
+4. Done!
+
+***NOTE**: If you are using an older version of Linux on your server machine (with glibc version < 2.28), the plugin crashes due to the compiled version of glibc being too recent. In that case you can either recompile the Linux plugin binary yourself or you can download the legacy binaries (Ubuntu 16.04 with glibc version == 2.23) as found [here](https://github.com/2shady4u/godot-sqlite/actions/workflows/linux_builds.yml).* 
+
 # How to export?
 
-**NOTE**: On mobile platforms (Android & iOS) this is not possible and the 'res://data/'-folder has to be copied to the 'user://-folder' in its entirety instead (see FAQ above).
+***NOTE**: On mobile platforms (Android & iOS) the method discussed here is not possible and the contents of the `res://data/`-folder has to be copied to the `user://-folder` in its entirety instead (see FAQ above).*
 
 All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
 
