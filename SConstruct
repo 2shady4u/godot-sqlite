@@ -87,7 +87,7 @@ opts.Add(EnumVariable(
     'platform',
     'Target platform',
     host_platform,
-    allowed_values=('linux', 'osx', 'windows', 'ios'),
+    allowed_values=('linux', 'osx', 'windows', 'ios', 'javascript'),
     ignorecase=2
 ))
 opts.Add(EnumVariable(
@@ -180,6 +180,8 @@ if env['bits'] == 'default':
 arch_suffix = env['bits']
 if env['platform'] == 'ios':
     arch_suffix = env['ios_arch']
+if env['platform'] == 'javascript':
+    arch_suffix = 'wasm'
 
 ###################
 ####FLAGS##########
@@ -310,6 +312,34 @@ elif env['platform'] == 'windows':
             '-static-libgcc',
             '-static-libstdc++',
         ])
+
+elif env["platform"] == "javascript":
+    env["ENV"] = os.environ
+    env["CC"] = "emcc"
+    env["CXX"] = "em++"
+    env["AR"] = "emar"
+    env["RANLIB"] = "emranlib"
+    env.Append(CPPFLAGS=["-s", "SIDE_MODULE=1"])
+    env.Append(LINKFLAGS=["-s", "SIDE_MODULE=1"])
+    env["SHOBJSUFFIX"] = ".bc"
+    env["SHLIBSUFFIX"] = ".wasm"
+    # Use TempFileMunge since some AR invocations are too long for cmd.exe.
+    # Use POSIX-style paths, required with TempFileMunge.
+    env["ARCOM_POSIX"] = env["ARCOM"].replace("$TARGET", "$TARGET.posix").replace("$SOURCES", "$SOURCES.posix")
+    env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX)}"
+
+    # All intermediate files are just LLVM bitcode.
+    env["OBJPREFIX"] = ""
+    env["OBJSUFFIX"] = ".bc"
+    env["PROGPREFIX"] = ""
+    # Program() output consists of multiple files, so specify suffixes manually at builder.
+    env["PROGSUFFIX"] = ""
+    env["LIBPREFIX"] = "lib"
+    env["LIBSUFFIX"] = ".bc"
+    env["LIBPREFIXES"] = ["$LIBPREFIX"]
+    env["LIBSUFFIXES"] = ["$LIBSUFFIX"]
+    env.Replace(SHLINKFLAGS='$LINKFLAGS')
+    env.Replace(SHLINKFLAGS='$LINKFLAGS')
 
 #####################
 #ADD SOURCES#########
