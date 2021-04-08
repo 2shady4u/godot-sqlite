@@ -340,6 +340,7 @@ elif env["platform"] == "javascript":
     env["LIBSUFFIXES"] = ["$LIBSUFFIX"]
     env.Replace(SHLINKFLAGS='$LINKFLAGS')
     env.Replace(SHLINKFLAGS='$LINKFLAGS')
+    env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME']=1
 
 #####################
 #ADD SOURCES#########
@@ -350,12 +351,15 @@ cpp_bindings_libname = 'libgodot-cpp.{}.{}.{}'.format(
                         arch_suffix)
 
 env.Append(CPPPATH=['.', godot_headers_path, cpp_bindings_path + 'include/', cpp_bindings_path + 'include/core/', cpp_bindings_path + 'include/gen/'])
-env.Append(LIBS=[cpp_bindings_libname])
-env.Append(LIBPATH=[cpp_bindings_path + 'bin/'])
+if env['platform'] != "javascript":
+    env.Append(LIBS=[cpp_bindings_libname])
+    env.Append(LIBPATH=[cpp_bindings_path + 'bin/'])
 
 # tweak this if you want to use different folders, or more folders, to store your source code in.
 env.Append(CPPPATH=['src/'])
 sources = [Glob('src/*.cpp'), 'src/sqlite/sqlite3.c']
+if env['platform'] == "javascript":
+    sources.append(cpp_bindings_path + 'bin/' + cpp_bindings_libname + '.bc')
 
 ###############
 #BUILD LIB#####
