@@ -8,7 +8,6 @@ env:
   TARGET_PATH: demo/addons/godot-sqlite/bin/javascript/
   TARGET_NAME: libgdsqlite
   TARGET: release
-  EM_CACHE_FOLDER: 'emsdk-cache'
 
 jobs:
   android-compilation:
@@ -37,20 +36,22 @@ jobs:
           python --version
           scons --version
 
-      - name: Set up Emscripten latest
-        uses: mymindstorm/setup-emsdk@v6
+      - name: Cloning emsdk
+        uses: actions/checkout@v2
         with:
-          version: 'latest'
-          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-
-      - name: Verify Emscripten setup
-        run: |
-          emcc -v
+          repository: emscripten-core/emsdk
+          path: emsdk
 
       # Install emsdk as discussed here:
       # https://emscripten.org/docs/getting_started/downloads.html
       - name: Compilation
         run: |
+          cd emsdk
+          git pull
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+          cd ..
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
           cd ${{env.PROJECT_FOLDER}}
           cd godot-cpp
