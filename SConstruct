@@ -334,7 +334,7 @@ elif env["platform"] == "javascript":
     env["PROGPREFIX"] = ""
     # Program() output consists of multiple files, so specify suffixes manually at builder.
     env["PROGSUFFIX"] = ""
-    env["LIBPREFIX"] = "lib"
+    env["LIBPREFIX"] = ""
     env["LIBSUFFIX"] = ".bc"
     env["LIBPREFIXES"] = ["$LIBPREFIX"]
     env["LIBSUFFIXES"] = ["$LIBSUFFIX"]
