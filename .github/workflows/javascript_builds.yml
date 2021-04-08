@@ -36,22 +36,20 @@ jobs:
           python --version
           scons --version
 
-      - name: Cloning emsdk
-        uses: actions/checkout@v2
-        with:
-          repository: emscripten-core/emsdk
-          path: emsdk
+      - name: Set up Emscripten latest
+          uses: mymindstorm/setup-emsdk@v6
+          with:
+            version: ${{env.EM_VERSION}}
+            actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+
+      - name: Verify Emscripten setup
+        run: |
+          emcc -v
 
       # Install emsdk as discussed here:
       # https://emscripten.org/docs/getting_started/downloads.html
       - name: Compilation
         run: |
-          cd emsdk
-          git pull
-          ./emsdk install latest
-          ./emsdk activate latest
-          source ./emsdk_env.sh
-          cd ..
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
           cd ${{env.PROJECT_FOLDER}}
           cd godot-cpp
