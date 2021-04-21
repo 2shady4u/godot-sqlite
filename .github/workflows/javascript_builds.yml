@@ -8,9 +8,12 @@ env:
   TARGET_PATH: demo/addons/godot-sqlite/bin/javascript/
   TARGET_NAME: libgdsqlite
   TARGET: release
+  GODOT_VERSION: 3.3
+  RC_VERSION: 9
+  EXPORT_NAME: demo/
 
 jobs:
-  android-compilation:
+  javascript-compilation:
     name: Javascript Compilation
     runs-on: "ubuntu-20.04"
     steps:
@@ -64,3 +67,52 @@ jobs:
         with:
           name: javascript
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
+
+  javascript-deploy:
+    name: Javascript Deploy
+    runs-on: ubuntu-latest
+    needs: [javascript-compilation]
+    container:
+      image: ponders/godot-ci:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - name: Download Artefacts
+        uses: actions/download-artifact@v2
+
+      - name: Copy Libraries to Project Folder
+        run: |
+          mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
+          cp javascript/${{env.TARGET_NAME}}.wasm ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
+
+      - name: Setup
+        run: |
+          mkdir -v -p ~/.local/share/godot/templates
+          mv /root/.local/share/godot/templates/${GODOT_VERSION}.rc${RC_VERSION} ~/.local/share/godot/templates/${GODOT_VERSION}.rc${RC_VERSION}
+
+      - name: Web Build
+        run: |
+          mkdir -v -p build/web
+          cd $EXPORT_NAME
+          godot -v --export "HTML5" ../../build/web/index.html
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: web
+          path: build/web
+
+      # Installing rsync is needed in order to deploy to GitHub Pages. Without it, the build will fail.
+      - name: Install rsync 📚
+        run: |
+          apt-get update && apt-get install -y rsync
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: build/web # The folder the action should deploy.
