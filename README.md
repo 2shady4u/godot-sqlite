@@ -11,7 +11,7 @@ does not require any additional compilation or mucking about with build scripts.
 - Windows
 - Android (arm64-v8a, armeabi-v7a & x86)
 - iOS (arm64 & armv7)
-- HTML5 (**only in Godot 3.3+**)
+- HTML5 (**requires Godot 3.3+**)
 
 _DISLAIMER_: iOS is still untested! (as of 24/12/2020)
 
@@ -275,7 +275,7 @@ Follow these steps to create a working Linux Server for your project:
 
 # How to export?
 
-***NOTE**: On mobile platforms (Android & iOS) and for web builds, the method discussed here is not possible and the contents of the `res://data/`-folder have to be copied to the `user://-folder` in its entirety instead (see FAQ above).*
+***NOTE**: On mobile platforms (Android & iOS) and for web builds, the method discussed here is not possible and the contents of the `res://data/`-folder have to be copied to the `user://`-folder in its entirety instead (see FAQ above).*
 
 All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
 
