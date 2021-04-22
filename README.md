@@ -11,6 +11,7 @@ does not require any additional compilation or mucking about with build scripts.
 - Windows
 - Android (arm64-v8a, armeabi-v7a & x86)
 - iOS (arm64 & armv7)
+- HTML5 (**only in Godot 3.3+**)
 
 _DISLAIMER_: iOS is still untested! (as of 24/12/2020)
 
@@ -32,17 +33,17 @@ Re-building Godot from scratch is **NOT** required, the proper way of installing
 
 ### Manually
 
-It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the *gdsqlite.gdns*-resource and that it is available in the *res://*-environment.
+It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the `gdsqlite.gdns`-resource and that it is available in the `res://`-environment.
 
 An example project, named "demo", can also be downloaded from the releases tab.
 
 ## Variables
 
-- **path** (String ,default value='default')
+- **path** (String, default="default")
 
-Path to the database, should be set before opening the database with .open_db(). If no database with this name exists, a new one at the supplied path will be created. Both *res://* and *user://* keywords can be used to define the path.
+Path to the database, should be set before opening the database with `open_db()`. If no database with this name exists, a new one at the supplied path will be created. Both `res://` and `user://` keywords can be used to define the path.
 
-- **error_message** (String, default='')
+- **error_message** (String, default="")
 
 Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
 
@@ -79,7 +80,7 @@ Binds the parameters contained in the `param_bindings`-variable to the query. Us
 
 **Example usage**:
 
-```Swift
+```gdscript
 var query_string : String = "SELECT ? FROM company WHERE age < ?;"
 var param_bindings : Array = ["name", 24]
 var success = db.query_with_bindings(query_string, param_bindings)
@@ -89,7 +90,7 @@ var success = db.query_with_bindings(query_string, param_bindings)
 
 Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 
-***NOTE**: Binding column names is not possible due SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
+***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
 
 - Boolean success = **create_table(** String table_name, Dictionary table_dictionary **)**
 
@@ -107,7 +108,7 @@ Each key/value pair of the `table_dictionary`-variable defines a column of the t
     | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING    |
     | blob        | BLOB           | TYPE_RAW_ARRAY |
 
-    \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.  
+    \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.*  
     \*\* *with the question mark being replaced by the maximum amount of characters*
 
 **Optional fields**:
@@ -125,11 +126,11 @@ Evidently, only a single column can be set as the primary key.
 
 - **"foreign_key"**: Enforce an "exist" relationship between tables by setting this variable to `foreign_table.foreign_column`. In other words, when adding an additional row, the column value should be an existing value as found in the column with name `foreign_column` of the table with name `foreign_table`.
 
-    ***NOTE**: Availability of foreign keys has to be enabled by setting the `foreign_keys`-variable to `True`.*
+    ***NOTE**: Availability of foreign keys has to be enabled by setting the `foreign_keys`-variable to true BEFORE opening the database.*
 
 **Example usage**:
 
-```Swift
+```gdscript
 # Add the row "id" to the table, which is an auto-incremented primary key.
 # When adding additional rows, this value can either by explicitely given or be unfilled.
 table_dictionary["id"] = {
@@ -155,7 +156,7 @@ Columns should adhere to the table schema as instantiated using the `table_dicti
 
 - Boolean success = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary **)**
 
-With the `update_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
+With the `updated_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
 
 - Boolean success = **delete_rows(** String table_name, String query_conditions **)**
 
@@ -249,10 +250,10 @@ Preferably never.
 
 Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
 
-### 4. My Android (or iOS) application cannot access the database!
+### 4. My Android/iOS/HTML5 application cannot access the database!
 
-Android does not allow modification of files in the 'res://'-folder, thus blocking the plugin from writing to and/or reading from this database-file.
-In both cases, the most painless solution is to copy the entire database to the 'user://-folder' as apps have explicit writing privileges there.
+Android does not allow modification of files in the `res://`-folder, thus blocking the plugin from writing to and/or reading from this database-file.
+In both cases, the most painless solution is to copy the entire database to the `user://`-folder instead as apps have explicit writing privileges there.
 
 If there is a better solution, one that does not involve copying the database to a new location, please do enlighten me.
 
@@ -274,7 +275,7 @@ Follow these steps to create a working Linux Server for your project:
 
 # How to export?
 
-***NOTE**: On mobile platforms (Android & iOS) the method discussed here is not possible and the contents of the `res://data/`-folder has to be copied to the `user://-folder` in its entirety instead (see FAQ above).*
+***NOTE**: On mobile platforms (Android & iOS) and for web builds, the method discussed here is not possible and the contents of the `res://data/`-folder have to be copied to the `user://-folder` in its entirety instead (see FAQ above).*
 
 All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
 
@@ -301,7 +302,7 @@ scons p=<platform> bits=64 generate_bindings=yes -j4
 
 In the case of Android and iOS, additional parameters have to be supplied to specify the architecture. In the case of android, the `android_arch`-parameter has to be supplied (with valid values being 'arm64v8', 'armv7' and/or 'x86'), and in the case of iOS, the `ios_arch`-parameter serves similar purposes (with valid values being 'arm64' and/or 'arm7')
 
-Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac OS X, Windows and iOS (for both architectures) with the help of following command:
+Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac&nbsp;OS&nbsp;X, Windows, iOS (for both architectures) and HTML5 with the help of following command:
 
 ```
 scons p=<platform> target_path=<target_path> target_name=libgdsqlite
@@ -313,7 +314,7 @@ In the case of Android, the [Android NDK](https://developer.android.com/ndk) nee
  $ANDROID_NDK_ROOT/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=<target_path>
 ```
 
-For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts, the `SConstruct`-file (for Windows, Linux, Mac OS X and iOs compilation) and both the `Android.mk`- and `jni/Application.mk`-file for the Android build process.
+For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts, the `SConstruct`-file (for Windows, Linux, Mac OS X, iOS and HTML5 compilation) and both the `Android.mk`- and `jni/Application.mk`-files for the Android build process.
 
 Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/latest/tutorials/plugins/gdnative/gdnative-cpp-example.html)
 in the Official Godot Documentation.
