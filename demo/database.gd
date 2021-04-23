@@ -23,7 +23,7 @@ signal output_received(text)
 signal texture_received(texture)
 
 func _ready():
-	if OS.get_name() == "Android" or OS.get_name() == "iOS":
+	if OS.get_name() in ["Android", "iOS", "HTML5"]:
 		copy_data_to_user()
 		db_name = "user://data/test"
 		json_name = "user://data/test_backup"

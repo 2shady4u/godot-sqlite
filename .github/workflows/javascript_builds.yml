@@ -1,0 +1,117 @@
+name: 🌐 Javascript Builds
+on:
+  push:
+    branches: [ master, main ]
+
+env:
+  PROJECT_FOLDER: .
+  TARGET_PATH: demo/addons/godot-sqlite/bin/javascript/
+  TARGET_NAME: libgdsqlite
+  TARGET: release
+  GODOT_VERSION: 3.3
+  EXPORT_NAME: demo/
+
+jobs:
+  javascript-compilation:
+    name: Javascript Compilation
+    runs-on: "ubuntu-20.04"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2 
+        with:
+            lfs: true
+            submodules: recursive
+
+      # Use python 3.x release (works cross platform)
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.x'
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: 'x64'
+
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      - name: Cloning emsdk
+        uses: actions/checkout@v2
+        with:
+          repository: emscripten-core/emsdk
+          path: emsdk
+
+      # Install emsdk as discussed here:
+      # https://emscripten.org/docs/getting_started/downloads.html
+      - name: Compilation
+        run: |
+          cd emsdk
+          git pull
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+          cd ..
+          mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
+          cd ${{env.PROJECT_FOLDER}}
+          cd godot-cpp
+          scons platform=javascript bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
+          cd ..
+          scons platform=javascript target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: javascript
+          path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
+
+  javascript-deploy:
+    name: Javascript Deploy
+    runs-on: ubuntu-latest
+    needs: [javascript-compilation]
+    container:
+      image: barichello/godot-ci:3.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - name: Download Artefacts
+        uses: actions/download-artifact@v2
+
+      - name: Copy Libraries to Project Folder
+        run: |
+          mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
+          cp javascript/${{env.TARGET_NAME}}.wasm ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
+
+      - name: Setup
+        run: |
+          mkdir -v -p ~/.local/share/godot/templates
+          mv /root/.local/share/godot/templates/${GODOT_VERSION}.stable ~/.local/share/godot/templates/${GODOT_VERSION}.stable
+
+      - name: Web Build
+        run: |
+          mkdir -v -p build/web
+          cd $EXPORT_NAME
+          godot -v --export "HTML5" ../build/web/index.html
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: web
+          path: build/web
+
+      # Installing rsync is needed in order to deploy to GitHub Pages. Without it, the build will fail.
+      - name: Install rsync 📚
+        run: |
+          apt-get update && apt-get install -y rsync
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: build/web # The folder the action should deploy.
