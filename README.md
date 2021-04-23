@@ -211,7 +211,7 @@ There are a couple of things you can do before panicking, namely:
     ```gdscript
     var table_name := "characters"
     var column_name := "level"
-    db.query_with_bindings("UPDATE ? SET ?=? WHERE id=?", [table_name, column_name, 100, 1])
+    db.query_with_bindings("UPDATE ? SET ?=? WHERE id=?;", [table_name, column_name, 100, 1])
     ```
 
     This is forbidden SQLite syntax as both the `table_name`- and `column_name`-variables cannot be bound! If dynamic modification of names of tables and columns is required for purposes of your code, then use following work-around:
@@ -219,7 +219,7 @@ There are a couple of things you can do before panicking, namely:
     ```gdscript
     var table_name := "characters"
     var column_name := "level"
-    db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?", [100, 1])
+    db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?;", [100, 1])
     ```
 
 After exhausting these options, please open an issue that describes the error in proper detail.
