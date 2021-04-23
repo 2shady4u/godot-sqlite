@@ -277,20 +277,25 @@ Follow these steps to create a working Linux Server for your project:
 
 ***NOTE**: On mobile platforms (Android & iOS) and for web builds, the method discussed here is not possible and the contents of the `res://data/`-folder have to be copied to the `user://`-folder in its entirety instead (see FAQ above).*
 
-All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
+All `*.db`-files (and `*.json`-files if you choose not to include them in the `*.pck`) should preferably be part of the same folder. For example, in the case of the demo-project this is the `data/`-folder. During export this folder has to be copied in its entirety and placed alongside the executable that is created by Godot's export command line utilities.  
+To simplify and automate this process, a script with the name `export_data.gd` can be found in the demo-project and allows to automatically copy the `data`-folder's contents to the export folder.
 
 The commands to succesfully export a working executable for the demo-project are:
 ```
 mkdir build
 godot -s export_data.gd
-godot -e --export-debug "Windows Desktop" build/godot-sqlite.exe
+godot -e --export-debug "Windows Desktop" 'build/SQLite Demo.exe'
 ```
 ("Windows Desktop" should be replaced by whatever the name of your relevant build template is.)
 
-The design philosophy behind this is the following:
-
-- Even after exporting the entire game, the data-files can still be easily edited without requiring additional exports for every miniscule edit.
-- Importing a database from a json-file allows the Godot executable to use the full capabilities of the SQLite framework (SELECT, UPDATE, ...), while still allowing writers and other content creators to edit these json-files using their favorite text-based IDE.
+For the "Windows Desktop" export target this results in following folder/file-structure:
+```
+data/test_backup_base64_old.json
+data/test_backup_old.json
+libgdsqlite.dll
+'SQLite Demo.exe'
+'SQlite Demo.pck'
+```
 
 # How to contribute?
 

@@ -5,7 +5,7 @@ var copy_path = "res://build/data"
 
 func _init():
 	var dir = Directory.new()
-	dir.make_dir(copy_path)
+	dir.make_dir_recursive(copy_path)
 	if dir.open(data_path) == OK:
 		dir.list_dir_begin();
 		var file_name = dir.get_next()
