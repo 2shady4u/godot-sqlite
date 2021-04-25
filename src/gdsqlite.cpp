@@ -722,15 +722,8 @@ bool SQLite::import_from_json(String import_path)
 
                 if (row.has(key))
                 {
-                    std::string input = ((const String &)row[key]).alloc_c_string();
-                    std::string output;
-                    macaron::Base64::Decode(input, output);
-
-                    PoolByteArray arr = PoolByteArray();
-                    arr.resize(output.length());
-                    PoolByteArray::Write write = arr.write();
-                    memcpy(write.ptr(), output.data(), output.length());
-
+                    String encoded_string = ((const String &)row[key]);
+                    PoolByteArray arr = Marshalls::get_singleton()->base64_to_raw(encoded_string);
                     row[key] = arr;
                 }
             }
@@ -802,14 +795,10 @@ bool SQLite::export_to_json(String export_path)
                     {
                         Dictionary row = query_result[j];
                         PoolByteArray arr = ((const PoolByteArray &)row[key]);
-                        PoolByteArray::Read r = arr.read();
+                        String encoded_string = Marshalls::get_singleton()->raw_to_base64(arr);
 
-                        std::string s(r.ptr(), r.ptr() + arr.size());
-                        std::string encoded_string = macaron::Base64::Encode(s);
-
-                        /* Has to be erased to make sure PoolByteArray is cleaned up properly!!!*/
                         row.erase(key);
-                        row[key] = godot::String(encoded_string.c_str());
+                        row[key] = encoded_string;
                     }
                 }
 

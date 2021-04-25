@@ -5,6 +5,7 @@
 #include <Reference.hpp>
 #include <FuncRef.hpp>
 #include <ProjectSettings.hpp>
+#include <Marshalls.hpp>
 #include <Directory.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
@@ -13,7 +14,6 @@
 #include <vector>
 #include <sstream>
 #include <sqlite/sqlite3.h>
-#include <base64/base64.h>
 #include <helpers/current_function.h>
 
 namespace godot
