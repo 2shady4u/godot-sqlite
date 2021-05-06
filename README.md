@@ -37,34 +37,44 @@ It's also possible to manually download the build files found in the [releases](
 
 An example project, named "demo", can also be downloaded from the releases tab.
 
+# How to use?
+
+Examples of possible usage can be found in the supplied demo-project as downloadable in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab or the source code can be directly inspected [here](https://github.com/2shady4u/godot-sqlite/blob/master/demo/database.gd).
+
+Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github.com/finepointcgi) is available here: 
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=HG-PV4rlzoY"><img src="https://img.youtube.com/vi/HG-PV4rlzoY/0.jpg"></a>
+</p>
+
 ## Variables
 
 - **path** (String, default="default")
 
-Path to the database, should be set before opening the database with `open_db()`. If no database with this name exists, a new one at the supplied path will be created. Both `res://` and `user://` keywords can be used to define the path.
+    Path to the database, should be set before opening the database with `open_db()`. If no database with this name exists, a new one at the supplied path will be created. Both `res://` and `user://` keywords can be used to define the path.
 
 - **error_message** (String, default="")
 
-Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
+    Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
 
 - **verbose_mode** (Boolean, default=false)
 
-Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
+    Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
 
 - **foreign_keys** (Boolean, default=false)
 
-Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database.
+    Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database.
 
 - **query_result** (Array, default=[])
 
-Contains the results from the latest query and is cleared after every new query. 
+    Contains the results from the latest query and is cleared after every new query. 
 
-***NOTE:** If you want your result to persist you'll have to **duplicate()** this array yourself BEFORE running additional queries.*
+    ***NOTE:** If you want your result to persist you'll have to **duplicate()** this array yourself BEFORE running additional queries.*
 
 - **last_insert_rowid** (Integer, default=0)
 
-Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
-Attempting to modify this variable directly is forbidden and throws an error.
+    Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
+    Attempting to modify this variable directly is forbidden and throws an error.
 
 ## Functions
 
@@ -76,79 +86,79 @@ Attempting to modify this variable directly is forbidden and throws an error.
 
 - Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
 
-Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
+    Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
 
-**Example usage**:
+    **Example usage**:
 
-```gdscript
-var query_string : String = "SELECT ? FROM company WHERE age < ?;"
-var param_bindings : Array = ["name", 24]
-var success = db.query_with_bindings(query_string, param_bindings)
-# Executes following query: 
-# SELECT name FROM company WHERE age < 24;
-```
+    ```gdscript
+    var query_string : String = "SELECT ? FROM company WHERE age < ?;"
+    var param_bindings : Array = ["name", 24]
+    var success = db.query_with_bindings(query_string, param_bindings)
+    # Executes following query: 
+    # SELECT name FROM company WHERE age < 24;
+    ```
 
-Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+    Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 
-***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
+    ***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
 
 - Boolean success = **create_table(** String table_name, Dictionary table_dictionary **)**
 
-Each key/value pair of the `table_dictionary`-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.
+    Each key/value pair of the `table_dictionary`-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.
 
-**Required fields**:
+    **Required fields**:
 
-- **"data_type"**: type of the column variable, following values are valid\*:
+    - **"data_type"**: type of the column variable, following values are valid\*:
 
-    | value       | SQLite         | Godot          |
-    |:-----------:|:--------------:|:--------------:|
-    | int         | INTEGER        | TYPE_INT       |
-    | real        | REAL           | TYPE_REAL      |
-    | text        | TEXT           | TYPE_STRING    |
-    | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING    |
-    | blob        | BLOB           | TYPE_RAW_ARRAY |
+        | value       | SQLite         | Godot          |
+        |:-----------:|:--------------:|:--------------:|
+        | int         | INTEGER        | TYPE_INT       |
+        | real        | REAL           | TYPE_REAL      |
+        | text        | TEXT           | TYPE_STRING    |
+        | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING    |
+        | blob        | BLOB           | TYPE_RAW_ARRAY |
 
-    \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.*  
-    \*\* *with the question mark being replaced by the maximum amount of characters*
+        \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.*  
+        \*\* *with the question mark being replaced by the maximum amount of characters*
 
-**Optional fields**:
+    **Optional fields**:
 
-- **"not_null"** *(default = false)*: Is the NULL value an invalid value for this column?
+    - **"not_null"** *(default = false)*: Is the NULL value an invalid value for this column?
 
-- **"default"**: The default value of the column if not explicitly given.
+    - **"default"**: The default value of the column if not explicitly given.
 
-- **"primary_key"** *(default = false)*: Is this the primary key of this table?  
-Evidently, only a single column can be set as the primary key.
+    - **"primary_key"** *(default = false)*: Is this the primary key of this table?  
+    Evidently, only a single column can be set as the primary key.
 
-- **"auto_increment"** *(default = false)*: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
+    - **"auto_increment"** *(default = false)*: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
 
-    ***NOTE**: Auto-incrementing a column only works when this column is the primary key!*
+        ***NOTE**: Auto-incrementing a column only works when this column is the primary key!*
 
-- **"foreign_key"**: Enforce an "exist" relationship between tables by setting this variable to `foreign_table.foreign_column`. In other words, when adding an additional row, the column value should be an existing value as found in the column with name `foreign_column` of the table with name `foreign_table`.
+    - **"foreign_key"**: Enforce an "exist" relationship between tables by setting this variable to `foreign_table.foreign_column`. In other words, when adding an additional row, the column value should be an existing value as found in the column with name `foreign_column` of the table with name `foreign_table`.
 
-    ***NOTE**: Availability of foreign keys has to be enabled by setting the `foreign_keys`-variable to true BEFORE opening the database.*
+        ***NOTE**: Availability of foreign keys has to be enabled by setting the `foreign_keys`-variable to true BEFORE opening the database.*
 
-**Example usage**:
+    **Example usage**:
 
-```gdscript
-# Add the row "id" to the table, which is an auto-incremented primary key.
-# When adding additional rows, this value can either by explicitely given or be unfilled.
-table_dictionary["id"] = {
-    "data_type":"int", 
-    "primary_key": true, 
-    "auto_increment":true
-}
-```
+    ```gdscript
+    # Add the row "id" to the table, which is an auto-incremented primary key.
+    # When adding additional rows, this value can either by explicitely given or be unfilled.
+    table_dictionary["id"] = {
+        "data_type":"int", 
+        "primary_key": true, 
+        "auto_increment":true
+    }
+    ```
 
-For more concrete usage examples see the `database.gd`-file as found in this repository's demo project.
+    For more concrete usage examples see the `database.gd`-file as found in this repository's demo project.
 
 - Boolean success = **drop_table(** String table_name **)**
 
 - Boolean success = **insert_row(** String table_name, Dictionary row_dictionary **)**
 
-Each key/value pair of the `row_dictionary`-variable defines the column values of a single row.  
+    Each key/value pair of the `row_dictionary`-variable defines the column values of a single row.  
 
-Columns should adhere to the table schema as instantiated using the `table_dictionary`-variable and are required if their corresponding **"not_null"**-column value is set to `True`.
+    Columns should adhere to the table schema as instantiated using the `table_dictionary`-variable and are required if their corresponding **"not_null"**-column value is set to `True`.
 
 - Boolean success = **insert_rows(** String table_name, Array row_array **)**
 
@@ -156,21 +166,21 @@ Columns should adhere to the table schema as instantiated using the `table_dicti
 
 - Boolean success = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary **)**
 
-With the `updated_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
+    With the `updated_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
 
 - Boolean success = **delete_rows(** String table_name, String query_conditions **)**
 
 - Boolean success = **import_from_json(** String import_path **)**
 
-Drops all database tables and imports the database structure and content present inside of import_path.json.
+    Drops all database tables and imports the database structure and content present inside of `import_path.json`.
 
 - Boolean success = **export_to_json(** String export_path **)**
 
-Exports the database structure and content to export_path.json as a backup or for ease of editing.
+    Exports the database structure and content to `export_path.json` as a backup or for ease of editing.
 
 - Boolean success = **create_function(** String function_name, FuncRef function_reference, int number_of_arguments **)**
 
-Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
+    Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
 
 ## Frequently Asked Questions (FAQ)
 
