@@ -8,6 +8,7 @@ env:
   TARGET_PATH: demo/addons/godot-sqlite/bin/javascript/
   TARGET_NAME: libgdsqlite
   TARGET: release
+  EMSDK_VERSION: 2.0.17
   GODOT_VERSION: 3.3
   EXPORT_NAME: demo/
 
@@ -50,8 +51,8 @@ jobs:
         run: |
           cd emsdk
           git pull
-          ./emsdk install latest
-          ./emsdk activate latest
+          ./emsdk install ${{env.EMSDK_VERSION}}
+          ./emsdk activate ${{env.EMSDK_VERSION}}
           source ./emsdk_env.sh
           cd ..
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
