@@ -287,13 +287,13 @@ elif env['platform'] == 'windows':
     elif host_platform == 'linux' or host_platform == 'osx':
         # Cross-compilation using MinGW
         if env['bits'] == '64':
-            env['CC'] = 'x86_64-w64-mingw32-g'
+            env['CC'] = 'x86_64-w64-mingw32-gcc'
             env['CXX'] = 'x86_64-w64-mingw32-g++'
             env['AR'] = "x86_64-w64-mingw32-ar"
             env['RANLIB'] = "x86_64-w64-mingw32-ranlib"
             env['LINK'] = "x86_64-w64-mingw32-g++"
         elif env['bits'] == '32':
-            env['CC'] = 'i686-w64-mingw32-g'
+            env['CC'] = 'i686-w64-mingw32-gcc'
             env['CXX'] = 'i686-w64-mingw32-g++'
             env['AR'] = "i686-w64-mingw32-ar"
             env['RANLIB'] = "i686-w64-mingw32-ranlib"
