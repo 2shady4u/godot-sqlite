@@ -16,6 +16,7 @@ Windows.64="res://addons/godot-sqlite/bin/win64/libgdsqlite.dll"
 X11.64="res://addons/godot-sqlite/bin/x11/libgdsqlite.so"
 iOS.armv7="res://addons/godot-sqlite/bin/ios/armv7/libgdsqlite.a"
 iOS.arm64="res://addons/godot-sqlite/bin/ios/arm64/libgdsqlite.a"
+Server="res://addons/godot-sqlite/bin/x11/libgdsqlite.so"
 
 [dependencies]
 
@@ -28,3 +29,4 @@ Windows.64=[  ]
 X11.64=[  ]
 iOS.armv7=[  ]
 iOS.arm64=[  ]
+Server=[  ]
