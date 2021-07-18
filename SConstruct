@@ -298,13 +298,18 @@ elif env['platform'] == 'windows':
             env['AR'] = "i686-w64-mingw32-ar"
             env['RANLIB'] = "i686-w64-mingw32-ranlib"
             env['LINK'] = "i686-w64-mingw32-g++"
+
     elif host_platform == 'windows' and env['use_mingw']:
-        env = env.Clone(tools=['mingw'])
+        # Don't Clone the environment. Because otherwise, SCons will pick up msvc stuff.
+        env = Environment(ENV = os.environ, tools=["mingw"])
+        opts.Update(env)
+        #env = env.Clone(tools=['mingw'])
+
         env["SPAWN"] = mySpawn
 
     # Native or cross-compilation using MinGW
     if host_platform == 'linux' or host_platform == 'osx' or env['use_mingw']:
-        env.Append(CCFLAGS=['-g', '-O3', '-Wwrite-strings'])
+        env.Append(CCFLAGS=['-O3', '-Wwrite-strings'])
         env.Append(CXXFLAGS=['-std=c++17'])
         env.Append(LINKFLAGS=[
             '--static',

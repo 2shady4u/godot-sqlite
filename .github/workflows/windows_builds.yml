@@ -1,7 +1,7 @@
 name: 🏁 Windows Builds
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, cross-compilation-tryouts ]
 
 # Global Settings
 env:
@@ -55,3 +55,53 @@ jobs:
         with:
           name: win64
           path: ${{env.PROJECT_FOLDER}}\${{env.TARGET_PATH}}
+
+  windows-cross-compilation:
+    name: Windows Cross Compilation
+    runs-on: "ubuntu-20.04"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+          submodules: recursive
+
+      # Install all packages (except scons)
+      - name: Configure dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential pkg-config libx11-dev libxcursor-dev \
+            libxinerama-dev libgl1-mesa-dev libglu-dev libasound2-dev libpulse-dev \
+            libudev-dev libxi-dev libxrandr-dev yasm mingw-w64
+
+      # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.x'
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: 'x64'
+
+      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      - name: Compilation
+        run: |
+          mkdir -v -p ${{env.PROJECT_FOLDER}}\${{env.TARGET_PATH}}
+          cd ${{env.PROJECT_FOLDER}}
+          cd godot-cpp
+          scons platform=windows bits=64 target=${{env.TARGET}} generate_bindings=yes -j4
+          cd ..
+          scons platform=windows target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}.dll
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: win64-cross
+          path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
