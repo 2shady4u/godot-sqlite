@@ -62,26 +62,29 @@ func example_of_basic_database_querying():
 	db = SQLite.new()
 	db.path = db_name
 	db.verbose_mode = true
+	db.read_only = false
 	# Open the database using the db_name found in the path variable
 	db.open_db()
-	# Throw away any table that was already present
-	db.drop_table(table_name)
-	# Create a table with the structure found in table_dict and add it to the database
-	db.create_table(table_name, table_dict)
 
-	var row_array : Array = []
-	var row_dict : Dictionary = Dictionary()
-	for i in range(0,ids.size()):
-		row_dict["id"] = ids[i]
-		row_dict["name"] = names[i]
-		row_dict["age"] = ages[i]
-		row_dict["address"] = addresses[i]
-		row_dict["salary"] = salaries[i]
-		row_array.append(row_dict.duplicate())
+	if not db.read_only:
+		# Throw away any table that was already present
+		db.drop_table(table_name)
+		# Create a table with the structure found in table_dict and add it to the database
+		db.create_table(table_name, table_dict)
 
-		# Insert a new row in the table
-		db.insert_row(table_name, row_dict)
-		row_dict.clear()
+		var row_array : Array = []
+		var row_dict : Dictionary = Dictionary()
+		for i in range(0,ids.size()):
+			row_dict["id"] = ids[i]
+			row_dict["name"] = names[i]
+			row_dict["age"] = ages[i]
+			row_dict["address"] = addresses[i]
+			row_dict["salary"] = salaries[i]
+			row_array.append(row_dict.duplicate())
+
+			# Insert a new row in the table
+			db.insert_row(table_name, row_dict)
+			row_dict.clear()
 
 	# Select all employees
 	var select_condition := ""

@@ -29,6 +29,7 @@ void SQLite::_register_methods()
 
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
+    register_property<SQLite, bool>("read_only", &SQLite::read_only, false);
 
     register_property<SQLite, String>("path", &SQLite::path, "default");
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
@@ -55,6 +56,7 @@ void SQLite::_init()
     path = String("default");
     verbose_mode = false;
     foreign_keys = false;
+    read_only = false;
 }
 
 bool SQLite::open_db()
@@ -93,7 +95,16 @@ bool SQLite::open_db()
 
     const char *char_path = path.alloc_c_string();
     /* Try to open the database */
-    rc = sqlite3_open(char_path, &db);
+    if (read_only)
+    {
+        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, NULL);
+
+    }
+    else
+    {
+        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+        /* Identical to: `rc = sqlite3_open(char_path, &db);`*/
+    }
     if (rc != SQLITE_OK)
     {
         GODOT_LOG(2, "GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)))
