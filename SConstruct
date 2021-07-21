@@ -357,7 +357,7 @@ if env['platform'] != "javascript":
 
 # tweak this if you want to use different folders, or more folders, to store your source code in.
 env.Append(CPPPATH=['src/'])
-sources = [Glob('src/*.cpp'), 'src/sqlite/sqlite3.c']
+sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), 'src/sqlite/sqlite3.c']
 if env['platform'] == "javascript":
     sources.append(cpp_bindings_path + 'bin/' + cpp_bindings_libname + '.bc')
 

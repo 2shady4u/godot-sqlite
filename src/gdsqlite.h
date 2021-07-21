@@ -15,6 +15,7 @@
 #include <sstream>
 #include <sqlite/sqlite3.h>
 #include <helpers/current_function.h>
+#include <vfs/gdsqlite_vfs.h>
 
 namespace godot
 {

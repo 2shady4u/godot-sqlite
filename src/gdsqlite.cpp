@@ -97,8 +97,8 @@ bool SQLite::open_db()
     /* Try to open the database */
     if (read_only)
     {
-        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, NULL);
-
+        sqlite3_vfs_register(gdsqlite_vfs(), 0);
+        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
     }
     else
     {
