@@ -1,7 +1,7 @@
 name: 🐧 Linux Builds
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, vfs-testing ]
 
 # Global Settings
 env:
