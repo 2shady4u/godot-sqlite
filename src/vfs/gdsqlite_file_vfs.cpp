@@ -11,7 +11,7 @@ int gdsqlite_file::close(sqlite3_file *pFile)
     ERR_FAIL_COND_V(!p->file->is_open(), SQLITE_IOERR_CLOSE);
 
     p->file->close();
-    p->file = nullptr;
+    p->file.unref();
 
     return SQLITE_OK;
 }

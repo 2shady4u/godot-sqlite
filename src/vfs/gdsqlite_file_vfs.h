@@ -1,8 +1,9 @@
 #ifndef GDSQLITE_VFS_FILE_H
 #define GDSQLITE_VFS_FILE_H
 
-#include <OS.hpp>
+#include <Godot.hpp>
 #include <File.hpp>
+#include <OS.hpp>
 
 #include "./sqlite/sqlite3.h"
 
