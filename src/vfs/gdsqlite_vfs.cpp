@@ -4,56 +4,79 @@
 
 using namespace godot;
 
+/*
+** Open a file handle.
+*/
 static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file *pFile, int flags, int *pOutFlags)
 {
 	static const sqlite3_io_methods gdsqlite_file_io_methods = {
-		1,									   	/* iVersion */
-		gdsqlite_file::close,				   	/* xClose */
-		gdsqlite_file::read,				   	/* xRead */
-		gdsqlite_file::write,				   	/* xWrite */
-		gdsqlite_file::truncate,			   	/* xTruncate */
-		gdsqlite_file::sync,				   	/* xSync */
-		gdsqlite_file::fileSize,			   	/* xFileSize */
-		gdsqlite_file::lock,				   	/* xLock */
-		gdsqlite_file::unlock,				   	/* xUnlock */
-		gdsqlite_file::checkReservedLock,	   	/* xCheckReservedLock */
-		gdsqlite_file::fileControl,		   		/* xFileControl */
-		gdsqlite_file::sectorSize,			   	/* xSectorSize */
-		gdsqlite_file::deviceCharacteristics, 	/* xDeviceCharacteristics */
+		1,									  /* iVersion */
+		gdsqlite_file::close,				  /* xClose */
+		gdsqlite_file::read,				  /* xRead */
+		gdsqlite_file::write,				  /* xWrite */
+		gdsqlite_file::truncate,			  /* xTruncate */
+		gdsqlite_file::sync,				  /* xSync */
+		gdsqlite_file::fileSize,			  /* xFileSize */
+		gdsqlite_file::lock,				  /* xLock */
+		gdsqlite_file::unlock,				  /* xUnlock */
+		gdsqlite_file::checkReservedLock,	  /* xCheckReservedLock */
+		gdsqlite_file::fileControl,			  /* xFileControl */
+		gdsqlite_file::sectorSize,			  /* xSectorSize */
+		gdsqlite_file::deviceCharacteristics, /* xDeviceCharacteristics */
 	};
 	gdsqlite_file *p = reinterpret_cast<gdsqlite_file *>(pFile);
-
-	ERR_FAIL_COND_V(zName == NULL, SQLITE_IOERR); // TODO: Support temp databases
-
-	// Get flags
-	// TODO: Support exclusive and create
+	Ref<File> file = File::_new();
 	int godot_flags = 0;
+
+	ERR_FAIL_COND_V(zName == NULL, SQLITE_IOERR); /* How does this respond to :memory:? */
+
+	Godot::print(String(zName));
+	std::cout << flags << std::endl;
+
+	/* TODO: Add/Support additional flags: 
+    ** - SQLITE_OPEN_DELETEONCLOSE
+    ** - SQLITE_OPEN_EXCLUSIVE
+	** - ???
+	*/
+
+	/* Convert SQLite's flags to something Godot might understand! */
 	if (flags & SQLITE_OPEN_READONLY)
 	{
-		Godot::print("read only");
+		Godot::print("READ");
 		godot_flags |= File::READ;
 	}
 	if (flags & SQLITE_OPEN_READWRITE)
 	{
-		Godot::print("write read");
-		godot_flags |= File::READ_WRITE;
+		if (flags & SQLITE_OPEN_CREATE)
+		{
+			if (file->file_exists(String(zName)))
+			{
+				Godot::print("READ WRITE");
+				godot_flags |= File::READ_WRITE;
+			}
+			else
+			{
+				Godot::print("WRITE READ");
+				godot_flags |= File::WRITE_READ;
+			}
+		}
+		else
+		{
+			Godot::print("READ WRITE");
+			godot_flags |= File::READ_WRITE;
+		}
 	}
 
-	// Open file
-	Ref<File> file = File::_new();
-	p->file = file;
-	Error err_code = p->file->open(String(zName), godot_flags);
+	Error err_code = file->open(String(zName), godot_flags);
+	ERR_FAIL_COND_V(err_code != Error::OK, SQLITE_CANTOPEN);
 
 	Godot::print(String(std::to_string(static_cast<int>(err_code)).c_str()));
-	Godot::print(String(zName));
-	Godot::print(flags);
-	std::cout << flags << std::endl;
-	ERR_FAIL_COND_V(err_code != Error::OK, SQLITE_CANTOPEN);
 
 	if (pOutFlags)
 	{
 		*pOutFlags = flags;
 	}
+	p->file = file;
 	p->base.pMethods = &gdsqlite_file_io_methods;
 	return SQLITE_OK;
 }
@@ -223,28 +246,28 @@ static int gdsqlite_vfs_currentTimeInt64(sqlite3_vfs *vfs, sqlite3_int64 *now)
 sqlite3_vfs *godot::gdsqlite_vfs()
 {
 	static sqlite3_vfs godot_vfs = {
-		3,							  	/* iVersion */
-		sizeof(gdsqlite_file),		   	/* szOsFile */
-		MAXPATHNAME,				   	/* mxPathname */
-		0,							   	/* pNext */
-		"godot",					   	/* zName */
-		NULL,						    /* pAppData */
-		gdsqlite_vfs_open,			   	/* xOpen */
-		gdsqlite_vfs_delete,		   	/* xDelete */
-		gdsqlite_vfs_access,		   	/* xAccess */
-		gdsqlite_vfs_fullPathname,	   	/* xFullPathname */
-		gdsqlite_vfs_dlOpen,		   	/* xDlOpen */
-		gdsqlite_vfs_dlError,		   	/* xDlError */
-		gdsqlite_vfs_dlSym,			   	/* xDlSym */
-		gdsqlite_vfs_dlClose,		  	/* xDlClose */
-		gdsqlite_vfs_randomness,	   	/* xRandomness */
-		gdsqlite_vfs_sleep,			   	/* xSleep */
-		gdsqlite_vfs_currentTime,	   	/* xCurrentTime */
-		gdsqlite_vfs_getLastError,	   	/* xGetLastError */
-		gdsqlite_vfs_currentTimeInt64, 	/* xCurrentTimeInt64 */
-		NULL,						   	/* xSetSystemCall */
-		NULL,						   	/* xGetSystemCall */
-		NULL						   	/* xNextSystemCall */
+		3,							   /* iVersion */
+		sizeof(gdsqlite_file),		   /* szOsFile */
+		MAXPATHNAME,				   /* mxPathname */
+		0,							   /* pNext */
+		"godot",					   /* zName */
+		NULL,						   /* pAppData */
+		gdsqlite_vfs_open,			   /* xOpen */
+		gdsqlite_vfs_delete,		   /* xDelete */
+		gdsqlite_vfs_access,		   /* xAccess */
+		gdsqlite_vfs_fullPathname,	   /* xFullPathname */
+		gdsqlite_vfs_dlOpen,		   /* xDlOpen */
+		gdsqlite_vfs_dlError,		   /* xDlError */
+		gdsqlite_vfs_dlSym,			   /* xDlSym */
+		gdsqlite_vfs_dlClose,		   /* xDlClose */
+		gdsqlite_vfs_randomness,	   /* xRandomness */
+		gdsqlite_vfs_sleep,			   /* xSleep */
+		gdsqlite_vfs_currentTime,	   /* xCurrentTime */
+		gdsqlite_vfs_getLastError,	   /* xGetLastError */
+		gdsqlite_vfs_currentTimeInt64, /* xCurrentTimeInt64 */
+		NULL,						   /* xSetSystemCall */
+		NULL,						   /* xGetSystemCall */
+		NULL						   /* xNextSystemCall */
 	};
 	return &godot_vfs;
 }
