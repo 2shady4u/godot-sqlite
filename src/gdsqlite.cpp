@@ -73,7 +73,10 @@ bool SQLite::open_db()
         }
 
         /* Find the real path */
-        path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
+        if (!read_only)
+        {
+            path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
+        }
         /* This part does weird things on Android & on export! Leave it out for now! */
         ///* Make the necessary empty directories if they do not exist yet */
         //Ref<Directory> dir = Directory::_new();
@@ -680,7 +683,8 @@ bool SQLite::import_from_json(String import_path)
     if (db == nullptr)
     {
         /* Open the database using the open_db method */
-        if (!open_db()){
+        if (!open_db())
+        {
             return false;
         }
     }
@@ -774,7 +778,8 @@ bool SQLite::export_to_json(String export_path)
     {
         Dictionary object_dict = database_array[i];
 
-        if (object_dict["type"] == String("table")){
+        if (object_dict["type"] == String("table"))
+        {
             String object_name = object_dict["name"];
             String query_string;
 
@@ -813,12 +818,12 @@ bool SQLite::export_to_json(String export_path)
                     }
                 }
 
-                if (!base64_columns.empty()){
+                if (!base64_columns.empty())
+                {
                     object_dict["base64_columns"] = base64_columns;
                 }
             }
             object_dict["row_array"] = query_result.duplicate(true);
-
         }
     }
 
@@ -908,7 +913,6 @@ bool SQLite::validate_json(Array database_array, std::vector<object_struct> &obj
                 return false;
             }
             new_object.row_array = temp_dict["row_array"];
-
         }
         else if (temp_dict["type"] == String("trigger"))
         {

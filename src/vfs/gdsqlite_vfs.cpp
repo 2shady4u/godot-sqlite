@@ -188,10 +188,10 @@ static void gdsqlite_vfs_dlClose(sqlite3_vfs *vfs, void *data)
 */
 static int gdsqlite_vfs_randomness(sqlite3_vfs *pVfs, int nByte, char *zByte)
 {
+	srand(OS::get_singleton()->get_unix_time());
 	for (int i = 0; i < nByte; ++i)
 	{
-		zByte[i] = 0;
-		//zByte[i] = Math::rand();
+		zByte[i] = rand();
 	}
 	return SQLITE_OK;
 }
