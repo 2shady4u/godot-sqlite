@@ -72,11 +72,12 @@ bool SQLite::open_db()
             path += ending;
         }
 
-        /* Find the real path */
         if (!read_only)
         {
+            /* Find the real path */
             path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
         }
+
         /* This part does weird things on Android & on export! Leave it out for now! */
         ///* Make the necessary empty directories if they do not exist yet */
         //Ref<Directory> dir = Directory::_new();
@@ -100,14 +101,23 @@ bool SQLite::open_db()
     /* Try to open the database */
     if (read_only)
     {
-        sqlite3_vfs_register(gdsqlite_vfs(), 0);
-        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
+        if (path != ":memory:")
+        {
+            sqlite3_vfs_register(gdsqlite_vfs(), 0);
+            rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
+        }
+        else
+        {
+            GODOT_LOG(2, "GDSQLite Error: Opening in-memory databases in read-only mode is currently not supported!")
+            return false;
+        }
     }
     else
     {
         rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
         /* Identical to: `rc = sqlite3_open(char_path, &db);`*/
     }
+
     if (rc != SQLITE_OK)
     {
         GODOT_LOG(2, "GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)))

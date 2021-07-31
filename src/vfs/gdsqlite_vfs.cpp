@@ -67,10 +67,17 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 		}
 	}
 
+	/* Attempt to open the database or journal file using Godot's `open()`-function */
 	Error err_code = file->open(String(zName), godot_flags);
-	ERR_FAIL_COND_V(err_code != Error::OK, SQLITE_CANTOPEN);
-
-	Godot::print(String(std::to_string(static_cast<int>(err_code)).c_str()));
+	if (err_code != Error::OK) {
+		/* File can't be opened! */
+		/* In most cases this is caused by the fact that Godot opens files in a non-shareable way, as discussed here: */
+		/* https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-s-wfopen-s?view=msvc-160 */
+		/* Simply assuring that the file is closed in all other programs fixes this issue... */
+		/* Multiple database connections are only possible if they are opened in SQLITE_OPEN_READONLY mode */
+        ERR_PRINT("GDSQLITE_VFS Error: Could not open database! Is the file read/write locked by another program? (Error = " + String(std::to_string(static_cast<int>(err_code)).c_str()) + ")");
+        return SQLITE_CANTOPEN;
+	}
 
 	if (pOutFlags)
 	{
