@@ -133,7 +133,7 @@ opts.Add(PathVariable(
 opts.Add(PathVariable(
     'target_name', 
     'The library name.', 
-    'libgdexample', 
+    'libgdsqlite', 
     PathVariable.PathAccept
 ))
 

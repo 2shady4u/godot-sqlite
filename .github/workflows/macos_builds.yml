@@ -1,7 +1,7 @@
 name: 🍎 macOS Builds
 on:
   push:
-    branches: [ master, main, vfs-testing ]
+    branches: [ master, main ]
 
 # Global Settings
 env:
