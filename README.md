@@ -2,7 +2,7 @@
 
 # godot-sqlite
 
-This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.1+. Additionally, it
+This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.2+. Additionally, it
 does not require any additional compilation or mucking about with build scripts.
 
 ### Supported operating systems:
@@ -64,6 +64,12 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 - **foreign_keys** (Boolean, default=false)
 
     Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database.
+
+- **read_only** (Boolean, default=false)
+
+    Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API.
+
+    ***NOTE:** Godot opens files in a mode that is not shareable i.e. the database file cannot be open in any other program. Attempting to open a read-only database that is locked by another program fails and returns `ERR_FILE_CANT_OPEN` (`12`)*
 
 - **query_result** (Array, default=[])
 
@@ -331,5 +337,5 @@ In the case of Android, the [Android NDK](https://developer.android.com/ndk) nee
 
 For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts, the `SConstruct`-file (for Windows, Linux, Mac OS X, iOS and HTML5 compilation) and both the `Android.mk`- and `jni/Application.mk`-files for the Android build process.
 
-Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/latest/tutorials/plugins/gdnative/gdnative-cpp-example.html)
+Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-cpp-example.html)
 in the Official Godot Documentation.
