@@ -15,6 +15,7 @@
 #include <sstream>
 #include <sqlite/sqlite3.h>
 #include <helpers/current_function.h>
+#include <vfs/gdsqlite_vfs.h>
 
 namespace godot
 {
@@ -55,7 +56,7 @@ namespace godot
 
     public:
         int last_insert_rowid;
-        bool verbose_mode, foreign_keys;
+        bool verbose_mode, foreign_keys, read_only;
         String path, error_message;
         Array query_result;
 
