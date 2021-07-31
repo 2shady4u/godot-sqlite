@@ -1,6 +1,4 @@
 #include "gdsqlite_vfs.h"
-#include <iostream>
-#include <string>
 
 using namespace godot;
 

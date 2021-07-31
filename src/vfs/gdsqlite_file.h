@@ -1,5 +1,5 @@
-#ifndef GDSQLITE_VFS_FILE_H
-#define GDSQLITE_VFS_FILE_H
+#ifndef GDSQLITE_FILE_H
+#define GDSQLITE_FILE_H
 
 #include <Godot.hpp>
 #include <File.hpp>

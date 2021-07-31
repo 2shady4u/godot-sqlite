@@ -1,4 +1,4 @@
-#include "gdsqlite_file_vfs.h"
+#include "gdsqlite_file.h"
 
 using namespace godot;
 
