@@ -385,5 +385,22 @@ func example_of_read_only_database():
 	for row in selected_array:
 		cprint("* " + row["name"])
 
+	# Open another simultanous database connection in read-only mode.
+	# Having multiple database connections in read-only mode is allowed.
+	# Having multiple database connections in read and write is NOT allowed!
+	# This behaviour is hard-coded into Godot's file handling system and can't be
+	# modified by this plugin.
+	var other_db = SQLite.new()
+	other_db.path = packaged_db_name
+	other_db.verbose_mode = true
+	other_db.read_only = true
+
+	other_db.open_db()
+
+	# Get the experience you would get by kiling a mimic.
+	select_condition = "name = 'mimic'"
+	selected_array = other_db.select_rows(packaged_table_name, select_condition, ["experience"])
+	cprint("Killing a mimic yields " + str(selected_array[0]["experience"]) + " experience points!")
+
 	# Close the current database
 	db.close_db()
