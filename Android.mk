@@ -23,6 +23,8 @@ LOCAL_LDLIBS := -llog
 LOCAL_SRC_FILES := \
 src/gdsqlite.cpp \
 src/library.cpp \
+src/vfs/gdsqlite_vfs.cpp \
+src/vfs/gdsqlite_file.cpp \
 src/sqlite/sqlite3.c \
 
 LOCAL_C_INCLUDES := \

@@ -20,6 +20,8 @@ mono_crash.*.json
 *.sql
 *.sqlite
 *.db
+# Do not ignore the database that is to be opened in read-only mode!
+!data_to_be_packaged.db
 
 # Compiled source #
 ###################

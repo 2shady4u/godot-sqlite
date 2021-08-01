@@ -29,6 +29,7 @@ void SQLite::_register_methods()
 
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
+    register_property<SQLite, bool>("read_only", &SQLite::read_only, false);
 
     register_property<SQLite, String>("path", &SQLite::path, "default");
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
@@ -55,6 +56,7 @@ void SQLite::_init()
     path = String("default");
     verbose_mode = false;
     foreign_keys = false;
+    read_only = false;
 }
 
 bool SQLite::open_db()
@@ -70,8 +72,12 @@ bool SQLite::open_db()
             path += ending;
         }
 
-        /* Find the real path */
-        path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
+        if (!read_only)
+        {
+            /* Find the real path */
+            path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
+        }
+
         /* This part does weird things on Android & on export! Leave it out for now! */
         ///* Make the necessary empty directories if they do not exist yet */
         //Ref<Directory> dir = Directory::_new();
@@ -93,7 +99,25 @@ bool SQLite::open_db()
 
     const char *char_path = path.alloc_c_string();
     /* Try to open the database */
-    rc = sqlite3_open(char_path, &db);
+    if (read_only)
+    {
+        if (path != ":memory:")
+        {
+            sqlite3_vfs_register(gdsqlite_vfs(), 0);
+            rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
+        }
+        else
+        {
+            GODOT_LOG(2, "GDSQLite Error: Opening in-memory databases in read-only mode is currently not supported!")
+            return false;
+        }
+    }
+    else
+    {
+        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+        /* Identical to: `rc = sqlite3_open(char_path, &db);`*/
+    }
+
     if (rc != SQLITE_OK)
     {
         GODOT_LOG(2, "GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)))
@@ -669,7 +693,8 @@ bool SQLite::import_from_json(String import_path)
     if (db == nullptr)
     {
         /* Open the database using the open_db method */
-        if (!open_db()){
+        if (!open_db())
+        {
             return false;
         }
     }
@@ -763,7 +788,8 @@ bool SQLite::export_to_json(String export_path)
     {
         Dictionary object_dict = database_array[i];
 
-        if (object_dict["type"] == String("table")){
+        if (object_dict["type"] == String("table"))
+        {
             String object_name = object_dict["name"];
             String query_string;
 
@@ -802,12 +828,12 @@ bool SQLite::export_to_json(String export_path)
                     }
                 }
 
-                if (!base64_columns.empty()){
+                if (!base64_columns.empty())
+                {
                     object_dict["base64_columns"] = base64_columns;
                 }
             }
             object_dict["row_array"] = query_result.duplicate(true);
-
         }
     }
 
@@ -897,7 +923,6 @@ bool SQLite::validate_json(Array database_array, std::vector<object_struct> &obj
                 return false;
             }
             new_object.row_array = temp_dict["row_array"];
-
         }
         else if (temp_dict["type"] == String("trigger"))
         {
