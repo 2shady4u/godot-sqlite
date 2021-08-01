@@ -4,11 +4,6 @@ import os
 import sys
 import subprocess
 
-def add_sources(sources, dir, extension):
-    for f in os.listdir(dir):
-        if f.endswith('.' + extension):
-            sources.append(dir + '/' + f)
-
 if sys.version_info < (3,):
     def decode_utf8(x):
         return x
@@ -53,11 +48,10 @@ if (os.name=="nt"):
 
         return rv
 
-
-def sys_exec(args):
-    proc = subprocess.Popen(args, stdout=subprocess.PIPE, text=True)
-    (out, err) = proc.communicate()
-    return out.rstrip("\r\n").lstrip()
+def add_sources(sources, dir, extension):
+    for f in os.listdir(dir):
+        if f.endswith('.' + extension):
+            sources.append(dir + '/' + f)
 
 #################
 #OPTIONS#########
@@ -77,11 +71,19 @@ else:
         'platform=<platform>'
     )
 
-opts = Variables([], ARGUMENTS)
-
 # Gets the standard flags CC, CCX, etc.
-env = DefaultEnvironment()
+env = Environment(ENV = os.environ)
 
+is64 = sys.maxsize > 2**32
+if (
+    env['TARGET_ARCH'] == 'amd64' or
+    env['TARGET_ARCH'] == 'emt64' or
+    env['TARGET_ARCH'] == 'x86_64' or
+    env['TARGET_ARCH'] == 'arm64-v8a'
+):
+    is64 = True
+
+opts = Variables([], ARGUMENTS)
 # Define our options
 opts.Add(EnumVariable(
     'platform',
@@ -93,8 +95,8 @@ opts.Add(EnumVariable(
 opts.Add(EnumVariable(
     'bits',
     'Target platform bits',
-    'default',
-    ('default', '32', '64')
+    '64' if is64 else '32',
+    ('32', '64')
 ))
 opts.Add(BoolVariable(
     'use_llvm',
@@ -133,7 +135,7 @@ opts.Add(PathVariable(
 opts.Add(PathVariable(
     'target_name', 
     'The library name.', 
-    'libgdexample', 
+    'libgdsqlite', 
     PathVariable.PathAccept
 ))
 
@@ -141,20 +143,10 @@ opts.Add(PathVariable(
 godot_headers_path = "godot-cpp/godot-headers/"
 cpp_bindings_path = "godot-cpp/"
 
-env = Environment(ENV = os.environ)
 # Updates the environment with the option variables.
 opts.Update(env)
 # Generates help for the -h scons option.
 Help(opts.GenerateHelpText(env))
-
-is64 = sys.maxsize > 2**32
-if (
-    env['TARGET_ARCH'] == 'amd64' or
-    env['TARGET_ARCH'] == 'emt64' or
-    env['TARGET_ARCH'] == 'x86_64' or
-    env['TARGET_ARCH'] == 'arm64-v8a'
-):
-    is64 = True
 
 # For the reference:
 # - CCFLAGS are compilation flags shared between C and C++
@@ -173,9 +165,6 @@ if host_platform == 'windows':
     elif env['bits'] == '32':
          env = Environment(TARGET_ARCH='x86')
     opts.Update(env)
-
-if env['bits'] == 'default':
-    env['bits'] = '64' if is64 else '32'
 
 arch_suffix = env['bits']
 if env['platform'] == 'ios':
@@ -340,12 +329,17 @@ elif env["platform"] == "javascript":
     # Program() output consists of multiple files, so specify suffixes manually at builder.
     env["PROGSUFFIX"] = ""
     env["LIBPREFIX"] = "lib"
-    env["LIBSUFFIX"] = ".bc"
+    env["LIBSUFFIX"] = ".a"
     env["LIBPREFIXES"] = ["$LIBPREFIX"]
     env["LIBSUFFIXES"] = ["$LIBSUFFIX"]
     env.Replace(SHLINKFLAGS='$LINKFLAGS')
     env.Replace(SHLINKFLAGS='$LINKFLAGS')
     env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME']=1
+
+    if env['target'] == 'debug':
+        env.Append(CCFLAGS=['-O0', '-g'])
+    elif env['target'] == 'release':
+        env.Append(CCFLAGS=['-O3'])
 
 #####################
 #ADD SOURCES#########
