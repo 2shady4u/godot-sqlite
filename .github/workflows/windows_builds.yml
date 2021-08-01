@@ -1,7 +1,7 @@
 name: 🏁 Windows Builds
 on:
   push:
-    branches: [ master, main, cross-compilation-tryouts ]
+    branches: [ master, main ]
 
 # Global Settings
 env:
