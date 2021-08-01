@@ -69,7 +69,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API.
 
-    ***NOTE:** Godot opens files in a mode that is not shareable i.e. the database file cannot be open in any other program. Attempting to open a read-only database that is locked by another program fails and returns `ERR_FILE_CANT_OPEN` (`12`)*
+    ***NOTE:** Godot opens files in a mode that is not shareable i.e. the database file cannot be open in any other program. Attempting to open a read-only database that is locked by another program fails and returns `ERR_FILE_CANT_OPEN` (`12`). However, multiple simultaneous read-only database connections are allowed.*
 
 - **query_result** (Array, default=[])
 
@@ -291,7 +291,30 @@ Follow these steps to create a working Linux Server for your project:
 
 # How to export?
 
+The exporting strategy is dependent on the nature of your database.
+
+## Read-only databases
+
+If your database serves as static data storage i.e. there's no persistent dynamic data that needs to be saved, then your database is a read-only database. For example, a database that contains a table of monster descriptions and data (experience gained on kill, health points) probably never changes during normal gameplay.
+
+In this case, the database can be packaged in the `*.pck`-file together with all other assets without any hassle.  
+To enable this behaviour following conditions need to be met:
+- The database file has to be added manually to the `include_filter` of your `export_presets.cfg`-file to package the file on export.
+- The connection has to be opened in read-only mode by setting the `read_only` variable to True.
+
+You can also open databases in read-only mode that are not packaged, albeit under some restrictions such as the fact that the database files have to copied manually to `user://`-folder on mobile platforms (Android & iOS) and for web builds.
+
+One important additional constraint for read-only databases is that Godot's implementation of file handling does not allow files to opened in a shareable manner. Basically this means that opening a database connection fails whenever other programs have a read lock on the database file e.g. having the file open in [SQLiteStudio](https://sqlitestudio.pl/) for editing purposes. However, multiple simultaneous read-only database connections are allowed.
+
+***NOTE**: The contents of your PCK file can be verified by using externally available tools as found [here](https://github.com/hhyyrylainen/GodotPckTool).*
+
+## Read and write databases
+
 ***NOTE**: On mobile platforms (Android & iOS) and for web builds, the method discussed here is not possible and the contents of the `res://data/`-folder have to be copied to the `user://`-folder in its entirety instead (see FAQ above).*
+
+If your database serves as dynamic data storage i.e. there's persistent dynamic data that needs to be saved during gameplay, then your database is a read and write database. For example, a database that contains a table of character levels and experience dynamically changes whenever the player levels up and/or gains experience.
+
+In this case, the database cannot be packaged in the `*.pck`-file as the contents of this file are static and cannot be dynamically modified during normal operation.  
 
 All `*.db`-files (and `*.json`-files if you choose not to include them in the `*.pck`) should preferably be part of the same folder. For example, in the case of the demo-project this is the `data/`-folder. During export this folder has to be copied in its entirety and placed alongside the executable that is created by Godot's export command line utilities.  
 To simplify and automate this process, a script with the name `export_data.gd` can be found in the demo-project and allows to automatically copy the `data`-folder's contents to the export folder.
