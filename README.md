@@ -268,9 +268,12 @@ Creating function should only be seen as a measure of last resort and only be us
 
 ### 4. My Android/iOS/HTML5 application cannot access the database!
 
-Android does not allow modification of files in the `res://`-folder, thus blocking the plugin from writing to and/or reading from this database-file.
-In both cases, the most painless solution is to copy the entire database to the `user://`-folder instead as apps have explicit writing privileges there.
+Android does not allow modification of files in the `res://`-folder, thus blocking the plugin from acquiring a read and write lock on the database-file.
 
+In the case of read-only databases, the database files have to be packaged/exported in the `*.pck`-file by manually adding the file entry to the `include_filter` of your `export_presets.cfg`-file.
+Additionally the connection has to be opened by explicitly setting the `read_only`-variable of your connection to True before opening your database.
+
+In the case of a read and write database connection, the most painless solution is to copy the entire database to the `user://`-folder instead as apps have explicit writing privileges there.
 If there is a better solution, one that does not involve copying the database to a new location, please do enlighten me.
 
 ### 5. Is this plugin compatible with a Godot Server binary? How to set it up?
