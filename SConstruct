@@ -184,7 +184,7 @@ if host_platform == 'windows':
     if env['bits'] == '64':
         env = Environment(TARGET_ARCH='amd64')
     elif env['bits'] == '32':
-         env = Environment(TARGET_ARCH='x86')
+        env = Environment(TARGET_ARCH='x86')
 
     opts.Update(env)
 
@@ -272,7 +272,7 @@ elif env['platform'] == 'ios':
     env['AR'] = compiler_path + 'ar'
     env['RANLIB'] = compiler_path + 'ranlib'
 
-    env.Append(CCFLAGS=['-g', '-arch', env['ios_arch'], '-isysroot', sdk_path])
+    env.Append(CCFLAGS=['-arch', env['ios_arch'], '-isysroot', sdk_path])
     env.Append(CXXFLAGS=['-std=c++17'])
     env.Append(LINKFLAGS=[
         '-arch',
