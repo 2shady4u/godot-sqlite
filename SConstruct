@@ -116,11 +116,32 @@ opts.Add(EnumVariable(
     allowed_values=('debug', 'release'),
     ignorecase=2
 ))
+opts.Add(
+    'macos_deployment_target',
+    'macOS deployment target',
+    'default'
+)
+opts.Add(
+    'macos_sdk_path',
+    'macOS SDK path',
+    ''
+)
+opts.Add(EnumVariable(
+    'macos_arch',
+    'Target macOS architecture',
+    'x86_64',
+    ['x86_64', 'arm64']
+))
 opts.Add(EnumVariable(
     'ios_arch',
     'Target iOS architecture',
     'arm64',
     ['armv7', 'arm64', 'x86_64']
+))
+opts.Add(BoolVariable(
+    'ios_simulator',
+    'Target iOS Simulator',
+    False
 ))
 opts.Add(
     'IPHONEPATH',
@@ -163,14 +184,9 @@ if host_platform == 'windows':
     if env['bits'] == '64':
         env = Environment(TARGET_ARCH='amd64')
     elif env['bits'] == '32':
-         env = Environment(TARGET_ARCH='x86')
-    opts.Update(env)
+        env = Environment(TARGET_ARCH='x86')
 
-arch_suffix = env['bits']
-if env['platform'] == 'ios':
-    arch_suffix = env['ios_arch']
-if env['platform'] == 'javascript':
-    arch_suffix = 'wasm'
+    opts.Update(env)
 
 ###################
 ####FLAGS##########
@@ -208,27 +224,37 @@ elif env['platform'] == 'osx':
             'Only 64-bit builds are supported for the macOS target.'
         )
 
-    env.Append(CCFLAGS=['-g', '-arch', 'x86_64'])
+    env.Append(CCFLAGS=['-arch', env['macos_arch']])
     env.Append(CXXFLAGS=['-std=c++17'])
+
+    if env['macos_deployment_target'] != 'default':
+        env.Append(CCFLAGS=['-mmacosx-version-min=' + env['macos_deployment_target']])
+        env.Append(LINKFLAGS=['-mmacosx-version-min=' + env['macos_deployment_target']])
+
+    if env['macos_sdk_path']:
+        env.Append(CCFLAGS=['-isysroot', env['macos_sdk_path']])
+        env.Append(LINKFLAGS=['-isysroot', env['macos_sdk_path']])
+
     env.Append(LINKFLAGS=[
         '-arch',
-        'x86_64',
+        env['macos_arch'],
         '-framework',
         'Cocoa',
         '-Wl,-undefined,dynamic_lookup',
     ])
 
     if env['target'] == 'debug':
-        env.Append(CCFLAGS=['-Og'])
+        env.Append(CCFLAGS=['-Og', 'g'])
     elif env['target'] == 'release':
         env.Append(CCFLAGS=['-O3'])
 
 elif env['platform'] == 'ios':
     env['target_path'] += env['ios_arch'] + '/'
 
-    if env['ios_arch'] == 'x86_64':
+    if env['ios_simulator']:
         sdk_name = 'iphonesimulator'
         env.Append(CCFLAGS=['-mios-simulator-version-min=10.0'])
+        env['LIBSUFFIX'] = ".simulator" + env['LIBSUFFIX']
     else:
         sdk_name = 'iphoneos'
         env.Append(CCFLAGS=['-miphoneos-version-min=10.0'])
@@ -246,7 +272,7 @@ elif env['platform'] == 'ios':
     env['AR'] = compiler_path + 'ar'
     env['RANLIB'] = compiler_path + 'ranlib'
 
-    env.Append(CCFLAGS=['-g', '-arch', env['ios_arch'], '-isysroot', sdk_path])
+    env.Append(CCFLAGS=['-arch', env['ios_arch'], '-isysroot', sdk_path])
     env.Append(CXXFLAGS=['-std=c++17'])
     env.Append(LINKFLAGS=[
         '-arch',
@@ -259,7 +285,7 @@ elif env['platform'] == 'ios':
     ])
 
     if env['target'] == 'debug':
-        env.Append(CCFLAGS=['-Og'])
+        env.Append(CCFLAGS=['-Og', '-g'])
     elif env['target'] == 'release':
         env.Append(CCFLAGS=['-O3'])
 
@@ -344,12 +370,25 @@ elif env["platform"] == "javascript":
 #####################
 #ADD SOURCES#########
 #####################
+env.Append(CPPPATH=[
+    '.', 
+    godot_headers_path, 
+    cpp_bindings_path + 'include/', 
+    cpp_bindings_path + 'include/core/', 
+    cpp_bindings_path + 'include/gen/'
+])
+
+arch_suffix = env['bits']
+if env['platform'] == 'ios':
+    arch_suffix = env['ios_arch']
+if env['platform'] == 'javascript':
+    arch_suffix = 'wasm'
+
 cpp_bindings_libname = 'libgodot-cpp.{}.{}.{}'.format(
                         env['platform'],
                         env['target'],
                         arch_suffix)
 
-env.Append(CPPPATH=['.', godot_headers_path, cpp_bindings_path + 'include/', cpp_bindings_path + 'include/core/', cpp_bindings_path + 'include/gen/'])
 if env['platform'] != "javascript":
     env.Append(LIBS=[cpp_bindings_libname])
     env.Append(LIBPATH=[cpp_bindings_path + 'bin/'])
@@ -358,7 +397,7 @@ if env['platform'] != "javascript":
 env.Append(CPPPATH=['src/'])
 sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), 'src/sqlite/sqlite3.c']
 if env['platform'] == "javascript":
-    sources.append(cpp_bindings_path + 'bin/' + cpp_bindings_libname + '.bc')
+    sources.append(cpp_bindings_path + 'bin/' + cpp_bindings_libname + '.a')
 
 ###############
 #BUILD LIB#####
