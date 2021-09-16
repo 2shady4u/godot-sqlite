@@ -2,7 +2,7 @@
 
 # godot-sqlite
 
-This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.1+. Additionally, it
+This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.2+. Additionally, it
 does not require any additional compilation or mucking about with build scripts.
 
 ### Supported operating systems:
@@ -11,6 +11,7 @@ does not require any additional compilation or mucking about with build scripts.
 - Windows
 - Android (arm64-v8a, armeabi-v7a & x86)
 - iOS (arm64 & armv7)
+- HTML5 (**requires Godot 3.3+**)
 
 _DISLAIMER_: iOS is still untested! (as of 24/12/2020)
 
@@ -32,38 +33,60 @@ Re-building Godot from scratch is **NOT** required, the proper way of installing
 
 ### Manually
 
-It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the *gdsqlite.gdns*-resource and that it is available in the *res://*-environment.
+It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the `gdsqlite.gdns`-resource and that it is available in the `res://`-environment.
 
 An example project, named "demo", can also be downloaded from the releases tab.
 
+# How to use?
+
+Examples of possible usage can be found in the supplied demo-project as downloadable in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab or the source code can be directly inspected [here](https://github.com/2shady4u/godot-sqlite/blob/master/demo/database.gd).
+
+Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github.com/finepointcgi) is available here: 
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=HG-PV4rlzoY"><img src="https://img.youtube.com/vi/HG-PV4rlzoY/0.jpg"></a>
+</p>
+
 ## Variables
 
-- **path** (String ,default value='default')
+- **path** (String, default="default")
 
-Path to the database, should be set before opening the database with .open_db(). If no database with this name exists, a new one at the supplied path will be created. Both *res://* and *user://* keywords can be used to define the path.
+    Path to the database, should be set before opening the database with `open_db()`. If no database with this name exists, a new one at the supplied path will be created. Both `res://` and `user://` keywords can be used to define the path.
 
-- **error_message** (String, default='')
+- **error_message** (String, default="")
 
-Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
+    Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
+
+- **default_extension** (String, default="db")
+
+    Default extension that is automatically appended to the `path`-variable whenever **no** extension is detected/given.
+
+    ***NOTE:** If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.*
 
 - **verbose_mode** (Boolean, default=false)
 
-Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
+    Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
 
 - **foreign_keys** (Boolean, default=false)
 
-Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database.
+    Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database.
+
+- **read_only** (Boolean, default=false)
+
+    Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API.
+
+    ***NOTE:** Godot opens files in a mode that is not shareable i.e. the database file cannot be open in any other program. Attempting to open a read-only database that is locked by another program fails and returns `ERR_FILE_CANT_OPEN` (`12`). However, multiple simultaneous read-only database connections are allowed.*
 
 - **query_result** (Array, default=[])
 
-Contains the results from the latest query and is cleared after every new query. 
+    Contains the results from the latest query and is cleared after every new query. 
 
-***NOTE:** If you want your result to persist you'll have to **duplicate()** this array yourself BEFORE running additional queries.*
+    ***NOTE:** If you want your result to persist you'll have to **duplicate()** this array yourself BEFORE running additional queries.*
 
 - **last_insert_rowid** (Integer, default=0)
 
-Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
-Attempting to modify this variable directly is forbidden and throws an error.
+    Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
+    Attempting to modify this variable directly is forbidden and throws an error.
 
 ## Functions
 
@@ -75,79 +98,79 @@ Attempting to modify this variable directly is forbidden and throws an error.
 
 - Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
 
-Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
+    Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
 
-**Example usage**:
+    **Example usage**:
 
-```Swift
-var query_string : String = "SELECT ? FROM company WHERE age < ?;"
-var param_bindings : Array = ["name", 24]
-var success = db.query_with_bindings(query_string, param_bindings)
-# Executes following query: 
-# SELECT name FROM company WHERE age < 24;
-```
+    ```gdscript
+    var query_string : String = "SELECT ? FROM company WHERE age < ?;"
+    var param_bindings : Array = ["name", 24]
+    var success = db.query_with_bindings(query_string, param_bindings)
+    # Executes following query: 
+    # SELECT name FROM company WHERE age < 24;
+    ```
 
-Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+    Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 
-***NOTE**: Binding column names is not possible due SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
+    ***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
 
 - Boolean success = **create_table(** String table_name, Dictionary table_dictionary **)**
 
-Each key/value pair of the `table_dictionary`-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.
+    Each key/value pair of the `table_dictionary`-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.
 
-**Required fields**:
+    **Required fields**:
 
-- **"data_type"**: type of the column variable, following values are valid\*:
+    - **"data_type"**: type of the column variable, following values are valid\*:
 
-    | value       | SQLite         | Godot          |
-    |:-----------:|:--------------:|:--------------:|
-    | int         | INTEGER        | TYPE_INT       |
-    | real        | REAL           | TYPE_REAL      |
-    | text        | TEXT           | TYPE_STRING    |
-    | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING    |
-    | blob        | BLOB           | TYPE_RAW_ARRAY |
+        | value       | SQLite         | Godot          |
+        |:-----------:|:--------------:|:--------------:|
+        | int         | INTEGER        | TYPE_INT       |
+        | real        | REAL           | TYPE_REAL      |
+        | text        | TEXT           | TYPE_STRING    |
+        | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING    |
+        | blob        | BLOB           | TYPE_RAW_ARRAY |
 
-    \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.  
-    \*\* *with the question mark being replaced by the maximum amount of characters*
+        \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.*  
+        \*\* *with the question mark being replaced by the maximum amount of characters*
 
-**Optional fields**:
+    **Optional fields**:
 
-- **"not_null"** *(default = false)*: Is the NULL value an invalid value for this column?
+    - **"not_null"** *(default = false)*: Is the NULL value an invalid value for this column?
 
-- **"default"**: The default value of the column if not explicitly given.
+    - **"default"**: The default value of the column if not explicitly given.
 
-- **"primary_key"** *(default = false)*: Is this the primary key of this table?  
-Evidently, only a single column can be set as the primary key.
+    - **"primary_key"** *(default = false)*: Is this the primary key of this table?  
+    Evidently, only a single column can be set as the primary key.
 
-- **"auto_increment"** *(default = false)*: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
+    - **"auto_increment"** *(default = false)*: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
 
-    ***NOTE**: Auto-incrementing a column only works when this column is the primary key!*
+        ***NOTE**: Auto-incrementing a column only works when this column is the primary key!*
 
-- **"foreign_key"**: Enforce an "exist" relationship between tables by setting this variable to `foreign_table.foreign_column`. In other words, when adding an additional row, the column value should be an existing value as found in the column with name `foreign_column` of the table with name `foreign_table`.
+    - **"foreign_key"**: Enforce an "exist" relationship between tables by setting this variable to `foreign_table.foreign_column`. In other words, when adding an additional row, the column value should be an existing value as found in the column with name `foreign_column` of the table with name `foreign_table`.
 
-    ***NOTE**: Availability of foreign keys has to be enabled by setting the `foreign_keys`-variable to `True`.*
+        ***NOTE**: Availability of foreign keys has to be enabled by setting the `foreign_keys`-variable to true BEFORE opening the database.*
 
-**Example usage**:
+    **Example usage**:
 
-```Swift
-# Add the row "id" to the table, which is an auto-incremented primary key.
-# When adding additional rows, this value can either by explicitely given or be unfilled.
-table_dictionary["id"] = {
-    "data_type":"int", 
-    "primary_key": true, 
-    "auto_increment":true
-}
-```
+    ```gdscript
+    # Add the row "id" to the table, which is an auto-incremented primary key.
+    # When adding additional rows, this value can either by explicitely given or be unfilled.
+    table_dictionary["id"] = {
+        "data_type":"int", 
+        "primary_key": true, 
+        "auto_increment":true
+    }
+    ```
 
-For more concrete usage examples see the `database.gd`-file as found in this repository's demo project.
+    For more concrete usage examples see the `database.gd`-file as found in this repository's demo project.
 
 - Boolean success = **drop_table(** String table_name **)**
 
 - Boolean success = **insert_row(** String table_name, Dictionary row_dictionary **)**
 
-Each key/value pair of the `row_dictionary`-variable defines the column values of a single row.  
+    Each key/value pair of the `row_dictionary`-variable defines the column values of a single row.  
 
-Columns should adhere to the table schema as instantiated using the `table_dictionary`-variable and are required if their corresponding **"not_null"**-column value is set to `True`.
+    Columns should adhere to the table schema as instantiated using the `table_dictionary`-variable and are required if their corresponding **"not_null"**-column value is set to `True`.
 
 - Boolean success = **insert_rows(** String table_name, Array row_array **)**
 
@@ -155,21 +178,21 @@ Columns should adhere to the table schema as instantiated using the `table_dicti
 
 - Boolean success = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary **)**
 
-With the `update_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
+    With the `updated_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
 
 - Boolean success = **delete_rows(** String table_name, String query_conditions **)**
 
 - Boolean success = **import_from_json(** String import_path **)**
 
-Drops all database tables and imports the database structure and content present inside of import_path.json.
+    Drops all database tables and imports the database structure and content present inside of `import_path.json`.
 
 - Boolean success = **export_to_json(** String export_path **)**
 
-Exports the database structure and content to export_path.json as a backup or for ease of editing.
+    Exports the database structure and content to `export_path.json` as a backup or for ease of editing.
 
 - Boolean success = **create_function(** String function_name, FuncRef function_reference, int number_of_arguments **)**
 
-Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
+    Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
 
 ## Frequently Asked Questions (FAQ)
 
@@ -210,7 +233,7 @@ There are a couple of things you can do before panicking, namely:
     ```gdscript
     var table_name := "characters"
     var column_name := "level"
-    db.query_with_bindings("UPDATE ? SET ?=? WHERE id=?", [table_name, column_name, 100, 1])
+    db.query_with_bindings("UPDATE ? SET ?=? WHERE id=?;", [table_name, column_name, 100, 1])
     ```
 
     This is forbidden SQLite syntax as both the `table_name`- and `column_name`-variables cannot be bound! If dynamic modification of names of tables and columns is required for purposes of your code, then use following work-around:
@@ -218,7 +241,7 @@ There are a couple of things you can do before panicking, namely:
     ```gdscript
     var table_name := "characters"
     var column_name := "level"
-    db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?", [100, 1])
+    db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?;", [100, 1])
     ```
 
 After exhausting these options, please open an issue that describes the error in proper detail.
@@ -249,11 +272,14 @@ Preferably never.
 
 Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of [scalar SQL applications](https://www.sqlite.org/lang_corefunc.html) that is already available in SQLite3.
 
-### 4. My Android (or iOS) application cannot access the database!
+### 4. My Android/iOS/HTML5 application cannot access the database!
 
-Android does not allow modification of files in the 'res://'-folder, thus blocking the plugin from writing to and/or reading from this database-file.
-In both cases, the most painless solution is to copy the entire database to the 'user://-folder' as apps have explicit writing privileges there.
+Android does not allow modification of files in the `res://`-folder, thus blocking the plugin from acquiring a read and write lock on the database-file.
 
+In the case of read-only databases, the database files have to be packaged/exported in the `*.pck`-file by manually adding the file entry to the `include_filter` of your `export_presets.cfg`-file.
+Additionally the connection has to be opened by explicitly setting the `read_only`-variable of your connection to True before opening your database.
+
+In the case of a read and write database connection, the most painless solution is to copy the entire database to the `user://`-folder instead as apps have explicit writing privileges there.
 If there is a better solution, one that does not involve copying the database to a new location, please do enlighten me.
 
 ### 5. Is this plugin compatible with a Godot Server binary? How to set it up?
@@ -274,22 +300,50 @@ Follow these steps to create a working Linux Server for your project:
 
 # How to export?
 
-***NOTE**: On mobile platforms (Android & iOS) the method discussed here is not possible and the contents of the `res://data/`-folder has to be copied to the `user://-folder` in its entirety instead (see FAQ above).*
+The exporting strategy is dependent on the nature of your database.
 
-All json- and db-files should be part of the exact same folder (demo/data in the case of the demo-project). During export this folder should be copied in its entirety to the demo/build-folder, in which the executable will be created by Godot's export command line utilities. Luckily, a Godot script called 'export_data.gd' can also found in the demo-project and allows to automatically copy the demo/data-folder's contents to the demo/build-folder.
+## Read-only databases
+
+If your database serves as static data storage i.e. there's no persistent dynamic data that needs to be saved, then your database is a read-only database. For example, a database that contains a table of monster descriptions and data (experience gained on kill, health points) probably never changes during normal gameplay.
+
+In this case, the database can be packaged in the `*.pck`-file together with all other assets without any hassle.  
+To enable this behaviour following conditions need to be met:
+- The database file has to be added manually to the `include_filter` of your `export_presets.cfg`-file to package the file on export.
+- The connection has to be opened in read-only mode by setting the `read_only` variable to True.
+
+You can also open databases in read-only mode that are not packaged, albeit under some restrictions such as the fact that the database files have to copied manually to `user://`-folder on mobile platforms (Android & iOS) and for web builds.
+
+One important additional constraint for read-only databases is that Godot's implementation of file handling does not allow files to opened in a shareable manner. Basically this means that opening a database connection fails whenever other programs have a read lock on the database file e.g. having the file open in [SQLiteStudio](https://sqlitestudio.pl/) for editing purposes. However, multiple simultaneous read-only database connections are allowed.
+
+***NOTE**: The contents of your PCK file can be verified by using externally available tools as found [here](https://github.com/hhyyrylainen/GodotPckTool).*
+
+## Read and write databases
+
+***NOTE**: On mobile platforms (Android & iOS) and for web builds, the method discussed here is not possible and the contents of the `res://data/`-folder have to be copied to the `user://`-folder in its entirety instead (see FAQ above).*
+
+If your database serves as dynamic data storage i.e. there's persistent dynamic data that needs to be saved during gameplay, then your database is a read and write database. For example, a database that contains a table of character levels and experience dynamically changes whenever the player levels up and/or gains experience.
+
+In this case, the database cannot be packaged in the `*.pck`-file as the contents of this file are static and cannot be dynamically modified during normal operation.  
+
+All `*.db`-files (and `*.json`-files if you choose not to include them in the `*.pck`) should preferably be part of the same folder. For example, in the case of the demo-project this is the `data/`-folder. During export this folder has to be copied in its entirety and placed alongside the executable that is created by Godot's export command line utilities.  
+To simplify and automate this process, a script with the name `export_data.gd` can be found in the demo-project and allows to automatically copy the `data`-folder's contents to the export folder.
 
 The commands to succesfully export a working executable for the demo-project are:
 ```
 mkdir build
 godot -s export_data.gd
-godot -e --export-debug "Windows Desktop" build/godot-sqlite.exe
+godot -e --export-debug "Windows Desktop" 'build/SQLite Demo.exe'
 ```
 ("Windows Desktop" should be replaced by whatever the name of your relevant build template is.)
 
-The design philosophy behind this is the following:
-
-- Even after exporting the entire game, the data-files can still be easily edited without requiring additional exports for every miniscule edit.
-- Importing a database from a json-file allows the Godot executable to use the full capabilities of the SQLite framework (SELECT, UPDATE, ...), while still allowing writers and other content creators to edit these json-files using their favorite text-based IDE.
+For the "Windows Desktop" export target this results in following folder/file-structure:
+```
+data/test_backup_base64_old.json
+data/test_backup_old.json
+libgdsqlite.dll
+'SQLite Demo.exe'
+'SQlite Demo.pck'
+```
 
 # How to contribute?
 
@@ -301,7 +355,7 @@ scons p=<platform> bits=64 generate_bindings=yes -j4
 
 In the case of Android and iOS, additional parameters have to be supplied to specify the architecture. In the case of android, the `android_arch`-parameter has to be supplied (with valid values being 'arm64v8', 'armv7' and/or 'x86'), and in the case of iOS, the `ios_arch`-parameter serves similar purposes (with valid values being 'arm64' and/or 'arm7')
 
-Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac OS X, Windows and iOS (for both architectures) with the help of following command:
+Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac&nbsp;OS&nbsp;X, Windows, iOS (for both architectures) and HTML5 with the help of following command:
 
 ```
 scons p=<platform> target_path=<target_path> target_name=libgdsqlite
@@ -313,7 +367,7 @@ In the case of Android, the [Android NDK](https://developer.android.com/ndk) nee
  $ANDROID_NDK_ROOT/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=<target_path>
 ```
 
-For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts, the `SConstruct`-file (for Windows, Linux, Mac OS X and iOs compilation) and both the `Android.mk`- and `jni/Application.mk`-file for the Android build process.
+For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts, the `SConstruct`-file (for Windows, Linux, Mac OS X, iOS and HTML5 compilation) and both the `Android.mk`- and `jni/Application.mk`-files for the Android build process.
 
-Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/latest/tutorials/plugins/gdnative/gdnative-cpp-example.html)
+Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-cpp-example.html)
 in the Official Godot Documentation.

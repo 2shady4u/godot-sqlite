@@ -4,11 +4,6 @@ import os
 import sys
 import subprocess
 
-def add_sources(sources, dir, extension):
-    for f in os.listdir(dir):
-        if f.endswith('.' + extension):
-            sources.append(dir + '/' + f)
-
 if sys.version_info < (3,):
     def decode_utf8(x):
         return x
@@ -53,11 +48,10 @@ if (os.name=="nt"):
 
         return rv
 
-
-def sys_exec(args):
-    proc = subprocess.Popen(args, stdout=subprocess.PIPE, text=True)
-    (out, err) = proc.communicate()
-    return out.rstrip("\r\n").lstrip()
+def add_sources(sources, dir, extension):
+    for f in os.listdir(dir):
+        if f.endswith('.' + extension):
+            sources.append(dir + '/' + f)
 
 #################
 #OPTIONS#########
@@ -77,24 +71,32 @@ else:
         'platform=<platform>'
     )
 
-opts = Variables([], ARGUMENTS)
-
 # Gets the standard flags CC, CCX, etc.
-env = DefaultEnvironment()
+env = Environment(ENV = os.environ)
 
+is64 = sys.maxsize > 2**32
+if (
+    env['TARGET_ARCH'] == 'amd64' or
+    env['TARGET_ARCH'] == 'emt64' or
+    env['TARGET_ARCH'] == 'x86_64' or
+    env['TARGET_ARCH'] == 'arm64-v8a'
+):
+    is64 = True
+
+opts = Variables([], ARGUMENTS)
 # Define our options
 opts.Add(EnumVariable(
     'platform',
     'Target platform',
     host_platform,
-    allowed_values=('linux', 'osx', 'windows', 'ios'),
+    allowed_values=('linux', 'osx', 'windows', 'ios', 'javascript'),
     ignorecase=2
 ))
 opts.Add(EnumVariable(
     'bits',
     'Target platform bits',
-    'default',
-    ('default', '32', '64')
+    '64' if is64 else '32',
+    ('32', '64')
 ))
 opts.Add(BoolVariable(
     'use_llvm',
@@ -114,11 +116,32 @@ opts.Add(EnumVariable(
     allowed_values=('debug', 'release'),
     ignorecase=2
 ))
+opts.Add(
+    'macos_deployment_target',
+    'macOS deployment target',
+    'default'
+)
+opts.Add(
+    'macos_sdk_path',
+    'macOS SDK path',
+    ''
+)
+opts.Add(EnumVariable(
+    'macos_arch',
+    'Target macOS architecture',
+    'x86_64',
+    ['x86_64', 'arm64']
+))
 opts.Add(EnumVariable(
     'ios_arch',
     'Target iOS architecture',
     'arm64',
     ['armv7', 'arm64', 'x86_64']
+))
+opts.Add(BoolVariable(
+    'ios_simulator',
+    'Target iOS Simulator',
+    False
 ))
 opts.Add(
     'IPHONEPATH',
@@ -128,12 +151,12 @@ opts.Add(
 opts.Add(PathVariable(
     'target_path', 
     'The path where the lib is installed.', 
-    'demo/bin/'
+    'demo/addons/godot-sqlite/bin/'
 ))
 opts.Add(PathVariable(
     'target_name', 
     'The library name.', 
-    'libgdexample', 
+    'libgdsqlite', 
     PathVariable.PathAccept
 ))
 
@@ -141,20 +164,10 @@ opts.Add(PathVariable(
 godot_headers_path = "godot-cpp/godot-headers/"
 cpp_bindings_path = "godot-cpp/"
 
-env = Environment(ENV = os.environ)
 # Updates the environment with the option variables.
 opts.Update(env)
 # Generates help for the -h scons option.
 Help(opts.GenerateHelpText(env))
-
-is64 = sys.maxsize > 2**32
-if (
-    env['TARGET_ARCH'] == 'amd64' or
-    env['TARGET_ARCH'] == 'emt64' or
-    env['TARGET_ARCH'] == 'x86_64' or
-    env['TARGET_ARCH'] == 'arm64-v8a'
-):
-    is64 = True
 
 # For the reference:
 # - CCFLAGS are compilation flags shared between C and C++
@@ -171,15 +184,9 @@ if host_platform == 'windows':
     if env['bits'] == '64':
         env = Environment(TARGET_ARCH='amd64')
     elif env['bits'] == '32':
-         env = Environment(TARGET_ARCH='x86')
+        env = Environment(TARGET_ARCH='x86')
+
     opts.Update(env)
-
-if env['bits'] == 'default':
-    env['bits'] = '64' if is64 else '32'
-
-arch_suffix = env['bits']
-if env['platform'] == 'ios':
-    arch_suffix = env['ios_arch']
 
 ###################
 ####FLAGS##########
@@ -217,27 +224,37 @@ elif env['platform'] == 'osx':
             'Only 64-bit builds are supported for the macOS target.'
         )
 
-    env.Append(CCFLAGS=['-g', '-arch', 'x86_64'])
+    env.Append(CCFLAGS=['-arch', env['macos_arch']])
     env.Append(CXXFLAGS=['-std=c++17'])
+
+    if env['macos_deployment_target'] != 'default':
+        env.Append(CCFLAGS=['-mmacosx-version-min=' + env['macos_deployment_target']])
+        env.Append(LINKFLAGS=['-mmacosx-version-min=' + env['macos_deployment_target']])
+
+    if env['macos_sdk_path']:
+        env.Append(CCFLAGS=['-isysroot', env['macos_sdk_path']])
+        env.Append(LINKFLAGS=['-isysroot', env['macos_sdk_path']])
+
     env.Append(LINKFLAGS=[
         '-arch',
-        'x86_64',
+        env['macos_arch'],
         '-framework',
         'Cocoa',
         '-Wl,-undefined,dynamic_lookup',
     ])
 
     if env['target'] == 'debug':
-        env.Append(CCFLAGS=['-Og'])
+        env.Append(CCFLAGS=['-Og', 'g'])
     elif env['target'] == 'release':
         env.Append(CCFLAGS=['-O3'])
 
 elif env['platform'] == 'ios':
     env['target_path'] += env['ios_arch'] + '/'
 
-    if env['ios_arch'] == 'x86_64':
+    if env['ios_simulator']:
         sdk_name = 'iphonesimulator'
         env.Append(CCFLAGS=['-mios-simulator-version-min=10.0'])
+        env['LIBSUFFIX'] = ".simulator" + env['LIBSUFFIX']
     else:
         sdk_name = 'iphoneos'
         env.Append(CCFLAGS=['-miphoneos-version-min=10.0'])
@@ -255,7 +272,7 @@ elif env['platform'] == 'ios':
     env['AR'] = compiler_path + 'ar'
     env['RANLIB'] = compiler_path + 'ranlib'
 
-    env.Append(CCFLAGS=['-g', '-arch', env['ios_arch'], '-isysroot', sdk_path])
+    env.Append(CCFLAGS=['-arch', env['ios_arch'], '-isysroot', sdk_path])
     env.Append(CXXFLAGS=['-std=c++17'])
     env.Append(LINKFLAGS=[
         '-arch',
@@ -268,7 +285,7 @@ elif env['platform'] == 'ios':
     ])
 
     if env['target'] == 'debug':
-        env.Append(CCFLAGS=['-Og'])
+        env.Append(CCFLAGS=['-Og', '-g'])
     elif env['target'] == 'release':
         env.Append(CCFLAGS=['-O3'])
 
@@ -285,24 +302,29 @@ elif env['platform'] == 'windows':
     elif host_platform == 'linux' or host_platform == 'osx':
         # Cross-compilation using MinGW
         if env['bits'] == '64':
-            env['CC'] = 'x86_64-w64-mingw32-g'
+            env['CC'] = 'x86_64-w64-mingw32-gcc'
             env['CXX'] = 'x86_64-w64-mingw32-g++'
             env['AR'] = "x86_64-w64-mingw32-ar"
             env['RANLIB'] = "x86_64-w64-mingw32-ranlib"
             env['LINK'] = "x86_64-w64-mingw32-g++"
         elif env['bits'] == '32':
-            env['CC'] = 'i686-w64-mingw32-g'
+            env['CC'] = 'i686-w64-mingw32-gcc'
             env['CXX'] = 'i686-w64-mingw32-g++'
             env['AR'] = "i686-w64-mingw32-ar"
             env['RANLIB'] = "i686-w64-mingw32-ranlib"
             env['LINK'] = "i686-w64-mingw32-g++"
+
     elif host_platform == 'windows' and env['use_mingw']:
-        env = env.Clone(tools=['mingw'])
+        # Don't Clone the environment. Because otherwise, SCons will pick up msvc stuff.
+        env = Environment(ENV = os.environ, tools=["mingw"])
+        opts.Update(env)
+        #env = env.Clone(tools=['mingw'])
+
         env["SPAWN"] = mySpawn
 
     # Native or cross-compilation using MinGW
     if host_platform == 'linux' or host_platform == 'osx' or env['use_mingw']:
-        env.Append(CCFLAGS=['-g', '-O3', '-Wwrite-strings'])
+        env.Append(CCFLAGS=['-O3', '-Wwrite-strings'])
         env.Append(CXXFLAGS=['-std=c++17'])
         env.Append(LINKFLAGS=[
             '--static',
@@ -311,21 +333,71 @@ elif env['platform'] == 'windows':
             '-static-libstdc++',
         ])
 
+elif env["platform"] == "javascript":
+    env["ENV"] = os.environ
+    env["CC"] = "emcc"
+    env["CXX"] = "em++"
+    env["AR"] = "emar"
+    env["RANLIB"] = "emranlib"
+    env.Append(CPPFLAGS=["-s", "SIDE_MODULE=1"])
+    env.Append(LINKFLAGS=["-s", "SIDE_MODULE=1"])
+    env["SHOBJSUFFIX"] = ".bc"
+    env["SHLIBSUFFIX"] = ".wasm"
+    # Use TempFileMunge since some AR invocations are too long for cmd.exe.
+    # Use POSIX-style paths, required with TempFileMunge.
+    env["ARCOM_POSIX"] = env["ARCOM"].replace("$TARGET", "$TARGET.posix").replace("$SOURCES", "$SOURCES.posix")
+    env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX)}"
+
+    # All intermediate files are just LLVM bitcode.
+    env["OBJPREFIX"] = ""
+    env["OBJSUFFIX"] = ".bc"
+    env["PROGPREFIX"] = ""
+    # Program() output consists of multiple files, so specify suffixes manually at builder.
+    env["PROGSUFFIX"] = ""
+    env["LIBPREFIX"] = "lib"
+    env["LIBSUFFIX"] = ".a"
+    env["LIBPREFIXES"] = ["$LIBPREFIX"]
+    env["LIBSUFFIXES"] = ["$LIBSUFFIX"]
+    env.Replace(SHLINKFLAGS='$LINKFLAGS')
+    env.Replace(SHLINKFLAGS='$LINKFLAGS')
+    env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME']=1
+
+    if env['target'] == 'debug':
+        env.Append(CCFLAGS=['-O0', '-g'])
+    elif env['target'] == 'release':
+        env.Append(CCFLAGS=['-O3'])
+
 #####################
 #ADD SOURCES#########
 #####################
+env.Append(CPPPATH=[
+    '.', 
+    godot_headers_path, 
+    cpp_bindings_path + 'include/', 
+    cpp_bindings_path + 'include/core/', 
+    cpp_bindings_path + 'include/gen/'
+])
+
+arch_suffix = env['bits']
+if env['platform'] == 'ios':
+    arch_suffix = env['ios_arch']
+if env['platform'] == 'javascript':
+    arch_suffix = 'wasm'
+
 cpp_bindings_libname = 'libgodot-cpp.{}.{}.{}'.format(
                         env['platform'],
                         env['target'],
                         arch_suffix)
 
-env.Append(CPPPATH=['.', godot_headers_path, cpp_bindings_path + 'include/', cpp_bindings_path + 'include/core/', cpp_bindings_path + 'include/gen/'])
-env.Append(LIBS=[cpp_bindings_libname])
-env.Append(LIBPATH=[cpp_bindings_path + 'bin/'])
+if env['platform'] != "javascript":
+    env.Append(LIBS=[cpp_bindings_libname])
+    env.Append(LIBPATH=[cpp_bindings_path + 'bin/'])
 
 # tweak this if you want to use different folders, or more folders, to store your source code in.
 env.Append(CPPPATH=['src/'])
-sources = [Glob('src/*.cpp'), 'src/sqleet/sqleet.c']
+sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), 'src/sqleet/sqleet.c']
+if env['platform'] == "javascript":
+    sources.append(cpp_bindings_path + 'bin/' + cpp_bindings_libname + '.a')
 
 env.Append(CPPDEFINES=['SKIP_HEADER_BYTES=24'])
 

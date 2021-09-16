@@ -29,9 +29,11 @@ void SQLite::_register_methods()
 
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
+    register_property<SQLite, bool>("read_only", &SQLite::read_only, false);
 
     register_property<SQLite, String>("path", &SQLite::path, "default");
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
+    register_property<SQLite, String>("default_extension", &SQLite::default_extension, "db");
 
     register_property<SQLite, Array>("query_result", &SQLite::query_result, Array());
 
@@ -56,8 +58,10 @@ SQLite::~SQLite()
 void SQLite::_init()
 {
     path = String("default");
+    default_extension = String("db");
     verbose_mode = false;
     foreign_keys = false;
+    read_only = false;
 }
 
 bool SQLite::open_db()
@@ -66,15 +70,20 @@ bool SQLite::open_db()
     int rc;
     if (path != ":memory:")
     {
-        /* Add the ".db"-extension to the database path if not already present */
-        String ending = String(".db");
-        if (!path.ends_with(ending))
+        /* Add the default_extension to the database path if no extension is present */
+        /* Skip if the default_extension is an empty string to allow for paths without extension */
+        if (path.get_extension().empty() && !default_extension.empty())
         {
+            String ending = String(".") + default_extension;
             path += ending;
         }
 
-        /* Find the real path */
-        path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
+        if (!read_only)
+        {
+            /* Find the real path */
+            path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
+        }
+
         /* This part does weird things on Android & on export! Leave it out for now! */
         ///* Make the necessary empty directories if they do not exist yet */
         //Ref<Directory> dir = Directory::_new();
@@ -96,22 +105,41 @@ bool SQLite::open_db()
 
     const char *char_path = path.alloc_c_string();
     /* Try to open the database */
-    rc = sqlite3_open(char_path, &db);
-    if (encryption) {
-        const char* key = password.alloc_c_string();
-        rc = sqlite3_key(db, key, strlen(key));
-        std::cout << rc << std::endl;
-        rc = sqlite3_rekey(db, key, strlen(key));
-        std::cout << rc << std::endl;
+    if (read_only)
+    {
+        if (path != ":memory:")
+        {
+            sqlite3_vfs_register(gdsqlite_vfs(), 0);
+            rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
+        }
+        else
+        {
+            GODOT_LOG(2, "GDSQLite Error: Opening in-memory databases in read-only mode is currently not supported!")
+            return false;
+        }
+    }
+    else
+    {
+        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+        /* Identical to: `rc = sqlite3_open(char_path, &db);`*/
     }
 
-    if (rc != SQLITE_OK) {
+    if (rc != SQLITE_OK)
+    {
         GODOT_LOG(2, "GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)))
         return false;
     }
     else
     {
         GODOT_LOG(0, "Opened database successfully (" + path + ")")
+    }
+
+    if (encryption) {
+        const char* key = password.alloc_c_string();
+        rc = sqlite3_key(db, key, strlen(key));
+        std::cout << rc << std::endl;
+        rc = sqlite3_rekey(db, key, strlen(key));
+        std::cout << rc << std::endl;
     }
 
     /* Try to enable foreign keys. */
@@ -681,7 +709,8 @@ bool SQLite::import_from_json(String import_path)
     if (db == nullptr)
     {
         /* Open the database using the open_db method */
-        if (!open_db()){
+        if (!open_db())
+        {
             return false;
         }
     }
@@ -734,15 +763,8 @@ bool SQLite::import_from_json(String import_path)
 
                 if (row.has(key))
                 {
-                    std::string input = ((const String &)row[key]).alloc_c_string();
-                    std::string output;
-                    macaron::Base64::Decode(input, output);
-
-                    PoolByteArray arr = PoolByteArray();
-                    arr.resize(output.length());
-                    PoolByteArray::Write write = arr.write();
-                    memcpy(write.ptr(), output.data(), output.length());
-
+                    String encoded_string = ((const String &)row[key]);
+                    PoolByteArray arr = Marshalls::get_singleton()->base64_to_raw(encoded_string);
                     row[key] = arr;
                 }
             }
@@ -782,7 +804,8 @@ bool SQLite::export_to_json(String export_path)
     {
         Dictionary object_dict = database_array[i];
 
-        if (object_dict["type"] == String("table")){
+        if (object_dict["type"] == String("table"))
+        {
             String object_name = object_dict["name"];
             String query_string;
 
@@ -814,23 +837,19 @@ bool SQLite::export_to_json(String export_path)
                     {
                         Dictionary row = query_result[j];
                         PoolByteArray arr = ((const PoolByteArray &)row[key]);
-                        PoolByteArray::Read r = arr.read();
+                        String encoded_string = Marshalls::get_singleton()->raw_to_base64(arr);
 
-                        std::string s(r.ptr(), r.ptr() + arr.size());
-                        std::string encoded_string = macaron::Base64::Encode(s);
-
-                        /* Has to be erased to make sure PoolByteArray is cleaned up properly!!!*/
                         row.erase(key);
-                        row[key] = godot::String(encoded_string.c_str());
+                        row[key] = encoded_string;
                     }
                 }
 
-                if (!base64_columns.empty()){
+                if (!base64_columns.empty())
+                {
                     object_dict["base64_columns"] = base64_columns;
                 }
             }
             object_dict["row_array"] = query_result.duplicate(true);
-
         }
     }
 
@@ -920,7 +939,6 @@ bool SQLite::validate_json(Array database_array, std::vector<object_struct> &obj
                 return false;
             }
             new_object.row_array = temp_dict["row_array"];
-
         }
         else if (temp_dict["type"] == String("trigger"))
         {

@@ -45,7 +45,6 @@ jobs:
           python --version
           scons --version
 
-      # Linux shared libraries are humongous (>70MB) for some reason.. don't forget to strip them!
       - name: Compilation
         run: |
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
