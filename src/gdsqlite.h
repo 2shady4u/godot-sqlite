@@ -60,8 +60,7 @@ namespace godot
         bool verbose_mode, foreign_keys, read_only;
         String path, error_message, default_extension;
         Array query_result;
-        
-        bool encryption;
+
         String password;
 
         static void _register_methods();
@@ -72,6 +71,7 @@ namespace godot
         void _init();
 
         bool open_db();
+        bool rekey_db();
         void close_db();
         bool query(String p_query);
         bool query_with_bindings(String p_query, Array param_bindings);

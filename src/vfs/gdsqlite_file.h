@@ -5,7 +5,7 @@
 #include <File.hpp>
 #include <OS.hpp>
 
-#include "./sqlite/sqlite3.h"
+#include "./sqleet/sqlite3.h"
 
 namespace godot
 {

@@ -76,7 +76,6 @@ func example_of_basic_database_querying():
 	db = SQLite.new()
 	db.path = db_name
 	db.verbose_mode = true
-	db.encryption = true
 	db.password = "password123"
 	# Open the database using the db_name found in the path variable
 	db.open_db()
@@ -250,7 +249,6 @@ func example_of_call_external_functions():
 	db = SQLite.new()
 	db.path = db_name
 	db.verbose_mode = true
-	db.encryption = true
 	db.password = "password123"
 	# Open the database using the db_name found in the path variable
 	db.open_db()
@@ -301,7 +299,6 @@ func example_of_blob_io():
 	db = SQLite.new()
 	db.path = db_name
 	db.verbose_mode = true
-	db.encryption = true
 	db.password = "password123"
 	# Open the database using the db_name found in the path variable
 	db.open_db()

@@ -6,6 +6,7 @@ void SQLite::_register_methods()
 {
 
     register_method("open_db", &SQLite::open_db);
+    register_method("rekey_db", &SQLite::rekey_db);
     register_method("close_db", &SQLite::close_db);
     register_method("query", &SQLite::query);
     register_method("query_with_bindings", &SQLite::query_with_bindings);
@@ -37,7 +38,6 @@ void SQLite::_register_methods()
 
     register_property<SQLite, Array>("query_result", &SQLite::query_result, Array());
 
-    register_property<SQLite, bool>("encryption", &SQLite::encryption, false);
     register_property<SQLite, String>("password", &SQLite::password, "");
 }
 
@@ -134,12 +134,23 @@ bool SQLite::open_db()
         GODOT_LOG(0, "Opened database successfully (" + path + ")")
     }
 
-    if (encryption) {
-        const char* key = password.alloc_c_string();
-        rc = sqlite3_key(db, key, strlen(key));
-        std::cout << rc << std::endl;
-        rc = sqlite3_rekey(db, key, strlen(key));
-        std::cout << rc << std::endl;
+    if (!password.empty())
+    {
+        const char *char_key = password.alloc_c_string();
+        rc = sqlite3_key(db, char_key, strlen(char_key));
+        if (rc != SQLITE_OK)
+        {
+            /* Returned error is always SQLITE_AUTH (23) which is caused by either: */
+            /* - Supplying a wrong password */
+            /* - Attempting to open an unencrypted database using a password */
+            GODOT_LOG(2, "GDSQLite Error: Authorization denied due to incorrect password! Was the database previously encrypted?")
+            /* Note for self: Unsure if the database should automatically be closed here or not... */
+            return false;
+        }
+        else if(verbose_mode)
+        {
+            GODOT_LOG(0, "Authorization accepted")
+        }
     }
 
     /* Try to enable foreign keys. */
@@ -152,6 +163,25 @@ bool SQLite::open_db()
             sqlite3_free(zErrMsg);
             return false;
         }
+    }
+
+    return true;
+}
+
+bool SQLite::rekey_db()
+{
+    int rc;
+    const char *char_key = password.alloc_c_string();
+    rc = sqlite3_rekey(db, char_key, strlen(char_key));
+
+    if (rc != SQLITE_OK)
+    {
+        GODOT_LOG(2, "GDSQLite Error: Failed to change database password!")
+        return false;
+    }
+    else if (verbose_mode)
+    {
+        GODOT_LOG(0, "Password changed succesfully!")
     }
 
     return true;

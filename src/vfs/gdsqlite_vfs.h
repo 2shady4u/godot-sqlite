@@ -5,7 +5,7 @@
 #include <Directory.hpp>
 
 #include <sstream>
-#include "./sqlite/sqlite3.h"
+#include "./sqleet/sqlite3.h"
 #include "gdsqlite_file.h"
 
 /*
