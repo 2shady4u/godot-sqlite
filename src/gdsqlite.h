@@ -57,7 +57,7 @@ namespace godot
     public:
         int last_insert_rowid;
         bool verbose_mode, foreign_keys, read_only;
-        String path, error_message;
+        String path, error_message, default_extension;
         Array query_result;
 
         static void _register_methods();

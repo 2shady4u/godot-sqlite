@@ -13,7 +13,7 @@ env:
 jobs:
   macos-compilation:
     name: MacOS Compilation
-    runs-on: "macos-latest"
+    runs-on: "macos-11"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -51,51 +51,4 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: osx
-          path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
-
-  macos-arm64-compilation:
-    name: MacOS ARM64 Compilation
-    runs-on: "macos-latest"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          lfs: true
-          submodules: recursive
-
-      # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
-      - name: Set up Python 3.x
-        uses: actions/setup-python@v2
-        with:
-          # Semantic version range syntax or exact version of a Python version
-          python-version: '3.x'
-          # Optional - x64 or x86 architecture, defaults to x64
-          architecture: 'x64'
-
-      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
-      - name: Configuring Python packages
-        run: |
-          python -c "import sys; print(sys.version)"
-          python -m pip install scons
-          python --version
-          scons --version
-
-      # The default SDK in github the actions environment seems to have problems compiling for arm64.
-      # Use the latest 11.x SDK.
-      - name: Compilation
-        run: |
-          mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
-          cd ${{env.PROJECT_FOLDER}}
-          cd godot-cpp
-          SDK_BASE=/Library/Developer/CommandLineTools/SDKs
-          SDK_VER=$(ls $SDK_BASE | grep "MacOSX11." | sort -r | head -n1)
-          echo $SDK_BASE/$SDK_VER/
-          scons platform=osx target=${{env.TARGET}} macos_arch=arm64 macos_deployment_target=10.15 macos_sdk_path="$SDK_BASE/$SDK_VER/" -j $(sysctl -n hw.logicalcpu) generate_bindings=yes
-          cd ..
-          scons platform=osx target=${{env.TARGET}} macos_arch=arm64 macos_deployment_target=10.15 macos_sdk_path="$SDK_BASE/$SDK_VER/" target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: osx-arm64
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}

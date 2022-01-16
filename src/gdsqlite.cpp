@@ -33,6 +33,7 @@ void SQLite::_register_methods()
 
     register_property<SQLite, String>("path", &SQLite::path, "default");
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
+    register_property<SQLite, String>("default_extension", &SQLite::default_extension, "db");
 
     register_property<SQLite, Array>("query_result", &SQLite::query_result, Array());
 }
@@ -54,6 +55,7 @@ SQLite::~SQLite()
 void SQLite::_init()
 {
     path = String("default");
+    default_extension = String("db");
     verbose_mode = false;
     foreign_keys = false;
     read_only = false;
@@ -65,10 +67,11 @@ bool SQLite::open_db()
     int rc;
     if (path != ":memory:")
     {
-        /* Add the ".db"-extension to the database path if not already present */
-        String ending = String(".db");
-        if (!path.ends_with(ending))
+        /* Add the default_extension to the database path if no extension is present */
+        /* Skip if the default_extension is an empty string to allow for paths without extension */
+        if (path.get_extension().empty() && !default_extension.empty())
         {
+            String ending = String(".") + default_extension;
             path += ending;
         }
 

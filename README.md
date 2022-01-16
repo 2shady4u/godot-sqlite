@@ -57,6 +57,12 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
 
+- **default_extension** (String, default="db")
+
+    Default extension that is automatically appended to the `path`-variable whenever **no** extension is detected/given.
+
+    ***NOTE:** If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.*
+
 - **verbose_mode** (Boolean, default=false)
 
     Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
