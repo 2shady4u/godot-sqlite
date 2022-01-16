@@ -8,7 +8,7 @@ env:
   TARGET_PATH: demo/addons/godot-sqlite/bin/javascript/
   TARGET_NAME: libgdsqlite
   TARGET: release
-  EMSDK_VERSION: 2.0.17
+  EMSDK_VERSION: 2.0.25
   GODOT_VERSION: 3.4.2
   EXPORT_NAME: demo/
 
