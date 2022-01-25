@@ -6,17 +6,17 @@
 ;   [section] ; section goes between []
 ;   param=value ; assign values to parameters
 
-config_version=4
+config_version=5
 
-_global_script_classes=[  ]
-_global_script_class_icons={
-}
+_global_script_classes=[]
+_global_script_class_icons={}
 
 [application]
 
 config/name="SQLite Demo"
 run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
+config/features=PackedStringArray("4.0")
 
 [debug]
 
@@ -24,7 +24,7 @@ settings/stdout/verbose_stdout=true
 
 [editor_plugins]
 
-enabled=PoolStringArray( "godot-sqlite" )
+enabled=PackedStringArray()
 
 [rendering]
 
