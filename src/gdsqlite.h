@@ -31,10 +31,30 @@ namespace godot
         // Functions.
         bool open_db();
         void close_db();
+        bool query(String p_query);
+        bool query_with_bindings(String p_query, Array param_bindings);
 
         // Property.
-	    void set_path(const String &p_path);
-	    String get_path() const;
+        void set_verbose_mode(const bool &p_verbose_mode);
+        bool get_verbose_mode() const;
+
+        void set_foreign_keys(const bool &p_foreign_keys);
+        bool get_foreign_keys() const;
+
+        void set_read_only(const bool &p_read_only);
+        bool get_read_only() const;
+
+        void set_path(const String &p_path);
+        String get_path() const;
+
+        void set_error_message(const String &p_error_message);
+        String get_error_message() const;
+
+        void set_default_extension(const String &p_default_extension);
+        String get_default_extension() const;
+
+        void set_query_result(const Array &p_query_result);
+        Array get_query_result() const;
     };
 
 }
