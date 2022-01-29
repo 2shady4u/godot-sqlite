@@ -1,13 +1,5 @@
 #include "gdsqlite.h"
 
-#include <godot_cpp/core/class_db.hpp>
-
-#include <godot_cpp/classes/global_constants.hpp>
-#include <godot_cpp/classes/label.hpp>
-#include <godot_cpp/variant/utility_functions.hpp>
-
-#include <godot_cpp/classes/project_settings.hpp>
-
 using namespace godot;
 
 void SQLite::_bind_methods()
@@ -29,6 +21,10 @@ void SQLite::_bind_methods()
     ClassDB::bind_method(D_METHOD("delete_rows"), &SQLite::delete_rows);
 
     // Properties.
+    ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLite::set_last_insert_rowid);
+    ClassDB::bind_method(D_METHOD("get_last_insert_rowid"), &SQLite::get_last_insert_rowid);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "last_insert_rowid"), "set_last_insert_rowid", "get_last_insert_rowid");
+
     ClassDB::bind_method(D_METHOD("set_verbose_mode", "verbose_mode"), &SQLite::set_verbose_mode);
     ClassDB::bind_method(D_METHOD("get_verbose_mode"), &SQLite::get_verbose_mode);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "verbose_mode"), "set_verbose_mode", "get_verbose_mode");
@@ -572,6 +568,24 @@ bool SQLite::delete_rows(String p_name, String p_conditions)
 }
 
 // Properties.
+void SQLite::set_last_insert_rowid(const int &p_last_insert_rowid)
+{
+    if (db)
+    {
+        sqlite3_set_last_insert_rowid(db, p_last_insert_rowid);
+    }
+}
+
+int SQLite::get_last_insert_rowid() const
+{
+    if (db)
+    {
+        return sqlite3_last_insert_rowid(db);
+    }
+    /* Return the default value */
+    return 0;
+}
+
 void SQLite::set_verbose_mode(const bool &p_verbose_mode)
 {
     verbose_mode = p_verbose_mode;

@@ -1,11 +1,19 @@
 #ifndef SQLITE_CLASS_H
 #define SQLITE_CLASS_H
 
-#include <godot_cpp/classes/global_constants.hpp>
-#include <godot_cpp/classes/viewport.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <godot_cpp/core/binder_common.hpp>
+#include <godot_cpp/core/class_db.hpp>
 
+#include <godot_cpp/classes/global_constants.hpp>
+#include <godot_cpp/classes/project_settings.hpp>
+#include <godot_cpp/classes/marshalls.hpp>
+#include <godot_cpp/classes/json.hpp>
+
+#include <fstream>
+#include <vector>
+#include <sstream>
 #include <sqlite/sqlite3.h>
 
 namespace godot
@@ -17,7 +25,6 @@ namespace godot
     private:
         sqlite3 *db;
 
-        int last_insert_rowid;
         bool verbose_mode, foreign_keys, read_only;
         String path, error_message, default_extension;
         Array query_result;
@@ -46,6 +53,9 @@ namespace godot
         bool delete_rows(String p_name, String p_conditions);
 
         // Properties.
+        void set_last_insert_rowid(const int &p_last_insert_rowid);
+        int get_last_insert_rowid() const;
+
         void set_verbose_mode(const bool &p_verbose_mode);
         bool get_verbose_mode() const;
 
