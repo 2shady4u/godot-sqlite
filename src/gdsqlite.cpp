@@ -18,6 +18,16 @@ void SQLite::_bind_methods()
     ClassDB::bind_method(D_METHOD("query"), &SQLite::query);
     ClassDB::bind_method(D_METHOD("query_with_bindings"), &SQLite::query_with_bindings);
 
+    ClassDB::bind_method(D_METHOD("create_table"), &SQLite::create_table);
+    ClassDB::bind_method(D_METHOD("drop_table"), &SQLite::drop_table);
+
+    ClassDB::bind_method(D_METHOD("insert_row"), &SQLite::insert_row);
+    ClassDB::bind_method(D_METHOD("insert_rows"), &SQLite::insert_rows);
+
+    ClassDB::bind_method(D_METHOD("select_rows"), &SQLite::select_rows);
+    ClassDB::bind_method(D_METHOD("update_rows"), &SQLite::update_rows);
+    ClassDB::bind_method(D_METHOD("delete_rows"), &SQLite::delete_rows);
+
     // Properties.
     ClassDB::bind_method(D_METHOD("set_verbose_mode", "verbose_mode"), &SQLite::set_verbose_mode);
     ClassDB::bind_method(D_METHOD("get_verbose_mode"), &SQLite::get_verbose_mode);
@@ -308,6 +318,257 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     }
 
     return true;
+}
+
+bool SQLite::create_table(String p_name, Dictionary p_table_dict)
+{
+    String query_string, type_string, key_string;
+    String integer_datatype = "int";
+    /* Create SQL statement */
+    query_string = "CREATE TABLE IF NOT EXISTS " + p_name + " (";
+    key_string = "";
+
+    Dictionary column_dict;
+    Array columns = p_table_dict.keys();
+    int number_of_columns = columns.size();
+    for (int i = 0; i <= number_of_columns - 1; i++)
+    {
+        column_dict = p_table_dict[columns[i]];
+        if (!column_dict.has("data_type"))
+        {
+            UtilityFunctions::printerr("GDSQLite Error: The field \"data_type\" is a required part of the table dictionary");
+            return false;
+        }
+        query_string = query_string + (const String &)columns[i] + " ";
+        //query_string += (const String &)columns[i] + " ";
+        type_string = (const String &)column_dict["data_type"];
+        if (type_string.to_lower().begins_with(integer_datatype))
+        {
+            query_string = query_string + String("INTEGER");
+            //query_string += String("INTEGER");
+        }
+        else
+        {
+            query_string = query_string + type_string;
+            //query_string += type_string;
+        }
+
+        /* Primary key check */
+        if (column_dict.get("primary_key", false))
+        {
+            query_string = query_string + String(" PRIMARY KEY");
+            //query_string += String(" PRIMARY KEY");
+        }
+        /* Default check */
+        if (column_dict.has("default"))
+        {
+            query_string = query_string + String(" DEFAULT ") + (const String &)column_dict["default"];
+            //query_string += String(" DEFAULT ") + (const String &)column_dict["default"];
+        }
+        /* Autoincrement check */
+        if (column_dict.get("auto_increment", false))
+        {
+            query_string = query_string + String(" AUTOINCREMENT");
+            //query_string += String(" AUTOINCREMENT");
+        }
+        /* Not null check */
+        if (column_dict.get("not_null", false))
+        {
+            query_string = query_string + String(" NOT NULL");
+            //query_string += String(" NOT NULL");
+        }
+        /* Apply foreign key constraint. */
+        if (foreign_keys)
+        {
+            if (column_dict.get("foreign_key", false))
+            {
+                const String foreign_key_definition = (const String &)(column_dict["foreign_key"]);
+                const Array foreign_key_elements = foreign_key_definition.split(".");
+                if (foreign_key_elements.size() == 2)
+                {
+                    const String column_name = (const String &)(columns[i]);
+                    const String foreign_key_table_name = (const String &)(foreign_key_elements[0]);
+                    const String foreign_key_column_name = (const String &)(foreign_key_elements[1]);
+                    key_string = key_string + String(", FOREIGN KEY (" + column_name + ") REFERENCES " + foreign_key_table_name + "(" + foreign_key_column_name + ")");
+                    //key_string += String(", FOREIGN KEY (" + column_name + ") REFERENCES " + foreign_key_table_name + "(" + foreign_key_column_name + ")");
+                }
+            }
+        }
+
+        if (i != number_of_columns - 1)
+        {
+            query_string = query_string + ",";
+            //query_string += ",";
+        }
+    }
+
+    query_string = query_string + key_string + ");";
+    //query_string += key_string + ");";
+
+    return query(query_string);
+}
+
+bool SQLite::drop_table(String p_name)
+{
+    String query_string;
+    /* Create SQL statement */
+    query_string = "DROP TABLE " + p_name + ";";
+
+    return query(query_string);
+}
+
+bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
+{
+    String query_string, key_string, value_string = "";
+    Array keys = p_row_dict.keys();
+    Array param_bindings = p_row_dict.values();
+
+    /* Create SQL statement */
+    query_string = "INSERT INTO " + p_name;
+
+    int number_of_keys = p_row_dict.size();
+    for (int i = 0; i <= number_of_keys - 1; i++)
+    {
+        key_string = key_string + (const String &)keys[i];
+        //key_string += (const String &)keys[i];
+        value_string = value_string + "?";
+        //value_string += "?";
+        if (i != number_of_keys - 1)
+        {
+            key_string = key_string + ",";
+            //key_string += ",";
+            value_string = value_string + ",";
+            //value_string += ",";
+        }
+    }
+    query_string = query_string + " (" + key_string + ") VALUES (" + value_string + ");";
+    //query_string += " (" + key_string + ") VALUES (" + value_string + ");";
+
+    return query_with_bindings(query_string, param_bindings);
+}
+
+bool SQLite::insert_rows(String p_name, Array p_row_array)
+{
+    query("BEGIN TRANSACTION;");
+    int number_of_rows = p_row_array.size();
+    for (int i = 0; i <= number_of_rows - 1; i++)
+    {
+        if (p_row_array[i].get_type() != Variant::DICTIONARY)
+        {
+            UtilityFunctions::printerr("GDSQLite Error: All elements of the Array should be of type Dictionary");
+            return false;
+        }
+        if (!insert_row(p_name, p_row_array[i]))
+        {
+            /* Don't forget to close the transaction! */
+            /* Stop the error_message from being overwritten! */
+            String previous_error_message = error_message;
+            query("END TRANSACTION;");
+            error_message = previous_error_message;
+            return false;
+        }
+    }
+    query("END TRANSACTION;");
+    return true;
+}
+
+Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_array)
+{
+    String query_string;
+    /* Create SQL statement */
+    query_string = "SELECT ";
+
+    int number_of_columns = p_columns_array.size();
+    for (int i = 0; i <= number_of_columns - 1; i++)
+    {
+        if (p_columns_array[i].get_type() != Variant::STRING)
+        {
+            UtilityFunctions::printerr("GDSQLite Error: All elements of the Array should be of type String");
+            return query_result;
+        }
+        query_string = query_string + (const String &)p_columns_array[i];
+        //query_string += (const String &)p_columns_array[i];
+
+        if (i != number_of_columns - 1)
+        {
+            query_string = query_string + ", ";
+            //query_string += ", ";
+        }
+    }
+    query_string = query_string + " FROM " + p_name;
+    //query_string += " FROM " + p_name;
+    if (!p_conditions.is_empty())
+    {
+        query_string = query_string + " WHERE " + p_conditions;
+        //query_string += " WHERE " + p_conditions;
+    }
+    query_string = query_string + ";";
+    //query_string += ";";
+
+    query(query_string);
+    return query_result;
+}
+
+bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict)
+{
+    String query_string;
+    Array param_bindings;
+    bool success;
+
+    int number_of_keys = p_updated_row_dict.size();
+    Array keys = p_updated_row_dict.keys();
+    Array values = p_updated_row_dict.values();
+
+    query("BEGIN TRANSACTION;");
+    /* Create SQL statement */
+    query_string = query_string + "UPDATE " + p_name + " SET ";
+    //query_string += "UPDATE " + p_name + " SET ";
+
+    for (int i = 0; i <= number_of_keys - 1; i++)
+    {
+        query_string = query_string + (const String &)keys[i] + "=?";
+        //query_string += (const String &)keys[i] + "=?";
+        param_bindings.append(values[i]);
+        if (i != number_of_keys - 1)
+        {
+            query_string = query_string + ", ";
+            //query_string += ", ";
+        }
+    }
+    query_string = query_string + " WHERE " + p_conditions + ";";
+    //query_string += " WHERE " + p_conditions + ";";
+
+    success = query_with_bindings(query_string, param_bindings);
+    /* Stop the error_message from being overwritten! */
+    String previous_error_message = error_message;
+    query("END TRANSACTION;");
+    error_message = previous_error_message;
+    return success;
+}
+
+bool SQLite::delete_rows(String p_name, String p_conditions)
+{
+    String query_string;
+    bool success;
+
+    query("BEGIN TRANSACTION;");
+    /* Create SQL statement */
+    query_string = "DELETE FROM " + p_name;
+    /* If it's empty or * everything is to be deleted */
+    if (!p_conditions.is_empty() && (p_conditions != (const String &)"*"))
+    {
+        query_string = query_string + " WHERE " + p_conditions;
+        //query_string += " WHERE " + p_conditions;
+    }
+    query_string = query_string + ";";
+    //query_string += ";";
+
+    success = query(query_string);
+    /* Stop the error_message from being overwritten! */
+    String previous_error_message = error_message;
+    query("END TRANSACTION;");
+    error_message = previous_error_message;
+    return success;
 }
 
 // Properties.

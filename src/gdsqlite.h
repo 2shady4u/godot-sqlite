@@ -16,6 +16,7 @@ namespace godot
 
     private:
         sqlite3 *db;
+
         int last_insert_rowid;
         bool verbose_mode, foreign_keys, read_only;
         String path, error_message, default_extension;
@@ -34,7 +35,17 @@ namespace godot
         bool query(String p_query);
         bool query_with_bindings(String p_query, Array param_bindings);
 
-        // Property.
+        bool create_table(String p_name, Dictionary p_table_dict);
+        bool drop_table(String p_name);
+
+        bool insert_row(String p_name, Dictionary p_row_dict);
+        bool insert_rows(String p_name, Array p_row_array);
+
+        Array select_rows(String p_name, String p_conditions, Array p_columns_array);
+        bool update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict);
+        bool delete_rows(String p_name, String p_conditions);
+
+        // Properties.
         void set_verbose_mode(const bool &p_verbose_mode);
         bool get_verbose_mode() const;
 
