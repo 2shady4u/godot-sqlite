@@ -18,11 +18,21 @@
 
 namespace godot
 {
+    enum OBJECT_TYPE { TABLE, TRIGGER };
+    struct object_struct
+    {
+        String name, sql;
+        OBJECT_TYPE type;
+        Array base64_columns, row_array;
+    };
+
     class SQLite : public RefCounted
     {
         GDCLASS(SQLite, RefCounted)
 
     private:
+        bool validate_json(Array import_json, std::vector<object_struct> &tables_to_import);
+
         sqlite3 *db;
 
         bool verbose_mode, foreign_keys, read_only;
@@ -51,6 +61,9 @@ namespace godot
         Array select_rows(String p_name, String p_conditions, Array p_columns_array);
         bool update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict);
         bool delete_rows(String p_name, String p_conditions);
+
+        bool import_from_json(String import_path);
+        bool export_to_json(String export_path);
 
         // Properties.
         void set_last_insert_rowid(const int &p_last_insert_rowid);
