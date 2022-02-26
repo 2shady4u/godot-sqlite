@@ -224,12 +224,8 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
 
         case Variant::PACKED_BYTE_ARRAY:
         {
-            // TODO: Figure out how to read from a PackedByteArray in GDExtension
-            /*
             PackedByteArray binding = ((const PackedByteArray &)param_bindings[i]);
-            PackedByteArray::Read r = binding.read();
-            sqlite3_bind_blob64(stmt, i + 1, r.ptr(), binding.size(), SQLITE_TRANSIENT);
-            */
+            sqlite3_bind_blob64(stmt, i + 1, binding.ptr(), binding.size(), SQLITE_TRANSIENT);
             break;
         }
 
@@ -274,15 +270,11 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
 
             case SQLITE_BLOB:
             {
-                // TODO: Figure out how to write to a PackedByteArray in GDExtension
-                /*
                 int bytes = sqlite3_column_bytes(stmt, i);
                 PackedByteArray arr = PackedByteArray();
                 arr.resize(bytes);
-                PackedByteArray::Write write = arr.write();
-                memcpy(write.ptr(), (char *)sqlite3_column_blob(stmt, i), bytes);
+                memcpy((void *)arr.ptrw(), (char *)sqlite3_column_blob(stmt, i), bytes);
                 column_value = arr;
-                */
                 break;
             }
 

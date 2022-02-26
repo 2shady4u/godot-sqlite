@@ -35,9 +35,13 @@ namespace godot
 
         sqlite3 *db;
 
-        bool verbose_mode, foreign_keys, read_only;
-        String path, error_message, default_extension;
-        Array query_result;
+        bool verbose_mode = false;
+        bool foreign_keys = false;
+        bool read_only = false;
+        String path = "default";
+        String error_message = "";
+        String default_extension = "db";
+        Array query_result = Array();
 
     protected:
         static void _bind_methods();

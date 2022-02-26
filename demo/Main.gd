@@ -17,3 +17,4 @@ func _on_texture_received(texture : Texture) -> void:
 	$MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer.add_child(texture_rect)
 
 	texture_rect.texture = texture
+	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP
