@@ -68,7 +68,7 @@ func example_of_basic_database_querying():
 	var select_condition : String = "age > 30"
 	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "age"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([selected_array]))
+	cprint("result: {0}".format([str(selected_array)]))
 
 	# Change name of 'Amanda' to 'Olga' and her age to 30
 	db.update_rows(table_name, "name = 'Amanda'", {"AGE":30, "NAME":"Olga"})
@@ -77,7 +77,7 @@ func example_of_basic_database_querying():
 	select_condition = "name = 'Olga' and age = 30"
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([selected_array]))
+	cprint("result: {0}".format([str(selected_array)]))
 
 	# Delete the employee named Olga
 	db.delete_rows(table_name, "name = 'Olga'")
@@ -86,7 +86,7 @@ func example_of_basic_database_querying():
 	select_condition = ""
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([selected_array]))
+	cprint("result: {0}".format([str(selected_array)]))
 	# Check the types of the values in the dictionary
 	cprint("Types of selected columns:")
 	cprint("salary: {0}".format([typeof(selected_array[0]["salary"])]))
@@ -120,7 +120,7 @@ func example_of_basic_database_querying():
 	select_condition = ""
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([selected_array]))
+	cprint("result: {0}".format([str(selected_array)]))
 	# Check the types of the values in the dictionary
 	cprint("Types of selected columns:")
 	cprint("salary: {0}".format([typeof(selected_array[0]["salary"])]))

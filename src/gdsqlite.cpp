@@ -321,8 +321,8 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
 
     Dictionary column_dict;
     Array columns = p_table_dict.keys();
-    int number_of_columns = columns.size();
-    for (int i = 0; i <= number_of_columns - 1; i++)
+    int64_t number_of_columns = columns.size();
+    for (int64_t i = 0; i <= number_of_columns - 1; i++)
     {
         column_dict = p_table_dict[columns[i]];
         if (!column_dict.has("data_type"))
@@ -417,8 +417,8 @@ bool SQLite::insert_row(const String &p_name, const Dictionary &p_row_dict)
     /* Create SQL statement */
     query_string = "INSERT INTO " + p_name;
 
-    int number_of_keys = p_row_dict.size();
-    for (int i = 0; i <= number_of_keys - 1; i++)
+    int64_t number_of_keys = p_row_dict.size();
+    for (int64_t i = 0; i <= number_of_keys - 1; i++)
     {
         key_string = key_string + (const String &)keys[i];
         //key_string += (const String &)keys[i];
@@ -441,8 +441,8 @@ bool SQLite::insert_row(const String &p_name, const Dictionary &p_row_dict)
 bool SQLite::insert_rows(const String &p_name, const Array &p_row_array)
 {
     query("BEGIN TRANSACTION;");
-    int number_of_rows = p_row_array.size();
-    for (int i = 0; i <= number_of_rows - 1; i++)
+    int64_t number_of_rows = p_row_array.size();
+    for (int64_t i = 0; i <= number_of_rows - 1; i++)
     {
         if (p_row_array[i].get_type() != Variant::DICTIONARY)
         {
@@ -469,8 +469,8 @@ Array SQLite::select_rows(const String &p_name, const String &p_conditions, cons
     /* Create SQL statement */
     query_string = "SELECT ";
 
-    int number_of_columns = p_columns_array.size();
-    for (int i = 0; i <= number_of_columns - 1; i++)
+    int64_t number_of_columns = p_columns_array.size();
+    for (int64_t i = 0; i <= number_of_columns - 1; i++)
     {
         if (p_columns_array[i].get_type() != Variant::STRING)
         {
@@ -506,7 +506,7 @@ bool SQLite::update_rows(const String &p_name, const String &p_conditions, const
     Array param_bindings;
     bool success;
 
-    int number_of_keys = p_updated_row_dict.size();
+    int64_t number_of_keys = p_updated_row_dict.size();
     Array keys = p_updated_row_dict.keys();
     Array values = p_updated_row_dict.values();
 
@@ -515,7 +515,7 @@ bool SQLite::update_rows(const String &p_name, const String &p_conditions, const
     query_string = query_string + "UPDATE " + p_name + " SET ";
     //query_string += "UPDATE " + p_name + " SET ";
 
-    for (int i = 0; i <= number_of_keys - 1; i++)
+    for (int64_t i = 0; i <= number_of_keys - 1; i++)
     {
         query_string = query_string + (const String &)keys[i] + "=?";
         //query_string += (const String &)keys[i] + "=?";
@@ -624,9 +624,9 @@ bool SQLite::import_from_json(String import_path)
     /* We don't care about triggers here since they get dropped automatically when their table is dropped */
     query(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
     Array old_database_array = query_result.duplicate(true);
-    int old_number_of_tables = query_result.size();
+    int64_t old_number_of_tables = query_result.size();
     /* Drop all old tables present in the database */
-    for (int i = 0; i <= old_number_of_tables - 1; i++)
+    for (int64_t i = 0; i <= old_number_of_tables - 1; i++)
     {
         Dictionary table_dict = old_database_array[i];
         String table_name = table_dict["name"];
@@ -659,10 +659,10 @@ bool SQLite::import_from_json(String import_path)
         }
 
         /* Convert the base64-encoded columns back to raw data */
-        for (int i = 0; i <= object.base64_columns.size() - 1; i++)
+        for (int64_t i = 0; i <= object.base64_columns.size() - 1; i++)
         {
             String key = object.base64_columns[i];
-            for (int j = 0; j <= object.row_array.size() - 1; j++)
+            for (int64_t j = 0; j <= object.row_array.size() - 1; j++)
             {
                 Dictionary row = object.row_array[j];
 
@@ -675,8 +675,8 @@ bool SQLite::import_from_json(String import_path)
             }
         }
 
-        int number_of_rows = object.row_array.size();
-        for (int i = 0; i <= number_of_rows - 1; i++)
+        int64_t number_of_rows = object.row_array.size();
+        for (int64_t i = 0; i <= number_of_rows - 1; i++)
         {
             if (object.row_array[i].get_type() != Variant::DICTIONARY)
             {
@@ -702,10 +702,10 @@ bool SQLite::export_to_json(String export_path)
 {
     /* Get all names and sql templates for all tables present in the database */
     query(String("SELECT name,sql,type FROM sqlite_master WHERE type = 'table' OR type = 'trigger';"));
-    int number_of_objects = query_result.size();
+    int64_t number_of_objects = query_result.size();
     Array database_array = query_result.duplicate(true);
     /* Construct a Dictionary for each table, convert it to JSON and write it to file */
-    for (int i = 0; i <= number_of_objects - 1; i++)
+    for (int64_t i = 0; i <= number_of_objects - 1; i++)
     {
         Dictionary object_dict = database_array[i];
 
@@ -791,8 +791,8 @@ bool SQLite::export_to_json(String export_path)
 bool SQLite::validate_json(const Array &database_array, std::vector<object_struct> &objects_to_import)
 {
     /* Start going through all the tables and checking their validity */
-    int number_of_objects = database_array.size();
-    for (int i = 0; i <= number_of_objects - 1; i++)
+    int64_t number_of_objects = database_array.size();
+    for (int64_t i = 0; i <= number_of_objects - 1; i++)
     {
         /* Create a new object_struct */
         object_struct new_object;
@@ -860,7 +860,7 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 }
 
 // Properties.
-void SQLite::set_last_insert_rowid(const int &p_last_insert_rowid)
+void SQLite::set_last_insert_rowid(const int64_t &p_last_insert_rowid)
 {
     if (db)
     {
@@ -868,7 +868,7 @@ void SQLite::set_last_insert_rowid(const int &p_last_insert_rowid)
     }
 }
 
-int SQLite::get_last_insert_rowid() const
+int64_t SQLite::get_last_insert_rowid() const
 {
     if (db)
     {

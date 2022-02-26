@@ -74,8 +74,8 @@ namespace godot
         bool export_to_json(String export_path);
 
         // Properties.
-        void set_last_insert_rowid(const int &p_last_insert_rowid);
-        int get_last_insert_rowid() const;
+        void set_last_insert_rowid(const int64_t &p_last_insert_rowid);
+        int64_t get_last_insert_rowid() const;
 
         void set_verbose_mode(const bool &p_verbose_mode);
         bool get_verbose_mode() const;
