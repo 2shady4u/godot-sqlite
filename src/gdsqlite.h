@@ -18,7 +18,11 @@
 
 namespace godot
 {
-    enum OBJECT_TYPE { TABLE, TRIGGER };
+    enum OBJECT_TYPE
+    {
+        TABLE,
+        TRIGGER
+    };
     struct object_struct
     {
         String name, sql;
@@ -31,7 +35,7 @@ namespace godot
         GDCLASS(SQLite, RefCounted)
 
     private:
-        bool validate_json(Array import_json, std::vector<object_struct> &tables_to_import);
+        bool validate_json(const Array &import_json, std::vector<object_struct> &tables_to_import);
 
         sqlite3 *db;
 
@@ -53,18 +57,18 @@ namespace godot
         // Functions.
         bool open_db();
         void close_db();
-        bool query(String p_query);
-        bool query_with_bindings(String p_query, Array param_bindings);
+        bool query(const String &p_query);
+        bool query_with_bindings(const String &p_query, const Array &param_bindings);
 
-        bool create_table(String p_name, Dictionary p_table_dict);
-        bool drop_table(String p_name);
+        bool create_table(const String &p_name, const Dictionary &p_table_dict);
+        bool drop_table(const String &p_name);
 
-        bool insert_row(String p_name, Dictionary p_row_dict);
-        bool insert_rows(String p_name, Array p_row_array);
+        bool insert_row(const String &p_name, const Dictionary &p_row_dict);
+        bool insert_rows(const String &p_name, const Array &p_row_array);
 
-        Array select_rows(String p_name, String p_conditions, Array p_columns_array);
-        bool update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict);
-        bool delete_rows(String p_name, String p_conditions);
+        Array select_rows(const String &p_name, const String &p_conditions, const Array &p_columns_array);
+        bool update_rows(const String &p_name, const String &p_conditions, const Dictionary &p_updated_row_dict);
+        bool delete_rows(const String &p_name, const String &p_conditions);
 
         bool import_from_json(String import_path);
         bool export_to_json(String export_path);

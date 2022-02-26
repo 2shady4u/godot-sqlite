@@ -161,12 +161,12 @@ void SQLite::close_db()
     }
 }
 
-bool SQLite::query(String p_query)
+bool SQLite::query(const String &p_query)
 {
     return query_with_bindings(p_query, Array());
 }
 
-bool SQLite::query_with_bindings(String p_query, Array param_bindings)
+bool SQLite::query_with_bindings(const String &p_query, const Array &param_bindings)
 {
     const char *zErrMsg, *sql;
     int rc;
@@ -311,7 +311,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     return true;
 }
 
-bool SQLite::create_table(String p_name, Dictionary p_table_dict)
+bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
 {
     String query_string, type_string, key_string;
     String integer_datatype = "int";
@@ -399,7 +399,7 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
     return query(query_string);
 }
 
-bool SQLite::drop_table(String p_name)
+bool SQLite::drop_table(const String &p_name)
 {
     String query_string;
     /* Create SQL statement */
@@ -408,7 +408,7 @@ bool SQLite::drop_table(String p_name)
     return query(query_string);
 }
 
-bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
+bool SQLite::insert_row(const String &p_name, const Dictionary &p_row_dict)
 {
     String query_string, key_string, value_string = "";
     Array keys = p_row_dict.keys();
@@ -438,7 +438,7 @@ bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
     return query_with_bindings(query_string, param_bindings);
 }
 
-bool SQLite::insert_rows(String p_name, Array p_row_array)
+bool SQLite::insert_rows(const String &p_name, const Array &p_row_array)
 {
     query("BEGIN TRANSACTION;");
     int number_of_rows = p_row_array.size();
@@ -463,7 +463,7 @@ bool SQLite::insert_rows(String p_name, Array p_row_array)
     return true;
 }
 
-Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_array)
+Array SQLite::select_rows(const String &p_name, const String &p_conditions, const Array &p_columns_array)
 {
     String query_string;
     /* Create SQL statement */
@@ -500,7 +500,7 @@ Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_ar
     return query_result;
 }
 
-bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict)
+bool SQLite::update_rows(const String &p_name, const String &p_conditions, const Dictionary &p_updated_row_dict)
 {
     String query_string;
     Array param_bindings;
@@ -537,7 +537,7 @@ bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_update
     return success;
 }
 
-bool SQLite::delete_rows(String p_name, String p_conditions)
+bool SQLite::delete_rows(const String &p_name, const String &p_conditions)
 {
     String query_string;
     bool success;
@@ -788,7 +788,7 @@ bool SQLite::export_to_json(String export_path)
     return true;
 }
 
-bool SQLite::validate_json(Array database_array, std::vector<object_struct> &objects_to_import)
+bool SQLite::validate_json(const Array &database_array, std::vector<object_struct> &objects_to_import)
 {
     /* Start going through all the tables and checking their validity */
     int number_of_objects = database_array.size();
