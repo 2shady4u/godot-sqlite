@@ -14,6 +14,7 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <cstring>
 #include <sqlite/sqlite3.h>
 
 namespace godot
