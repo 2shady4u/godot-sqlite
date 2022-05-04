@@ -3,6 +3,7 @@
 
 #include <godot_cpp/classes/file.hpp>
 
+#include <cstring>
 #include "./sqlite/sqlite3.h"
 
 namespace godot
