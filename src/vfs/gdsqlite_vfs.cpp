@@ -23,12 +23,13 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 		gdsqlite_file::deviceCharacteristics, /* xDeviceCharacteristics */
 	};
 	gdsqlite_file *p = reinterpret_cast<gdsqlite_file *>(pFile);
-	Ref<File> file = File::_new();
-	int godot_flags = 0;
+	Ref<File> file;
+	file.instantiate();
+	File::ModeFlags godot_flags;
 
 	ERR_FAIL_COND_V(zName == NULL, SQLITE_IOERR); /* How does this respond to :memory:? */
 
-	Godot::print(String(zName));
+	UtilityFunctions::print(String(zName));
 	std::cout << flags << std::endl;
 
 	/* TODO: Add/Support additional flags: 
@@ -40,28 +41,29 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 	/* Convert SQLite's flags to something Godot might understand! */
 	if (flags & SQLITE_OPEN_READONLY)
 	{
-		Godot::print("READ");
-		godot_flags |= File::READ;
+		UtilityFunctions::print("READ");
+		godot_flags = File::READ;
 	}
+	// TODO: Figure out if checking for SQLITE_OPEN_READWRITE is necessary when the database is readonly?
 	if (flags & SQLITE_OPEN_READWRITE)
 	{
 		if (flags & SQLITE_OPEN_CREATE)
 		{
 			if (file->file_exists(String(zName)))
 			{
-				Godot::print("READ WRITE");
-				godot_flags |= File::READ_WRITE;
+				UtilityFunctions::print("READ WRITE");
+				godot_flags = File::READ_WRITE;
 			}
 			else
 			{
-				Godot::print("WRITE READ");
-				godot_flags |= File::WRITE_READ;
+				UtilityFunctions::print("WRITE READ");
+				godot_flags = File::WRITE_READ;
 			}
 		}
 		else
 		{
-			Godot::print("READ WRITE");
-			godot_flags |= File::READ_WRITE;
+			UtilityFunctions::print("READ WRITE");
+			godot_flags = File::READ_WRITE;
 		}
 	}
 
@@ -93,7 +95,8 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 */
 static int gdsqlite_vfs_delete(sqlite3_vfs *pVfs, const char *zPath, int dirSync)
 {
-	Ref<Directory> dir = Directory::_new();
+	Ref<Directory> dir;
+	dir.instantiate();
 	Error err_code = dir->remove(zPath);
 	/* Probably we'll also need to check if the file exists and check the err_code! */
 	return SQLITE_OK;
@@ -105,7 +108,8 @@ static int gdsqlite_vfs_delete(sqlite3_vfs *pVfs, const char *zPath, int dirSync
 */
 static int gdsqlite_vfs_access(sqlite3_vfs *pVfs, const char *zPath, int flags, int *pResOut)
 {
-	Ref<File> file = File::_new();
+	Ref<File> file;
+	file.instantiate();
 	Error err_code = Error::OK;
 
 	switch (flags)
@@ -193,7 +197,7 @@ static void gdsqlite_vfs_dlClose(sqlite3_vfs *vfs, void *data)
 */
 static int gdsqlite_vfs_randomness(sqlite3_vfs *pVfs, int nByte, char *zByte)
 {
-	srand(OS::get_singleton()->get_unix_time());
+	srand(Time::get_singleton()->get_unix_time_from_system());
 	for (int i = 0; i < nByte; ++i)
 	{
 		zByte[i] = rand();
@@ -224,7 +228,7 @@ static int gdsqlite_vfs_sleep(sqlite3_vfs *pVfs, int nMicro)
 */
 static int gdsqlite_vfs_currentTime(sqlite3_vfs *vfs, double *pTime)
 {
-	uint64_t unix_time = OS::get_singleton()->get_unix_time();
+	uint64_t unix_time = Time::get_singleton()->get_unix_time_from_system();
 	*pTime = unix_time / 86400.0 + 2440587.5;
 	return SQLITE_OK;
 }
@@ -237,7 +241,7 @@ static int gdsqlite_vfs_getLastError(sqlite3_vfs *vfs, int nBuf, char *buf)
 
 static int gdsqlite_vfs_currentTimeInt64(sqlite3_vfs *vfs, sqlite3_int64 *now)
 {
-	uint64_t unix_time = OS::get_singleton()->get_unix_time();
+	uint64_t unix_time = Time::get_singleton()->get_unix_time_from_system();
 	*now = unix_time + 210866760000; // Add the number of ms since julian time
 	return SQLITE_OK;
 }

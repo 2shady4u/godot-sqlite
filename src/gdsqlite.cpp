@@ -101,10 +101,8 @@ bool SQLite::open_db()
     {
         if (path != ":memory:")
         {
-            // TODO: Re-enable VFS at some point
-            UtilityFunctions::printerr("GDSQLite Error: The Virtual File System component is not yet supported for GDExtension");
-            //sqlite3_vfs_register(gdsqlite_vfs(), 0);
-            //rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
+            sqlite3_vfs_register(gdsqlite_vfs(), 0);
+            rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
             return false;
         }
         else

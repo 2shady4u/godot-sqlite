@@ -1,9 +1,7 @@
 #ifndef GDSQLITE_FILE_H
 #define GDSQLITE_FILE_H
 
-#include <Godot.hpp>
-#include <File.hpp>
-#include <OS.hpp>
+#include <godot_cpp/classes/file.hpp>
 
 #include "./sqlite/sqlite3.h"
 

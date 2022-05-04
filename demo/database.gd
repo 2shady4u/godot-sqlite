@@ -3,10 +3,12 @@ extends Node
 var db : SQLite = null
 
 var db_name := "res://data/test"
+var packaged_db_name := "res://data_to_be_packaged"
 var json_name := "res://data/test_backup"
 
 var table_name := "company"
 var other_table_name := "expenses"
+var packaged_table_name = "creatures"
 
 var ids := [1,2,3,4,5,6,7]
 var names := ["Paul","Allen","Teddy","Mark","Robert","Julia","Amanda"]
@@ -21,6 +23,7 @@ func _ready():
 	# Enable/disable examples here:
 	example_of_basic_database_querying()
 	example_of_blob_io()
+	example_of_read_only_database()
 
 func cprint(text : String) -> void:
 	print(text)
@@ -189,6 +192,52 @@ func example_of_blob_io():
 		var loaded_texture := ImageTexture.new()
 		loaded_texture.create_from_image(image)
 		emit_signal("texture_received", loaded_texture)
+
+	# Close the current database
+	db.close_db()
+
+# Example of accessing a packaged database by using the custom Virtual File System (VFS)
+# which allows packaged databases to be opened in read_only modus.
+# Databases used in this way can be added to the project's export filters
+# and will be readable, but not writable, by Godot.
+func example_of_read_only_database():
+	db = SQLite.new()
+	db.path = packaged_db_name
+	db.verbose_mode = true
+	db.read_only = true
+
+	db.open_db()
+
+	# Select all the creatures
+	var select_condition : String = ""
+	var selected_array : Array = db.select_rows(packaged_table_name, select_condition, ["*"])
+	cprint("condition: " + select_condition)
+	cprint("result: {0}".format([str(selected_array)]))
+
+	# Select all the creatures that start with the letter 'b'
+	select_condition = "name LIKE 'b%'"
+	selected_array = db.select_rows(packaged_table_name, select_condition, ["name"])
+	cprint("condition: " + select_condition)
+	cprint("Following creatures start with the letter 'b':")
+	for row in selected_array:
+		cprint("* " + row["name"])
+
+	# Open another simultanous database connection in read-only mode.
+	# Having multiple database connections in read-only mode is allowed.
+	# Having multiple database connections in read and write is NOT allowed!
+	# This behaviour is hard-coded into Godot's file handling system and can't be
+	# modified by this plugin.
+	var other_db = SQLite.new()
+	other_db.path = packaged_db_name
+	other_db.verbose_mode = true
+	other_db.read_only = true
+
+	other_db.open_db()
+
+	# Get the experience you would get by kiling a mimic.
+	select_condition = "name = 'mimic'"
+	selected_array = other_db.select_rows(packaged_table_name, select_condition, ["experience"])
+	cprint("Killing a mimic yields " + str(selected_array[0]["experience"]) + " experience points!")
 
 	# Close the current database
 	db.close_db()

@@ -1,8 +1,11 @@
 #ifndef GDSQLITE_VFS_H
 #define GDSQLITE_VFS_H
 
-#include <Godot.hpp>
-#include <Directory.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
+
+#include <godot_cpp/classes/directory.hpp>
+#include <godot_cpp/classes/time.hpp>
+#include <godot_cpp/classes/os.hpp>
 
 #include <sstream>
 #include <iostream>
