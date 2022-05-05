@@ -4,4 +4,9 @@ entry_symbol = "sqlite_library_init"
 
 [libraries]
 
-windows.64.debug ="bin/libgdsqlite.windows.debug.64.dll"
+linux.64.debug = "bin/libgdsqlite.linux.debug.64.so"
+linux.64.release = "bin/libgdsqlite.linux.release.64.so"
+windows.64.debug = "bin/libgdsqlite.windows.debug.64.dll"
+windows.64.release = "bin/libgdsqlite.windows.release.64.dll"
+macos.debug = "bin/libgdsqlite.osx.debug.framework"
+macos.release = "bin/libgdsqlite.osx.release.framework"

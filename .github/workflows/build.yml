@@ -34,7 +34,7 @@ jobs:
           - name: MacOS Compilation
             os: "macos-11"
             artifact-name: osx
-            artifact-extension: dylib
+            artifact-extension: framework
 
     steps:
       - name: Checkout
