@@ -865,7 +865,7 @@ bool SQLite::export_to_json(String export_path)
 
 void SQLite::set_last_insert_rowid(int p_last_row_id)
 {
-    GODOT_LOG(2, "GDSQlite Error: Variable `last_insert_rowid` cannot be set externally.")
+    sqlite3_set_last_insert_rowid(db, p_last_row_id);
 }
 
 int SQLite::get_last_insert_rowid()
