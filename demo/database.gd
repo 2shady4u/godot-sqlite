@@ -3,6 +3,14 @@ extends Node
 const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
 var db
 
+enum VerbosityLevel {
+	QUIET = 0,
+	NORMAL = 1,
+	VERBOSE = 2,
+	VERY_VERBOSE = 3
+}
+const verbosity_level : int = VerbosityLevel.VERBOSE
+
 var db_name := "res://data/test"
 var packaged_db_name := "res://data_to_be_packaged"
 var json_name := "res://data/test_backup"
@@ -75,7 +83,7 @@ func example_of_basic_database_querying():
 
 	db = SQLite.new()
 	db.path = db_name
-	db.verbose_mode = true
+	db.verbosity_level = verbosity_level
 	# Open the database using the db_name found in the path variable
 	db.open_db()
 	# Throw away any table that was already present
@@ -180,7 +188,7 @@ func example_of_in_memory_and_foreign_key_support():
 	db = SQLite.new()
 	# Enable in-memory storage.
 	db.path = ":memory:"
-	db.verbose_mode = true
+	db.verbosity_level = verbosity_level
 	# Enable foreign keys.
 	db.foreign_keys = true
 	# Open the database as usual.
@@ -247,7 +255,7 @@ func example_of_call_external_functions():
 
 	db = SQLite.new()
 	db.path = db_name
-	db.verbose_mode = true
+	db.verbosity_level = verbosity_level
 	# Open the database using the db_name found in the path variable
 	db.open_db()
 	# Throw away any table that was already present
@@ -296,7 +304,7 @@ func example_of_blob_io():
 
 	db = SQLite.new()
 	db.path = db_name
-	db.verbose_mode = true
+	db.verbosity_level = verbosity_level
 	# Open the database using the db_name found in the path variable
 	db.open_db()
 	# Throw away any table that was already present
@@ -353,7 +361,7 @@ func regexp(pattern : String, subject : String) -> bool:
 func example_of_read_only_database():
 	db = SQLite.new()
 	db.path = packaged_db_name
-	db.verbose_mode = true
+	db.verbosity_level = verbosity_level
 	db.read_only = true
 
 	db.open_db()
@@ -392,7 +400,7 @@ func example_of_read_only_database():
 	# modified by this plugin.
 	var other_db = SQLite.new()
 	other_db.path = packaged_db_name
-	other_db.verbose_mode = true
+	other_db.verbosity_level = verbosity_level
 	other_db.read_only = true
 
 	other_db.open_db()

@@ -8,7 +8,7 @@ tool
 extends EditorPlugin
 
 func _enter_tree():
-    pass
+	pass
 
 func _exit_tree():
-    pass
+	pass

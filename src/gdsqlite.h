@@ -34,7 +34,11 @@ namespace godot
         break;                                                                     \
     }
 
-    enum OBJECT_TYPE { TABLE, TRIGGER };
+    enum OBJECT_TYPE
+    {
+        TABLE,
+        TRIGGER
+    };
     struct object_struct
     {
         String name, sql;
@@ -55,8 +59,16 @@ namespace godot
         bool validate_json(Array import_json, std::vector<object_struct> &tables_to_import);
 
     public:
-        int last_insert_rowid;
-        bool verbose_mode, foreign_keys, read_only;
+        enum VerbosityLevel
+        {
+            QUIET = 0,
+            NORMAL = 1,
+            VERBOSE = 2,
+            VERY_VERBOSE = 3
+        };
+
+        int last_insert_rowid, verbosity_level;
+        bool foreign_keys, read_only;
         String path, error_message, default_extension;
         Array query_result;
 
@@ -89,6 +101,9 @@ namespace godot
 
         void set_last_insert_rowid(int p_last_row_id);
         int get_last_insert_rowid();
+
+        void set_verbosity_level(int p_verbosity_level);
+        int get_verbosity_level();
 
         void set_query_result(Array p_query_result);
         Array get_query_result();
