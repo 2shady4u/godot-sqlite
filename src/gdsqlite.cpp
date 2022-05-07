@@ -35,7 +35,7 @@ void SQLite::_register_methods()
     register_property<SQLite, String>("error_message", &SQLite::error_message, "");
     register_property<SQLite, String>("default_extension", &SQLite::default_extension, "db");
 
-    register_property<SQLite, Array>("query_result", &SQLite::query_result, Array());
+    register_property<SQLite, Array>("query_result", &SQLite::set_query_result, &SQLite::get_query_result, Array());
 }
 
 SQLite::SQLite()
@@ -863,14 +863,32 @@ bool SQLite::export_to_json(String export_path)
     return true;
 }
 
-void SQLite::set_last_insert_rowid(int p_last_row_id)
+void SQLite::set_last_insert_rowid(int p_last_insert_rowid)
 {
-    sqlite3_set_last_insert_rowid(db, p_last_row_id);
+    if (db)
+    {
+        sqlite3_set_last_insert_rowid(db, p_last_insert_rowid);
+    }
 }
 
 int SQLite::get_last_insert_rowid()
 {
-    return sqlite3_last_insert_rowid(db);
+    if (db)
+    {
+        return sqlite3_last_insert_rowid(db);
+    }
+    /* Return the default value */
+    return 0;
+}
+
+void SQLite::set_query_result(Array p_query_result)
+{
+    query_result = p_query_result;
+}
+
+Array SQLite::get_query_result()
+{
+    return query_result.duplicate(true);
 }
 
 bool SQLite::validate_json(Array database_array, std::vector<object_struct> &objects_to_import)

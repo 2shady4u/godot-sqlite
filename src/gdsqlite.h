@@ -89,6 +89,9 @@ namespace godot
 
         void set_last_insert_rowid(int p_last_row_id);
         int get_last_insert_rowid();
+
+        void set_query_result(Array p_query_result);
+        Array get_query_result();
     };
 
 }
