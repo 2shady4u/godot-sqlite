@@ -170,7 +170,7 @@ bool SQLite::query(String p_query)
 
 bool SQLite::query_with_bindings(String p_query, Array param_bindings)
 {
-    const char *zErrMsg, *sql;
+    const char *zErrMsg, *sql, *pzTail;
     int rc;
 
     if (verbose_mode)
@@ -184,7 +184,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
 
     sqlite3_stmt *stmt;
     /* Prepare an SQL statement */
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &pzTail);
     zErrMsg = sqlite3_errmsg(db);
     error_message = String(zErrMsg);
     if (rc != SQLITE_OK)
@@ -193,10 +193,20 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
         return false;
     }
 
-    /* Bind any given parameters to the prepared statement */
-    for (int i = 0; i < param_bindings.size(); i++)
+    /* Check if the param_bindings size exceeds the required parameter count */
+    int parameter_count = sqlite3_bind_parameter_count(stmt);
+    if (param_bindings.size() < parameter_count)
     {
-        switch (param_bindings[i].get_type())
+        GODOT_LOG(2, "GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement!")
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    /* Bind any given parameters to the prepared statement */
+    for (int i = 0; i < parameter_count; i++)
+    {
+        Variant binding_value = param_bindings.pop_front();
+        switch (binding_value.get_type())
         {
         case Variant::NIL:
             sqlite3_bind_null(stmt, i + 1);
@@ -204,27 +214,27 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
 
         case Variant::BOOL:
         case Variant::INT:
-            sqlite3_bind_int64(stmt, i + 1, int64_t(param_bindings[i]));
+            sqlite3_bind_int64(stmt, i + 1, int64_t(binding_value));
             break;
 
         case Variant::REAL:
-            sqlite3_bind_double(stmt, i + 1, param_bindings[i]);
+            sqlite3_bind_double(stmt, i + 1, binding_value);
             break;
 
         case Variant::STRING:
-            sqlite3_bind_text(stmt, i + 1, (param_bindings[i].operator String()).alloc_c_string(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, i + 1, (binding_value.operator String()).alloc_c_string(), -1, SQLITE_TRANSIENT);
             break;
 
         case Variant::POOL_BYTE_ARRAY:
         {
-            PoolByteArray binding = ((const PoolByteArray &)param_bindings[i]);
+            PoolByteArray binding = ((const PoolByteArray &)binding_value);
             PoolByteArray::Read r = binding.read();
             sqlite3_bind_blob64(stmt, i + 1, r.ptr(), binding.size(), SQLITE_TRANSIENT);
             break;
         }
 
         default:
-            GODOT_LOG(2, "GDSQLite Error: Binding a parameter of type " + String(std::to_string(param_bindings[i].get_type()).c_str()) + " (TYPE_*) is not supported!")
+            GODOT_LOG(2, "GDSQLite Error: Binding a parameter of type " + String(std::to_string(binding_value.get_type()).c_str()) + " (TYPE_*) is not supported!")
             sqlite3_finalize(stmt);
             return false;
         }
@@ -301,6 +311,13 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     else if (verbose_mode)
     {
         GODOT_LOG(0, " --> Query succeeded")
+    }
+
+    /* Figure out if there's a subsequent statement which needs execution */
+    String sTail = String(pzTail).strip_edges();
+    if (!sTail.empty())
+    {
+        return query_with_bindings(sTail, param_bindings);
     }
 
     return true;
