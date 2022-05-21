@@ -28,6 +28,7 @@ void SQLite::_register_methods()
     register_property<SQLite, int>("last_insert_rowid", &SQLite::set_last_insert_rowid, &SQLite::get_last_insert_rowid, 0);
     register_property<SQLite, int>("verbosity_level", &SQLite::set_verbosity_level, &SQLite::get_verbosity_level, VerbosityLevel::NORMAL);
 
+    register_property<SQLite, bool>("verbose_mode", &SQLite::set_verbose_mode, &SQLite::get_verbose_mode, false);
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
     register_property<SQLite, bool>("read_only", &SQLite::read_only, false);
 
@@ -892,6 +893,23 @@ void SQLite::set_verbosity_level(int p_verbosity_level)
 int SQLite::get_verbosity_level()
 {
     return verbosity_level;
+}
+
+void SQLite::set_verbose_mode(bool p_verbose_mode)
+{
+    if (p_verbose_mode)
+    {
+        set_verbosity_level(VerbosityLevel::VERBOSE);
+    }
+    else 
+    {
+        set_verbosity_level(VerbosityLevel::QUIET);
+    }
+}
+
+bool SQLite::get_verbose_mode()
+{
+    return verbosity_level > VerbosityLevel::QUIET;
 }
 
 void SQLite::set_query_result(Array p_query_result)

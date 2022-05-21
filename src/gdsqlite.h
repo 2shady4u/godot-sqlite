@@ -105,6 +105,9 @@ namespace godot
         void set_verbosity_level(int p_verbosity_level);
         int get_verbosity_level();
 
+        void set_verbose_mode(bool p_verbose_mode);
+        bool get_verbose_mode();
+
         void set_query_result(Array p_query_result);
         Array get_query_result();
     };
