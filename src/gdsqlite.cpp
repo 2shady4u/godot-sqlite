@@ -26,8 +26,9 @@ void SQLite::_register_methods()
     register_method("export_to_json", &SQLite::export_to_json);
 
     register_property<SQLite, int>("last_insert_rowid", &SQLite::set_last_insert_rowid, &SQLite::get_last_insert_rowid, 0);
+    register_property<SQLite, int>("verbosity_level", &SQLite::set_verbosity_level, &SQLite::get_verbosity_level, VerbosityLevel::NORMAL);
 
-    register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
+    register_property<SQLite, bool>("verbose_mode", &SQLite::set_verbose_mode, &SQLite::get_verbose_mode, false);
     register_property<SQLite, bool>("foreign_keys", &SQLite::foreign_keys, false);
     register_property<SQLite, bool>("read_only", &SQLite::read_only, false);
 
@@ -54,11 +55,11 @@ SQLite::~SQLite()
 
 void SQLite::_init()
 {
-    path = String("default");
-    default_extension = String("db");
-    verbose_mode = false;
+    verbosity_level = VerbosityLevel::NORMAL;
     foreign_keys = false;
     read_only = false;
+    path = String("default");
+    default_extension = String("db");
 }
 
 bool SQLite::open_db()
@@ -83,21 +84,21 @@ bool SQLite::open_db()
 
         /* This part does weird things on Android & on export! Leave it out for now! */
         ///* Make the necessary empty directories if they do not exist yet */
-        //Ref<Directory> dir = Directory::_new();
-        //PoolStringArray split_array = path.split("/", false);
+        // Ref<Directory> dir = Directory::_new();
+        // PoolStringArray split_array = path.split("/", false);
         ///* Remove the database filename */
-        //split_array.remove(split_array.size()-1);
-        //String path_without_file = "";
-        //for (int i = 0; i < split_array.size(); i++) {
-        //    path_without_file += split_array[i] + "/";
-        //}
-        //Error error = dir->make_dir_recursive(path_without_file);
-        //if (error != Error::OK){
-        //    GODOT_LOG(2, "GDSQLite Error: Can't make necessary folders for path (ERROR = "
-        //    + String(std::to_string(static_cast<int>(error)).c_str())
-        //    + ")")
-        //    return false;
-        //}
+        // split_array.remove(split_array.size()-1);
+        // String path_without_file = "";
+        // for (int i = 0; i < split_array.size(); i++) {
+        //     path_without_file += split_array[i] + "/";
+        // }
+        // Error error = dir->make_dir_recursive(path_without_file);
+        // if (error != Error::OK){
+        //     GODOT_LOG(2, "GDSQLite Error: Can't make necessary folders for path (ERROR = "
+        //     + String(std::to_string(static_cast<int>(error)).c_str())
+        //     + ")")
+        //     return false;
+        // }
     }
 
     const char *char_path = path.alloc_c_string();
@@ -126,7 +127,7 @@ bool SQLite::open_db()
         GODOT_LOG(2, "GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)))
         return false;
     }
-    else
+    else if (verbosity_level > VerbosityLevel::QUIET)
     {
         GODOT_LOG(0, "Opened database successfully (" + path + ")")
     }
@@ -158,7 +159,10 @@ void SQLite::close_db()
         else
         {
             db = nullptr;
-            GODOT_LOG(0, "Closed database (" + path + ")")
+            if (verbosity_level > VerbosityLevel::QUIET)
+            {
+                GODOT_LOG(0, "Closed database (" + path + ")")
+            }
         }
     }
 }
@@ -173,7 +177,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     const char *zErrMsg, *sql;
     int rc;
 
-    if (verbose_mode)
+    if (verbosity_level > VerbosityLevel::NORMAL)
     {
         GODOT_LOG(0, p_query)
     }
@@ -230,7 +234,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
         }
     }
 
-    if (verbose_mode)
+    if (verbosity_level > VerbosityLevel::NORMAL)
     {
         char *expanded_sql = sqlite3_expanded_sql(stmt);
         GODOT_LOG(0, expanded_sql)
@@ -298,7 +302,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
         GODOT_LOG(2, " --> SQL error: " + error_message)
         return false;
     }
-    else if (verbose_mode)
+    else if (verbosity_level > VerbosityLevel::NORMAL)
     {
         GODOT_LOG(0, " --> Query succeeded")
     }
@@ -644,7 +648,7 @@ bool SQLite::create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc)
         GODOT_LOG(2, "GDSQLite Error: " + String(sqlite3_errmsg(db)))
         return false;
     }
-    else if (verbose_mode)
+    else if (verbosity_level > VerbosityLevel::NORMAL)
     {
         GODOT_LOG(0, "Succesfully added function \"" + p_name + "\" to function registry")
     }
@@ -879,6 +883,33 @@ int SQLite::get_last_insert_rowid()
     }
     /* Return the default value */
     return 0;
+}
+
+void SQLite::set_verbosity_level(int p_verbosity_level)
+{
+    verbosity_level = p_verbosity_level;
+}
+
+int SQLite::get_verbosity_level()
+{
+    return verbosity_level;
+}
+
+void SQLite::set_verbose_mode(bool p_verbose_mode)
+{
+    if (p_verbose_mode)
+    {
+        set_verbosity_level(VerbosityLevel::VERBOSE);
+    }
+    else 
+    {
+        set_verbosity_level(VerbosityLevel::QUIET);
+    }
+}
+
+bool SQLite::get_verbose_mode()
+{
+    return verbosity_level > VerbosityLevel::QUIET;
 }
 
 void SQLite::set_query_result(Array p_query_result)
