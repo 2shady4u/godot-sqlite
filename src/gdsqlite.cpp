@@ -328,7 +328,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
 
     if (!param_bindings.empty())
     {
-        GODOT_LOG(1, "GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameters)")
+        GODOT_LOG(1, "GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))")
     }
 
     return true;

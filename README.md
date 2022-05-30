@@ -262,7 +262,7 @@ After exhausting these options, please open an issue that describes the error in
 
 ### 2. Your plugin fails to load on my Windows machine!
 
-***NOTE**: This cause of this issue has been addressed in later releases of this plugin (3.1+) by swapping out the windows library with the MinGW cross-compiled version. This QA entry is preserved as a historical reference.* 
+***NOTE**: The cause of this issue has been addressed in later releases of this plugin (3.1+) by swapping out the windows library with the MinGW cross-compiled version. This QA entry is preserved as a historical reference.* 
 
 Basically if your Windows machine device doesn't have the required VC++ redistributables installed, the dynamic library will fail to load and throw an error of the following sort:
 
