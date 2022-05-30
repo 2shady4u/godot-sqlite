@@ -57,6 +57,7 @@ jobs:
           scons platform=android bits=64 android_arch=x86 target=${{env.TARGET}} generate_bindings=yes -j4
           cd ..
           $ANDROID_NDK_ROOT/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=./${{env.TARGET_PATH}}
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:

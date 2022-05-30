@@ -61,9 +61,11 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     ***NOTE:** If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.*
 
-- **verbose_mode** (Boolean, default=false)
+- **verbose_mode** (Boolean, default=false) **[DEPRECATED]**
 
     Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
+
+    ***NOTE:** This variable will be removed in later versions and is preserved only for the sake of backwards compatibility. See the new `verbosity_level`-variable below for the recommended way to control console logging.*
 
 - **foreign_keys** (Boolean, default=false)
 
@@ -77,14 +79,24 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - **query_result** (Array, default=[])
 
-    Contains the results from the latest query and is cleared after every new query. 
-
-    ***NOTE:** If you want your result to persist you'll have to **duplicate()** this array yourself BEFORE running additional queries.*
+    Contains the results from the latest query and is cleared after every new query.
 
 - **last_insert_rowid** (Integer, default=0)
 
-    Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
-    Attempting to modify this variable directly is forbidden and throws an error.
+    Exposes both the `sqlite3_last_insert_rowid()`- and `sqlite3_set_last_insert_rowid()`-methods to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html) and [here](https://www.sqlite.org/c3ref/set_last_insert_rowid.html) respectively.
+
+- **verbosity_level** (Integer, default=1)
+
+    The verbosity_level determines the amount of logging to the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
+
+    | Level            | Description                                 |
+    |----------------- | ------------------------------------------- |
+    | QUIET (0)        | Don't print anything to the console         |
+    | NORMAL (1)       | Print essential information to the console  |
+    | VERBOSE (2)      | Print additional information to the console |
+    | VERY_VERBOSE (3) | Same as VERBOSE                             |
+
+    ***NOTE:** VERBOSE and higher levels might considerably slow down your queries due to excessive logging.*
 
 ## Functions
 
@@ -249,6 +261,8 @@ There are a couple of things you can do before panicking, namely:
 After exhausting these options, please open an issue that describes the error in proper detail.
 
 ### 2. Your plugin fails to load on my Windows machine!
+
+***NOTE**: This cause of this issue has been addressed in later releases of this plugin (3.1+) by swapping out the windows library with the MinGW cross-compiled version. This QA entry is preserved as a historical reference.* 
 
 Basically if your Windows machine device doesn't have the required VC++ redistributables installed, the dynamic library will fail to load and throw an error of the following sort:
 
