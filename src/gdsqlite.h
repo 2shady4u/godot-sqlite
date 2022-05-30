@@ -99,6 +99,8 @@ namespace godot
         bool import_from_json(String import_path);
         bool export_to_json(String export_path);
 
+        int get_autocommit();
+
         void set_last_insert_rowid(int p_last_row_id);
         int get_last_insert_rowid();
 
