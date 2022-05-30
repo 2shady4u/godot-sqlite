@@ -192,6 +192,10 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
 
+- Integer mode = **get_autocommit()**
+
+    Get the current autocommit mode of the open database connection which can be used to check if there's any database transactions in progress, see [here](http://www.sqlite.org/c3ref/get_autocommit.html). A non-zero return value indicates that the database is in autocommit mode and thus has no active transaction.
+
 ## Frequently Asked Questions (FAQ)
 
 ### 1. My query fails and returns syntax errors, what should I do?

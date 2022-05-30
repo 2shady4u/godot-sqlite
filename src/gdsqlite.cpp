@@ -25,6 +25,8 @@ void SQLite::_register_methods()
     register_method("import_from_json", &SQLite::import_from_json);
     register_method("export_to_json", &SQLite::export_to_json);
 
+    register_method("get_autocommit", &SQLite::get_autocommit);
+
     register_property<SQLite, int>("last_insert_rowid", &SQLite::set_last_insert_rowid, &SQLite::get_last_insert_rowid, 0);
 
     register_property<SQLite, bool>("verbose_mode", &SQLite::verbose_mode, false);
@@ -320,6 +322,11 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
         return query_with_bindings(sTail, param_bindings);
     }
 
+    if (!param_bindings.empty())
+    {
+        GODOT_LOG(1, "GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameters)")
+    }
+
     return true;
 }
 
@@ -444,6 +451,9 @@ bool SQLite::insert_rows(String p_name, Array p_row_array)
         if (p_row_array[i].get_type() != Variant::DICTIONARY)
         {
             GODOT_LOG(2, "GDSQLite Error: All elements of the Array should be of type Dictionary")
+            /* Don't forget to close the transaction! */
+            /* Maybe we should do a rollback instead? */
+            query("END TRANSACTION;");
             return false;
         }
         if (!insert_row(p_name, p_row_array[i]))
@@ -888,6 +898,16 @@ void SQLite::set_last_insert_rowid(int p_last_row_id)
 int SQLite::get_last_insert_rowid()
 {
     return sqlite3_last_insert_rowid(db);
+}
+
+int SQLite::get_autocommit()
+{
+    if (db)
+    {
+        return sqlite3_get_autocommit(db);
+    }
+    /* Return the default value */
+    return 1; // A non-zero value indicates the autocommit is on!
 }
 
 bool SQLite::validate_json(Array database_array, std::vector<object_struct> &objects_to_import)

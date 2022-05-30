@@ -89,6 +89,8 @@ namespace godot
 
         void set_last_insert_rowid(int p_last_row_id);
         int get_last_insert_rowid();
+
+        int get_autocommit();
     };
 
 }
