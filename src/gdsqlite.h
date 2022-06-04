@@ -112,6 +112,8 @@ namespace godot
 
         void set_query_result(Array p_query_result);
         Array get_query_result();
+
+        Array get_query_result_by_reference();
     };
 
 }

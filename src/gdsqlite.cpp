@@ -39,6 +39,7 @@ void SQLite::_register_methods()
     register_property<SQLite, String>("default_extension", &SQLite::default_extension, "db");
 
     register_property<SQLite, Array>("query_result", &SQLite::set_query_result, &SQLite::get_query_result, Array());
+    register_property<SQLite, Array>("query_result_by_reference", &SQLite::set_query_result, &SQLite::get_query_result_by_reference, Array());
 }
 
 SQLite::SQLite()
@@ -949,6 +950,11 @@ Array SQLite::get_query_result()
     return query_result.duplicate(true);
 }
 
+Array SQLite::get_query_result_by_reference()
+{
+    return query_result;
+}
+
 int SQLite::get_autocommit()
 {
     if (db)
@@ -1028,18 +1034,6 @@ bool SQLite::validate_json(Array database_array, std::vector<object_struct> &obj
         objects_to_import.insert(objects_to_import.end(), new_object);
     }
     return true;
-}
-
-Dictionary SQLite::deep_copy(Dictionary p_dict)
-{
-    Dictionary copy_dict;
-    Array keys = p_dict.keys();
-    int number_of_keys = keys.size();
-    for (int i = 0; i <= number_of_keys - 1; i++)
-    {
-        copy_dict[keys[i]] = p_dict[keys[i]];
-    }
-    return copy_dict;
 }
 
 Variant SQLite::get_with_default(Dictionary p_dict, String p_key, Variant p_default)
