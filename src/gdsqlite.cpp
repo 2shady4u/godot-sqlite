@@ -20,6 +20,8 @@ void SQLite::_bind_methods()
     ClassDB::bind_method(D_METHOD("update_rows"), &SQLite::update_rows);
     ClassDB::bind_method(D_METHOD("delete_rows"), &SQLite::delete_rows);
 
+    ClassDB::bind_method(D_METHOD("create_function"), &SQLite::create_function);
+
     ClassDB::bind_method(D_METHOD("import_from_json"), &SQLite::import_from_json);
     ClassDB::bind_method(D_METHOD("export_to_json"), &SQLite::export_to_json);
 
@@ -599,6 +601,136 @@ bool SQLite::delete_rows(const String &p_name, const String &p_conditions)
     query("END TRANSACTION;");
     error_message = previous_error_message;
     return success;
+}
+
+static void function_callback(sqlite3_context *context, int argc, sqlite3_value **argv)
+{
+    void *temp = sqlite3_user_data(context);
+    Callable callable = *(Callable *)&temp;
+    /* Can also be done with following single-line statement, but I prefer the above */
+    /* Ref<FuncRef> func_ref = reinterpret_cast<Ref<FuncRef> >(sqlite3_user_data(context)); */
+
+    /* Check validity of the function reference */
+    if (!callable.is_valid())
+    {
+        UtilityFunctions::printerr("GDSQLite Error: Supplied function reference is invalid! Aborting callback...");
+        return;
+    }
+
+    Array argument_array = Array();
+    Variant argument_value;
+    for (int i = 0; i <= argc - 1; i++)
+    {
+        sqlite3_value *value = *argv;
+        /* Check the value type and do correct casting */
+        switch (sqlite3_value_type(value))
+        {
+        case SQLITE_INTEGER:
+            argument_value = Variant((int64_t)sqlite3_value_int64(value));
+            break;
+
+        case SQLITE_FLOAT:
+            argument_value = Variant(sqlite3_value_double(value));
+            break;
+
+        case SQLITE_TEXT:
+            argument_value = Variant((char *)sqlite3_value_text(value));
+            break;
+
+        case SQLITE_BLOB:
+        {
+            int bytes = sqlite3_value_bytes(value);
+            PackedByteArray arr = PackedByteArray();
+            arr.resize(bytes);
+            memcpy((void *)arr.ptrw(), (char *)sqlite3_value_blob(value), bytes);
+            argument_value = arr;
+            break;
+        }
+
+        case SQLITE_NULL:
+            break;
+
+        default:
+            break;
+        }
+
+        argument_array.append(argument_value);
+        argv += 1;
+    }
+
+    Object *object = callable.get_object();
+    StringName method = callable.get_method();
+    Variant output = object->call(method, argument_array);
+    // Ideally we would use the call()-method on the Callable itself, but this doesn't seem to work?
+    //Variant output = callable.call(argument_array);
+
+    switch (output.get_type())
+    {
+    case Variant::NIL:
+        sqlite3_result_null(context);
+        break;
+
+    case Variant::BOOL:
+    case Variant::INT:
+        sqlite3_result_int64(context, int64_t(output));
+        break;
+
+    case Variant::FLOAT:
+        sqlite3_result_double(context, output);
+        break;
+
+    case Variant::STRING:
+        // TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
+        {
+            const CharString dummy_binding = (output.operator String()).utf8();
+            const char *binding = dummy_binding.get_data();
+            sqlite3_result_text(context, binding, -1, SQLITE_STATIC);
+        }
+        //sqlite3_result_text(context, (output.operator String()).alloc_c_string(), -1, SQLITE_STATIC);
+        break;
+
+    case Variant::PACKED_BYTE_ARRAY:
+    {
+        PackedByteArray arr = ((const PackedByteArray &)output);
+        sqlite3_result_blob(context, arr.ptr(), arr.size(), SQLITE_TRANSIENT);
+        break;
+    }
+
+    default:
+        break;
+    }
+}
+
+bool SQLite::create_function(const String &p_name, const Callable &p_callable, int p_argc)
+{
+    /* Add the func_ref to a std::vector to increase the ref_count */
+    function_registry.push_back(p_callable);
+
+    int rc;
+    CharString dummy_name = p_name.utf8();
+    const char *zFunctionName = dummy_name.get_data();
+    //const char *zFunctionName = p_name.alloc_c_string();
+    int nArg = p_argc;
+    int eTextRep = SQLITE_UTF8;
+
+    /* Get a void pointer to the current value stored at the back of the vector */
+    void *pApp = *(void **)&function_registry.back();
+    void (*xFunc)(sqlite3_context *, int, sqlite3_value **) = function_callback;
+    void (*xStep)(sqlite3_context *, int, sqlite3_value **) = NULL;
+    void (*xFinal)(sqlite3_context *) = NULL;
+
+    /* Create the actual function */
+    rc = sqlite3_create_function(db, zFunctionName, nArg, eTextRep, pApp, xFunc, xStep, xFinal);
+    if (rc)
+    {
+        UtilityFunctions::printerr("GDSQLite Error: " + String(sqlite3_errmsg(db)));
+        return false;
+    }
+    else if (verbosity_level > VerbosityLevel::NORMAL)
+    {
+        UtilityFunctions::print("Succesfully added function \"" + p_name + "\" to function registry");
+    }
+    return true;
 }
 
 bool SQLite::import_from_json(String import_path)
