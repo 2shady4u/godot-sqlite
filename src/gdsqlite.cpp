@@ -197,6 +197,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     if (rc != SQLITE_OK)
     {
         GODOT_LOG(2, " --> SQL error: " + error_message)
+        sqlite3_finalize(stmt);
         return false;
     }
 
@@ -374,6 +375,11 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
         if (column_dict.has("default"))
         {
             query_string += String(" DEFAULT ") + (const String &)column_dict["default"];
+        }
+        /* Unique check */
+        if (get_with_default(column_dict, "unique", false))
+        {
+            query_string += String(" UNIQUE");
         }
         /* Autoincrement check */
         if (get_with_default(column_dict, "auto_increment", false))
