@@ -28,9 +28,6 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 
 	ERR_FAIL_COND_V(zName == NULL, SQLITE_IOERR); /* How does this respond to :memory:? */
 
-	Godot::print(String(zName));
-	std::cout << flags << std::endl;
-
 	/* TODO: Add/Support additional flags: 
     ** - SQLITE_OPEN_DELETEONCLOSE
     ** - SQLITE_OPEN_EXCLUSIVE
@@ -40,7 +37,7 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 	/* Convert SQLite's flags to something Godot might understand! */
 	if (flags & SQLITE_OPEN_READONLY)
 	{
-		Godot::print("READ");
+		//Godot::print("READ");
 		godot_flags |= File::READ;
 	}
 	if (flags & SQLITE_OPEN_READWRITE)
@@ -49,18 +46,18 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 		{
 			if (file->file_exists(String(zName)))
 			{
-				Godot::print("READ WRITE");
+				//Godot::print("READ WRITE");
 				godot_flags |= File::READ_WRITE;
 			}
 			else
 			{
-				Godot::print("WRITE READ");
+				//Godot::print("WRITE READ");
 				godot_flags |= File::WRITE_READ;
 			}
 		}
 		else
 		{
-			Godot::print("READ WRITE");
+			//Godot::print("READ WRITE");
 			godot_flags |= File::READ_WRITE;
 		}
 	}
