@@ -2,10 +2,10 @@
 import os
 import sys
 
-env = SConscript("godot-cpp/SConstruct")
+target_path = ARGUMENTS.pop("target_path", "demo/addons/godot-sqlite/bin/")
+target_name = ARGUMENTS.pop("target_name", "libgdsqlite")
 
-target_path = "demo/addons/godot-sqlite/bin/"
-target_name = "libgdsqlite"
+env = SConscript("godot-cpp/SConstruct")
 
 target = "{}{}.{}.{}".format(
     target_path, target_name, env["platform"], env["target"]
