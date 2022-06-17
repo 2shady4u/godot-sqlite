@@ -79,7 +79,11 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - **query_result** (Array, default=[])
 
-    Contains the results from the latest query and is cleared after every new query.
+    Contains the results from the latest query **by value**; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.
+
+- **query_result_by_reference** (Array, default=[])
+
+    Contains the results from the latest query **by reference** and is, as a direct result, cleared and repopulated after every new query.
 
 - **last_insert_rowid** (Integer, default=0)
 
