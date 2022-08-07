@@ -44,19 +44,17 @@ jobs:
           scons --version
 
       - name: Compilation
-        env:
-          ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk-bundle
         run: |
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}/armeabi-v7a
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}/arm64-v8a
           mkdir -v -p ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}/x86
           cd ${{env.PROJECT_FOLDER}}
           cd godot-cpp
-          scons platform=android bits=64 android_arch=armv7 target=${{env.TARGET}} generate_bindings=yes -j4
-          scons platform=android bits=64 android_arch=arm64v8 target=${{env.TARGET}} generate_bindings=yes -j4
-          scons platform=android bits=64 android_arch=x86 target=${{env.TARGET}} generate_bindings=yes -j4
+          scons platform=android bits=64 android_arch=armv7 target=${{env.TARGET}} generate_bindings=yes -j4 ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME
+          scons platform=android bits=64 android_arch=arm64v8 target=${{env.TARGET}} generate_bindings=yes -j4 ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME
+          scons platform=android bits=64 android_arch=x86 target=${{env.TARGET}} generate_bindings=yes -j4 ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME
           cd ..
-          $ANDROID_NDK_ROOT/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=./${{env.TARGET_PATH}}
+          $ANDROID_NDK_LATEST_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=./${{env.TARGET_PATH}}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
