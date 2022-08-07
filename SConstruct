@@ -23,7 +23,7 @@ target = "{}{}.{}.{}".format(
 env.Append(CPPPATH=["src/"])
 sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), 'src/sqlite/sqlite3.c']
 
-if env["platform"] == "osx":
+if env["platform"] == "macos":
     target = "{}.framework/{}.{}.{}".format(
         target, 
         target_name,

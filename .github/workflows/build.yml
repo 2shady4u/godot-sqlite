@@ -33,19 +33,19 @@ jobs:
 
           - name: MacOS Compilation
             os: "macos-11"
-            artifact-name: osx
+            artifact-name: macos
             artifact-extension: framework
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           lfs: true
           submodules: recursive
 
       # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
       - name: Set up Python 3.x
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           # Semantic version range syntax or exact version of a Python version
           python-version: '3.x'
@@ -84,3 +84,4 @@ jobs:
         with:
           name: ${{ matrix.artifact-name }}
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
+          if-no-files-found: error
