@@ -10,7 +10,7 @@ func _on_output_received(text : String) -> void:
 
 	label.text = text
 	label.set("theme_override_colors/font_color", Color.LIME_GREEN)
-	label.autowrap_mode = Label.AUTOWRAP_WORD
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD
 
 func _on_texture_received(texture : Texture) -> void:
 	var texture_rect := TextureRect.new()
