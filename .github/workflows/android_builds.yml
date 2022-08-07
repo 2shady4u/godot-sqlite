@@ -2,7 +2,7 @@ name: 🤖 Android Builds
 on:
   push:
     branches: [master, main]
-  workflow_dispatch: true
+  workflow_dispatch:
 
 # Global Settings
 # Only use the release target for android, otherwise further modification of the make-files is required!
