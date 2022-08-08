@@ -1,7 +1,8 @@
 name: 🐧 Linux Builds
 on:
   push:
-    branches: [ master, main ]
+    branches: [master, main]
+  workflow_dispatch:
 
 # Global Settings
 env:
