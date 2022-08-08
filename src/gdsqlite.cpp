@@ -1,9 +1,12 @@
 #include "gdsqlite.h"
+#include "backup.hpp"
 
 using namespace godot;
 
 void SQLite::_register_methods()
 {
+    register_method("backup", &SQLite::backup);
+    register_method("recovery", &SQLite::recovery);
 
     register_method("open_db", &SQLite::open_db);
     register_method("close_db", &SQLite::close_db);
@@ -63,6 +66,17 @@ void SQLite::_init()
     read_only = false;
     path = String("default");
     default_extension = String("db");
+}
+
+bool SQLite::backup(String p_dest_name)
+{
+    return sqlite_backup_db(db, p_dest_name.alloc_c_string(), [](int a, int b)
+                            { GODOT_LOG(0, "Backuping..." + String(a) + "," + String(b)) }) == SQLITE_OK;
+}
+
+bool SQLite::recovery(String p_dest_name)
+{
+    return sqlite_load_to_memory(db, p_dest_name.alloc_c_string()) == SQLITE_OK;
 }
 
 bool SQLite::open_db()

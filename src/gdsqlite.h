@@ -114,6 +114,9 @@ namespace godot
         Array get_query_result();
 
         Array get_query_result_by_reference();
+
+        bool backup(String p_filename);
+        bool recovery(String p_filename);
     };
 
 }
