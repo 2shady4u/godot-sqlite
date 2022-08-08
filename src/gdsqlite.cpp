@@ -7,8 +7,8 @@ void SQLite::_register_methods()
 
     register_method("open_db", &SQLite::open_db);
     register_method("close_db", &SQLite::close_db);
-    register_method("query", &SQLite::query);
-    register_method("query_with_bindings", &SQLite::query_with_bindings);
+    register_method("exec", &SQLite::exec);
+    register_method("exec_args", &SQLite::exec_args);
 
     register_method("create_table", &SQLite::create_table);
     register_method("drop_table", &SQLite::drop_table);
@@ -84,24 +84,6 @@ bool SQLite::open_db()
             /* Find the real path */
             path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
         }
-
-        /* This part does weird things on Android & on export! Leave it out for now! */
-        ///* Make the necessary empty directories if they do not exist yet */
-        // Ref<Directory> dir = Directory::_new();
-        // PoolStringArray split_array = path.split("/", false);
-        ///* Remove the database filename */
-        // split_array.remove(split_array.size()-1);
-        // String path_without_file = "";
-        // for (int i = 0; i < split_array.size(); i++) {
-        //     path_without_file += split_array[i] + "/";
-        // }
-        // Error error = dir->make_dir_recursive(path_without_file);
-        // if (error != Error::OK){
-        //     GODOT_LOG(2, "GDSQLite Error: Can't make necessary folders for path (ERROR = "
-        //     + String(std::to_string(static_cast<int>(error)).c_str())
-        //     + ")")
-        //     return false;
-        // }
     }
 
     const char *char_path = path.alloc_c_string();
@@ -122,7 +104,6 @@ bool SQLite::open_db()
     else
     {
         rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-        /* Identical to: `rc = sqlite3_open(char_path, &db);`*/
     }
 
     if (rc != SQLITE_OK)
@@ -170,12 +151,12 @@ void SQLite::close_db()
     }
 }
 
-bool SQLite::query(String p_query)
+bool SQLite::exec(String p_query)
 {
-    return query_with_bindings(p_query, Array());
+    return exec_args(p_query, Array());
 }
 
-bool SQLite::query_with_bindings(String p_query, Array param_bindings)
+bool SQLite::exec_args(String p_query, Array param_bindings)
 {
     const char *zErrMsg, *sql, *pzTail;
     int rc;
@@ -325,7 +306,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     String sTail = String(pzTail).strip_edges();
     if (!sTail.empty())
     {
-        return query_with_bindings(sTail, param_bindings);
+        return exec_args(sTail, param_bindings);
     }
 
     if (!param_bindings.empty())
@@ -416,7 +397,7 @@ bool SQLite::create_table(String p_name, Dictionary p_table_dict)
 
     query_string += key_string + ");";
 
-    return query(query_string);
+    return exec(query_string);
 }
 
 bool SQLite::drop_table(String p_name)
@@ -425,7 +406,7 @@ bool SQLite::drop_table(String p_name)
     /* Create SQL statement */
     query_string = "DROP TABLE " + p_name + ";";
 
-    return query(query_string);
+    return exec(query_string);
 }
 
 bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
@@ -450,12 +431,12 @@ bool SQLite::insert_row(String p_name, Dictionary p_row_dict)
     }
     query_string += " (" + key_string + ") VALUES (" + value_string + ");";
 
-    return query_with_bindings(query_string, param_bindings);
+    return exec_args(query_string, param_bindings);
 }
 
 bool SQLite::insert_rows(String p_name, Array p_row_array)
 {
-    query("BEGIN TRANSACTION;");
+    exec("BEGIN TRANSACTION;");
     int number_of_rows = p_row_array.size();
     for (int i = 0; i <= number_of_rows - 1; i++)
     {
@@ -464,7 +445,7 @@ bool SQLite::insert_rows(String p_name, Array p_row_array)
             GODOT_LOG(2, "GDSQLite Error: All elements of the Array should be of type Dictionary")
             /* Don't forget to close the transaction! */
             /* Maybe we should do a rollback instead? */
-            query("END TRANSACTION;");
+            exec("END TRANSACTION;");
             return false;
         }
         if (!insert_row(p_name, p_row_array[i]))
@@ -472,12 +453,12 @@ bool SQLite::insert_rows(String p_name, Array p_row_array)
             /* Don't forget to close the transaction! */
             /* Stop the error_message from being overwritten! */
             String previous_error_message = error_message;
-            query("END TRANSACTION;");
+            exec("END TRANSACTION;");
             error_message = previous_error_message;
             return false;
         }
     }
-    query("END TRANSACTION;");
+    exec("END TRANSACTION;");
     return true;
 }
 
@@ -509,7 +490,7 @@ Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_ar
     }
     query_string += ";";
 
-    query(query_string);
+    exec(query_string);
     return query_result;
 }
 
@@ -523,7 +504,7 @@ bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_update
     Array keys = p_updated_row_dict.keys();
     Array values = p_updated_row_dict.values();
 
-    query("BEGIN TRANSACTION;");
+    exec("BEGIN TRANSACTION;");
     /* Create SQL statement */
     query_string += "UPDATE " + p_name + " SET ";
 
@@ -538,10 +519,10 @@ bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_update
     }
     query_string += " WHERE " + p_conditions + ";";
 
-    success = query_with_bindings(query_string, param_bindings);
+    success = exec_args(query_string, param_bindings);
     /* Stop the error_message from being overwritten! */
     String previous_error_message = error_message;
-    query("END TRANSACTION;");
+    exec("END TRANSACTION;");
     error_message = previous_error_message;
     return success;
 }
@@ -551,7 +532,7 @@ bool SQLite::delete_rows(String p_name, String p_conditions)
     String query_string;
     bool success;
 
-    query("BEGIN TRANSACTION;");
+    exec("BEGIN TRANSACTION;");
     /* Create SQL statement */
     query_string = "DELETE FROM " + p_name;
     /* If it's empty or * everything is to be deleted */
@@ -561,10 +542,10 @@ bool SQLite::delete_rows(String p_name, String p_conditions)
     }
     query_string += ";";
 
-    success = query(query_string);
+    success = exec(query_string);
     /* Stop the error_message from being overwritten! */
     String previous_error_message = error_message;
-    query("END TRANSACTION;");
+    exec("END TRANSACTION;");
     error_message = previous_error_message;
     return success;
 }
@@ -742,7 +723,7 @@ bool SQLite::import_from_json(String import_path)
 
     /* Find all tables that are present in this database */
     /* We don't care about triggers here since they get dropped automatically when their table is dropped */
-    query(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
+    exec(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
     Array old_database_array = query_result.duplicate(true);
     int old_number_of_tables = query_result.size();
     /* Drop all old tables present in the database */
@@ -754,18 +735,18 @@ bool SQLite::import_from_json(String import_path)
         drop_table(table_name);
     }
 
-    query("BEGIN TRANSACTION;");
+    exec("BEGIN TRANSACTION;");
     /* foreign_keys cannot be enforced until after all rows have been added! */
-    query("PRAGMA defer_foreign_keys=on;");
+    exec("PRAGMA defer_foreign_keys=on;");
     /* Add all new tables and fill them up with all the rows */
     for (auto table : objects_to_import)
     {
-        if (!query(table.sql))
+        if (!exec(table.sql))
         {
             /* Don't forget to close the transaction! */
             /* Stop the error_message from being overwritten! */
             String previous_error_message = error_message;
-            query("END TRANSACTION;");
+            exec("END TRANSACTION;");
             error_message = previous_error_message;
         }
     }
@@ -808,20 +789,20 @@ bool SQLite::import_from_json(String import_path)
                 /* Don't forget to close the transaction! */
                 /* Stop the error_message from being overwritten! */
                 String previous_error_message = error_message;
-                query("END TRANSACTION;");
+                exec("END TRANSACTION;");
                 error_message = previous_error_message;
                 return false;
             }
         }
     }
-    query("END TRANSACTION;");
+    exec("END TRANSACTION;");
     return true;
 }
 
 bool SQLite::export_to_json(String export_path)
 {
     /* Get all names and sql templates for all tables present in the database */
-    query(String("SELECT name,sql,type FROM sqlite_master WHERE type = 'table' OR type = 'trigger';"));
+    exec(String("SELECT name,sql,type FROM sqlite_master WHERE type = 'table' OR type = 'trigger';"));
     int number_of_objects = query_result.size();
     Array database_array = query_result.duplicate(true);
     /* Construct a Dictionary for each table, convert it to JSON and write it to file */
@@ -835,7 +816,7 @@ bool SQLite::export_to_json(String export_path)
             String query_string;
 
             query_string = "SELECT * FROM " + (const String &)object_name + ";";
-            query(query_string);
+            exec(query_string);
 
             /* Encode all columns of type PoolByteArray to base64 */
             if (!query_result.empty())
@@ -935,7 +916,7 @@ void SQLite::set_verbose_mode(bool p_verbose_mode)
     {
         set_verbosity_level(VerbosityLevel::VERBOSE);
     }
-    else 
+    else
     {
         set_verbosity_level(VerbosityLevel::QUIET);
     }
