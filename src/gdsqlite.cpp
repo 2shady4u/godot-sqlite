@@ -119,7 +119,7 @@ bool SQLite::open_db()
 
     if (rc != SQLITE_OK)
     {
-        UtilityFunctions::printerr(2, "GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)));
+        UtilityFunctions::printerr("GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)));
         return false;
     }
     else

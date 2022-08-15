@@ -10,3 +10,12 @@ windows.debug.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.windows.debug.
 windows.release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.windows.release.x86_64.dll"
 linux.debug.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.linux.debug.x86_64.so"
 linux.release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.linux.release.x86_64.so"
+
+[dependencies]
+
+macos.debug = {}
+macos.release = {}
+windows.debug.x86_64 = {}
+windows.release.x86_64 = {}
+linux.debug.x86_64 = {}
+linux.release.x86_64 = {}
