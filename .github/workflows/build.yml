@@ -36,6 +36,18 @@ jobs:
             artifact-name: macos
             artifact-extension: framework
 
+          - name: Android Compilation
+            os: "ubuntu-20.04"
+            artifact-name: android
+            artifact-extension: so
+            flags: ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64
+
+          - name: iOS Compilation
+            os: "macos-11"
+            artifact-name: ios
+            artifact-extension: dylib
+            flags: arch=arm64
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
