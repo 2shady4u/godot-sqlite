@@ -75,6 +75,8 @@ namespace godot
         bool import_from_json(String import_path);
         bool export_to_json(String export_path);
 
+        int get_autocommit() const;
+
         // Properties.
         void set_last_insert_rowid(const int64_t &p_last_insert_rowid);
         int64_t get_last_insert_rowid() const;
@@ -99,6 +101,8 @@ namespace godot
 
         void set_query_result(const Array &p_query_result);
         Array get_query_result() const;
+
+        Array get_query_result_by_reference() const;
     };
 
 }

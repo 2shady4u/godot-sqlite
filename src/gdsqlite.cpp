@@ -23,6 +23,8 @@ void SQLite::_bind_methods()
     ClassDB::bind_method(D_METHOD("import_from_json"), &SQLite::import_from_json);
     ClassDB::bind_method(D_METHOD("export_to_json"), &SQLite::export_to_json);
 
+    ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLite::get_autocommit);
+
     // Properties.
     ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLite::set_last_insert_rowid);
     ClassDB::bind_method(D_METHOD("get_last_insert_rowid"), &SQLite::get_last_insert_rowid);
@@ -55,6 +57,9 @@ void SQLite::_bind_methods()
     ClassDB::bind_method(D_METHOD("set_query_result", "query_result"), &SQLite::set_query_result);
     ClassDB::bind_method(D_METHOD("get_query_result"), &SQLite::get_query_result);
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "query_result"), "set_query_result", "get_query_result");
+
+    ClassDB::bind_method(D_METHOD("get_query_result_by_reference"), &SQLite::get_query_result_by_reference);
+    ADD_PROPERTY(PropertyInfo(Variant::STRING, "query_result_by_reference"), "set_query_result", "get_query_result_by_reference");
 }
 
 SQLite::SQLite()
@@ -943,5 +948,20 @@ void SQLite::set_query_result(const Array &p_query_result)
 
 Array SQLite::get_query_result() const
 {
+    return query_result.duplicate(true);
+}
+
+Array SQLite::get_query_result_by_reference() const
+{
     return query_result;
+}
+
+int SQLite::get_autocommit() const
+{
+    if (db)
+    {
+        return sqlite3_get_autocommit(db);
+    }
+    /* Return the default value */
+    return 1; // A non-zero value indicates the autocommit is on!
 }
