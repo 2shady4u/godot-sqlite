@@ -28,7 +28,11 @@ void SQLite::_bind_methods()
     // Properties.
     ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLite::set_last_insert_rowid);
     ClassDB::bind_method(D_METHOD("get_last_insert_rowid"), &SQLite::get_last_insert_rowid);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "last_insert_rowid"), "set_last_insert_rowid", "get_last_insert_rowid");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "last_insert_rowid"), "set_last_insert_rowid", "get_last_insert_rowid");
+
+    ClassDB::bind_method(D_METHOD("set_verbosity_level", "verbosity_level"), &SQLite::set_verbosity_level);
+    ClassDB::bind_method(D_METHOD("get_verbosity_level"), &SQLite::get_verbosity_level);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "verbosity_level"), "set_verbosity_level", "get_verbosity_level");
 
     ClassDB::bind_method(D_METHOD("set_verbose_mode", "verbose_mode"), &SQLite::set_verbose_mode);
     ClassDB::bind_method(D_METHOD("get_verbose_mode"), &SQLite::get_verbose_mode);
@@ -60,6 +64,12 @@ void SQLite::_bind_methods()
 
     ClassDB::bind_method(D_METHOD("get_query_result_by_reference"), &SQLite::get_query_result_by_reference);
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "query_result_by_reference"), "set_query_result", "get_query_result_by_reference");
+
+    // Constants.
+    BIND_ENUM_CONSTANT(QUIET);
+    BIND_ENUM_CONSTANT(NORMAL);
+    BIND_ENUM_CONSTANT(VERBOSE);
+    BIND_ENUM_CONSTANT(VERY_VERBOSE);
 }
 
 SQLite::SQLite()
@@ -879,6 +889,16 @@ int64_t SQLite::get_last_insert_rowid() const
     }
     /* Return the default value */
     return 0;
+}
+
+void SQLite::set_verbosity_level(const int64_t &p_verbosity_level)
+{
+    verbose_mode = p_verbosity_level;
+}
+
+int64_t SQLite::get_verbosity_level() const
+{
+    return verbosity_level;
 }
 
 void SQLite::set_verbose_mode(const bool &p_verbose_mode)

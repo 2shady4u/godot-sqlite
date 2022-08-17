@@ -41,6 +41,7 @@ namespace godot
 
         sqlite3 *db;
 
+        int64_t verbosity_level = 1;
         bool verbose_mode = false;
         bool foreign_keys = false;
         bool read_only = false;
@@ -53,6 +54,15 @@ namespace godot
         static void _bind_methods();
 
     public:
+        // Constants.
+        enum VerbosityLevel
+        {
+            QUIET = 0,
+            NORMAL = 1,
+            VERBOSE = 2,
+            VERY_VERBOSE = 3
+        };
+
         SQLite();
         ~SQLite();
 
@@ -81,6 +91,9 @@ namespace godot
         void set_last_insert_rowid(const int64_t &p_last_insert_rowid);
         int64_t get_last_insert_rowid() const;
 
+        void set_verbosity_level(const int64_t &p_verbosity_level);
+        int64_t get_verbosity_level() const;
+
         void set_verbose_mode(const bool &p_verbose_mode);
         bool get_verbose_mode() const;
 
@@ -106,5 +119,7 @@ namespace godot
     };
 
 }
+
+VARIANT_ENUM_CAST(SQLite, VerbosityLevel);
 
 #endif // ! SQLITE_CLASS_H
