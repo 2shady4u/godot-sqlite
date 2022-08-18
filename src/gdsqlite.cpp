@@ -178,7 +178,7 @@ bool SQLite::query(const String &p_query)
     return query_with_bindings(p_query, Array());
 }
 
-bool SQLite::query_with_bindings(const String &p_query, Array &param_bindings)
+bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
 {
     const char *zErrMsg, *sql, *pzTail;
     int rc;
