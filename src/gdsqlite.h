@@ -42,7 +42,6 @@ namespace godot
         sqlite3 *db;
 
         int64_t verbosity_level = 1;
-        bool verbose_mode = false;
         bool foreign_keys = false;
         bool read_only = false;
         String path = "default";
@@ -70,7 +69,7 @@ namespace godot
         bool open_db();
         void close_db();
         bool query(const String &p_query);
-        bool query_with_bindings(const String &p_query, const Array &param_bindings);
+        bool query_with_bindings(const String &p_query, Array &param_bindings);
 
         bool create_table(const String &p_name, const Dictionary &p_table_dict);
         bool drop_table(const String &p_name);
@@ -93,9 +92,6 @@ namespace godot
 
         void set_verbosity_level(const int64_t &p_verbosity_level);
         int64_t get_verbosity_level() const;
-
-        void set_verbose_mode(const bool &p_verbose_mode);
-        bool get_verbose_mode() const;
 
         void set_foreign_keys(const bool &p_foreign_keys);
         bool get_foreign_keys() const;

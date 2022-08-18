@@ -2,6 +2,8 @@ extends Node
 
 var db : SQLite = null
 
+const verbosity_level : int = SQLite.VERBOSE
+
 var db_name := "res://data/test"
 var packaged_db_name := "res://data_to_be_packaged"
 var json_name := "res://data/test_backup"
@@ -44,7 +46,7 @@ func example_of_basic_database_querying():
 
 	db = SQLite.new()
 	db.path = db_name
-	db.verbose_mode = true
+	db.verbosity_level = verbosity_level
 	# Open the database using the db_name found in the path variable
 	db.open_db()
 	# Throw away any table that was already present
@@ -155,7 +157,7 @@ func example_of_blob_io():
 
 	db = SQLite.new()
 	db.path = db_name
-	db.verbose_mode = true
+	db.verbosity_level = verbosity_level
 	# Open the database using the db_name found in the path variable
 	db.open_db()
 	# Throw away any table that was already present
@@ -203,7 +205,7 @@ func example_of_blob_io():
 func example_of_read_only_database():
 	db = SQLite.new()
 	db.path = packaged_db_name
-	db.verbose_mode = true
+	db.verbosity_level = verbosity_level
 	db.read_only = true
 
 	db.open_db()
@@ -229,7 +231,7 @@ func example_of_read_only_database():
 	# modified by this plugin.
 	var other_db = SQLite.new()
 	other_db.path = packaged_db_name
-	other_db.verbose_mode = true
+	other_db.verbosity_level = verbosity_level
 	other_db.read_only = true
 
 	other_db.open_db()

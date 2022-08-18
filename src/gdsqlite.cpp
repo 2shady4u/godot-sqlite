@@ -34,10 +34,6 @@ void SQLite::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_verbosity_level"), &SQLite::get_verbosity_level);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "verbosity_level"), "set_verbosity_level", "get_verbosity_level");
 
-    ClassDB::bind_method(D_METHOD("set_verbose_mode", "verbose_mode"), &SQLite::set_verbose_mode);
-    ClassDB::bind_method(D_METHOD("get_verbose_mode"), &SQLite::get_verbose_mode);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "verbose_mode"), "set_verbose_mode", "get_verbose_mode");
-
     ClassDB::bind_method(D_METHOD("set_foreign_keys", "foreign_keys"), &SQLite::set_foreign_keys);
     ClassDB::bind_method(D_METHOD("get_foreign_keys"), &SQLite::get_foreign_keys);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "foreign_keys"), "set_foreign_keys", "get_foreign_keys");
@@ -137,7 +133,7 @@ bool SQLite::open_db()
         UtilityFunctions::printerr("GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)));
         return false;
     }
-    else
+    else if (verbosity_level > VerbosityLevel::QUIET)
     {
         UtilityFunctions::print("Opened database successfully (" + path + ")");
     }
@@ -169,7 +165,10 @@ void SQLite::close_db()
         else
         {
             db = nullptr;
-            UtilityFunctions::print("Closed database (" + path + ")");
+            if (verbosity_level > VerbosityLevel::QUIET)
+            {
+                UtilityFunctions::print("Closed database (" + path + ")");
+            }
         }
     }
 }
@@ -179,12 +178,12 @@ bool SQLite::query(const String &p_query)
     return query_with_bindings(p_query, Array());
 }
 
-bool SQLite::query_with_bindings(const String &p_query, const Array &param_bindings)
+bool SQLite::query_with_bindings(const String &p_query, Array &param_bindings)
 {
-    const char *zErrMsg, *sql;
+    const char *zErrMsg, *sql, *pzTail;
     int rc;
 
-    if (verbose_mode)
+    if (verbosity_level > VerbosityLevel::NORMAL)
     {
         UtilityFunctions::print(p_query);
     }
@@ -198,19 +197,30 @@ bool SQLite::query_with_bindings(const String &p_query, const Array &param_bindi
 
     sqlite3_stmt *stmt;
     /* Prepare an SQL statement */
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &pzTail);
     zErrMsg = sqlite3_errmsg(db);
     error_message = String(zErrMsg);
     if (rc != SQLITE_OK)
     {
         UtilityFunctions::printerr(" --> SQL error: " + error_message);
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    /* Check if the param_bindings size exceeds the required parameter count */
+    int parameter_count = sqlite3_bind_parameter_count(stmt);
+    if (param_bindings.size() < parameter_count)
+    {
+        UtilityFunctions::printerr("GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement!");
+        sqlite3_finalize(stmt);
         return false;
     }
 
     /* Bind any given parameters to the prepared statement */
-    for (int i = 0; i < param_bindings.size(); i++)
+    for (int i = 0; i < parameter_count; i++)
     {
-        switch (param_bindings[i].get_type())
+        Variant binding_value = param_bindings.pop_front();
+        switch (binding_value.get_type())
         {
         case Variant::NIL:
             sqlite3_bind_null(stmt, i + 1);
@@ -218,38 +228,38 @@ bool SQLite::query_with_bindings(const String &p_query, const Array &param_bindi
 
         case Variant::BOOL:
         case Variant::INT:
-            sqlite3_bind_int64(stmt, i + 1, int64_t(param_bindings[i]));
+            sqlite3_bind_int64(stmt, i + 1, int64_t(binding_value));
             break;
 
         case Variant::FLOAT:
-            sqlite3_bind_double(stmt, i + 1, param_bindings[i]);
+            sqlite3_bind_double(stmt, i + 1, binding_value);
             break;
 
         case Variant::STRING:
             // TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
             {
-                const CharString dummy_binding = (param_bindings[i].operator String()).utf8();
+                const CharString dummy_binding = (binding_value.operator String()).utf8();
                 const char *binding = dummy_binding.get_data();
                 sqlite3_bind_text(stmt, i + 1, binding, -1, SQLITE_TRANSIENT);
             }
-            //sqlite3_bind_text(stmt, i + 1, (param_bindings[i].operator String()).alloc_c_string(), -1, SQLITE_TRANSIENT);
+            //sqlite3_bind_text(stmt, i + 1, (binding_value.operator String()).alloc_c_string(), -1, SQLITE_TRANSIENT);
             break;
 
         case Variant::PACKED_BYTE_ARRAY:
         {
-            PackedByteArray binding = ((const PackedByteArray &)param_bindings[i]);
+            PackedByteArray binding = ((const PackedByteArray &)binding_value);
             sqlite3_bind_blob64(stmt, i + 1, binding.ptr(), binding.size(), SQLITE_TRANSIENT);
             break;
         }
 
         default:
-            UtilityFunctions::printerr("GDSQLite Error: Binding a parameter of type " + String(std::to_string(param_bindings[i].get_type()).c_str()) + " (TYPE_*) is not supported!");
+            UtilityFunctions::printerr("GDSQLite Error: Binding a parameter of type " + String(std::to_string(binding_value.get_type()).c_str()) + " (TYPE_*) is not supported!");
             sqlite3_finalize(stmt);
             return false;
         }
     }
 
-    if (verbose_mode)
+    if (verbosity_level > VerbosityLevel::NORMAL)
     {
         char *expanded_sql = sqlite3_expanded_sql(stmt);
         UtilityFunctions::print(expanded_sql);
@@ -316,9 +326,21 @@ bool SQLite::query_with_bindings(const String &p_query, const Array &param_bindi
         UtilityFunctions::printerr(" --> SQL error: " + error_message);
         return false;
     }
-    else if (verbose_mode)
+    else if (verbosity_level > VerbosityLevel::NORMAL)
     {
         UtilityFunctions::print(" --> Query succeeded");
+    }
+
+    /* Figure out if there's a subsequent statement which needs execution */
+    String sTail = String(pzTail).strip_edges();
+    if (!sTail.is_empty())
+    {
+        return query_with_bindings(sTail, param_bindings);
+    }
+
+    if (!param_bindings.is_empty())
+    {
+        UtilityFunctions::push_warning("GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))");
     }
 
     return true;
@@ -460,6 +482,9 @@ bool SQLite::insert_rows(const String &p_name, const Array &p_row_array)
         if (p_row_array[i].get_type() != Variant::DICTIONARY)
         {
             UtilityFunctions::printerr("GDSQLite Error: All elements of the Array should be of type Dictionary");
+            /* Don't forget to close the transaction! */
+            /* Maybe we should do a rollback instead? */
+            query("END TRANSACTION;");
             return false;
         }
         if (!insert_row(p_name, p_row_array[i]))
@@ -893,22 +918,12 @@ int64_t SQLite::get_last_insert_rowid() const
 
 void SQLite::set_verbosity_level(const int64_t &p_verbosity_level)
 {
-    verbose_mode = p_verbosity_level;
+    verbosity_level = p_verbosity_level;
 }
 
 int64_t SQLite::get_verbosity_level() const
 {
     return verbosity_level;
-}
-
-void SQLite::set_verbose_mode(const bool &p_verbose_mode)
-{
-    verbose_mode = p_verbose_mode;
-}
-
-bool SQLite::get_verbose_mode() const
-{
-    return verbose_mode;
 }
 
 void SQLite::set_foreign_keys(const bool &p_foreign_keys)

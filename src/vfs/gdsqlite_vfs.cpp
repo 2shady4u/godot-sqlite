@@ -29,19 +29,16 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 
 	ERR_FAIL_COND_V(zName == NULL, SQLITE_IOERR); /* How does this respond to :memory:? */
 
-	UtilityFunctions::print(String(zName));
-	std::cout << flags << std::endl;
-
-	/* TODO: Add/Support additional flags: 
-    ** - SQLITE_OPEN_DELETEONCLOSE
-    ** - SQLITE_OPEN_EXCLUSIVE
+	/* TODO: Add/Support additional flags:
+	** - SQLITE_OPEN_DELETEONCLOSE
+	** - SQLITE_OPEN_EXCLUSIVE
 	** - ???
 	*/
 
 	/* Convert SQLite's flags to something Godot might understand! */
 	if (flags & SQLITE_OPEN_READONLY)
 	{
-		UtilityFunctions::print("READ");
+		// UtilityFunctions::print("READ");
 		godot_flags = File::READ;
 	}
 	// TODO: Figure out if checking for SQLITE_OPEN_READWRITE is necessary when the database is readonly?
@@ -51,32 +48,33 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 		{
 			if (file->file_exists(String(zName)))
 			{
-				UtilityFunctions::print("READ WRITE");
+				// UtilityFunctions::print("READ WRITE");
 				godot_flags = File::READ_WRITE;
 			}
 			else
 			{
-				UtilityFunctions::print("WRITE READ");
+				// UtilityFunctions::print("WRITE READ");
 				godot_flags = File::WRITE_READ;
 			}
 		}
 		else
 		{
-			UtilityFunctions::print("READ WRITE");
+			// UtilityFunctions::print("READ WRITE");
 			godot_flags = File::READ_WRITE;
 		}
 	}
 
 	/* Attempt to open the database or journal file using Godot's `open()`-function */
 	Error err_code = file->open(String(zName), godot_flags);
-	if (err_code != Error::OK) {
+	if (err_code != Error::OK)
+	{
 		/* File can't be opened! */
 		/* In most cases this is caused by the fact that Godot opens files in a non-shareable way, as discussed here: */
 		/* https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-s-wfopen-s?view=msvc-160 */
 		/* Simply assuring that the file is closed in all other programs fixes this issue... */
 		/* Multiple database connections are only possible if they are opened in SQLITE_OPEN_READONLY mode */
-        ERR_PRINT("GDSQLITE_VFS Error: Could not open database! Is the file read/write locked by another program? (Error = " + String(std::to_string(static_cast<int>(err_code)).c_str()) + ")");
-        return SQLITE_CANTOPEN;
+		ERR_PRINT("GDSQLITE_VFS Error: Could not open database! Is the file read/write locked by another program? (Error = " + String(std::to_string(static_cast<int>(err_code)).c_str()) + ")");
+		return SQLITE_CANTOPEN;
 	}
 
 	if (pOutFlags)
@@ -138,13 +136,13 @@ static int gdsqlite_vfs_access(sqlite3_vfs *pVfs, const char *zPath, int flags, 
 
 /*
 ** Argument zPath points to a nul-terminated string containing a file path.
-** If zPath is an absolute path, then it is copied as is into the output 
+** If zPath is an absolute path, then it is copied as is into the output
 ** buffer. Otherwise, if it is a relative path, then the equivalent full
 ** path is written to the output buffer.
 **
 ** This function assumes that paths are UNIX style. Specifically, that:
 **
-**   1. Path components are separated by a '/'. and 
+**   1. Path components are separated by a '/'. and
 **   2. Full paths begin with a '/' character.
 */
 static int gdsqlite_vfs_fullPathname(sqlite3_vfs *pVfs, const char *zPath, int nPathOut, char *zPathOut)
@@ -206,7 +204,7 @@ static int gdsqlite_vfs_randomness(sqlite3_vfs *pVfs, int nByte, char *zByte)
 }
 
 /*
-** Sleep for at least nMicro microseconds. Return the (approximate) number 
+** Sleep for at least nMicro microseconds. Return the (approximate) number
 ** of microseconds slept for.
 */
 static int gdsqlite_vfs_sleep(sqlite3_vfs *pVfs, int nMicro)
@@ -222,9 +220,9 @@ static int gdsqlite_vfs_sleep(sqlite3_vfs *pVfs, int nMicro)
 **   http://en.wikipedia.org/wiki/Julian_day
 **
 ** This implementation is not very good. The current time is rounded to
-** an integer number of seconds. Also, assuming time_t is a signed 32-bit 
+** an integer number of seconds. Also, assuming time_t is a signed 32-bit
 ** value, it will stop working some time in the year 2038 AD (the so-called
-** "year 2038" problem that afflicts systems that store time this way). 
+** "year 2038" problem that afflicts systems that store time this way).
 */
 static int gdsqlite_vfs_currentTime(sqlite3_vfs *vfs, double *pTime)
 {
@@ -250,7 +248,7 @@ static int gdsqlite_vfs_currentTimeInt64(sqlite3_vfs *vfs, sqlite3_int64 *now)
 ** This function returns a pointer to the VFS implemented in this file.
 ** To make the VFS available to SQLite:
 **
-**   sqlite3_vfs_register(sqlite3_demovfs(), 0);
+**   sqlite3_vfs_register(gdsqlite_vfs(), 0);
 */
 sqlite3_vfs *godot::gdsqlite_vfs()
 {
