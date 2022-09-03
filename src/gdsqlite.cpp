@@ -114,7 +114,6 @@ bool SQLite::open_db()
         {
             sqlite3_vfs_register(gdsqlite_vfs(), 0);
             rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
-            return false;
         }
         else
         {
