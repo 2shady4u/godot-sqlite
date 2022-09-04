@@ -116,6 +116,7 @@ bool SQLite::open_db()
         else
         {
             GODOT_LOG(2, "GDSQLite Error: Opening in-memory databases in read-only mode is currently not supported!")
+            api->godot_free((void *)char_path);
             return false;
         }
     }
@@ -128,6 +129,7 @@ bool SQLite::open_db()
     if (rc != SQLITE_OK)
     {
         GODOT_LOG(2, "GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)))
+        api->godot_free((void *)char_path);
         return false;
     }
     else if (verbosity_level > VerbosityLevel::QUIET)
@@ -143,10 +145,12 @@ bool SQLite::open_db()
         {
             GODOT_LOG(2, "GDSQLite Error: Can't enable foreign keys: " + String(zErrMsg))
             sqlite3_free(zErrMsg);
+            api->godot_free((void *)char_path);
             return false;
         }
     }
 
+    api->godot_free((void *)char_path);
     return true;
 }
 
@@ -198,6 +202,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     {
         GODOT_LOG(2, " --> SQL error: " + error_message)
         sqlite3_finalize(stmt);
+        api->godot_free((void *)sql);
         return false;
     }
 
@@ -207,6 +212,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     {
         GODOT_LOG(2, "GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement!")
         sqlite3_finalize(stmt);
+        api->godot_free((void *)sql);
         return false;
     }
 
@@ -230,8 +236,12 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
             break;
 
         case Variant::STRING:
-            sqlite3_bind_text(stmt, i + 1, (binding_value.operator String()).alloc_c_string(), -1, SQLITE_TRANSIENT);
+        {
+            const char *char_binding = (binding_value.operator String()).alloc_c_string();
+            sqlite3_bind_text(stmt, i + 1, char_binding, -1, SQLITE_TRANSIENT);
+            api->godot_free((void *)char_binding);
             break;
+        }
 
         case Variant::POOL_BYTE_ARRAY:
         {
@@ -244,6 +254,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
         default:
             GODOT_LOG(2, "GDSQLite Error: Binding a parameter of type " + String(std::to_string(binding_value.get_type()).c_str()) + " (TYPE_*) is not supported!")
             sqlite3_finalize(stmt);
+            api->godot_free((void *)sql);
             return false;
         }
     }
@@ -314,6 +325,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     if (rc != SQLITE_OK)
     {
         GODOT_LOG(2, " --> SQL error: " + error_message)
+        api->godot_free((void *)sql);
         return false;
     }
     else if (verbosity_level > VerbosityLevel::NORMAL)
@@ -325,6 +337,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
     String sTail = String(pzTail).strip_edges();
     if (!sTail.empty())
     {
+        api->godot_free((void *)sql);
         return query_with_bindings(sTail, param_bindings);
     }
 
@@ -333,6 +346,7 @@ bool SQLite::query_with_bindings(String p_query, Array param_bindings)
         GODOT_LOG(1, "GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))")
     }
 
+    api->godot_free((void *)sql);
     return true;
 }
 
@@ -643,8 +657,12 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
         break;
 
     case Variant::STRING:
-        sqlite3_result_text(context, (output.operator String()).alloc_c_string(), -1, SQLITE_STATIC);
+    {
+        const char *char_output = (output.operator String()).alloc_c_string();
+        sqlite3_result_text(context, char_output, -1, SQLITE_TRANSIENT);
+        api->godot_free((void *)char_output);
         break;
+    }
 
     case Variant::POOL_BYTE_ARRAY:
     {
@@ -680,12 +698,14 @@ bool SQLite::create_function(String p_name, Ref<FuncRef> p_func_ref, int p_argc)
     if (rc)
     {
         GODOT_LOG(2, "GDSQLite Error: " + String(sqlite3_errmsg(db)))
+        api->godot_free((void *)zFunctionName);
         return false;
     }
     else if (verbosity_level > VerbosityLevel::NORMAL)
     {
         GODOT_LOG(0, "Succesfully added function \"" + p_name + "\" to function registry")
     }
+    api->godot_free((void *)zFunctionName);
     return true;
 }
 
@@ -706,6 +726,7 @@ bool SQLite::import_from_json(String import_path)
     if (ifs.fail())
     {
         GODOT_LOG(2, "GDSQLite Error: Failed to open specified json-file (" + import_path + ")")
+        api->godot_free((void *)char_path);
         return false;
     }
     std::stringstream buffer;
@@ -720,6 +741,7 @@ bool SQLite::import_from_json(String import_path)
     {
         /* Throw a parsing error */
         GODOT_LOG(2, "GDSQLite Error: parsing failed! reason: " + result->get_error_string() + ", at line: " + String::num_int64(result->get_error_line()))
+        api->godot_free((void *)char_path);
         return false;
     }
     Array database_array = result->get_result();
@@ -727,6 +749,7 @@ bool SQLite::import_from_json(String import_path)
     /* Validate the json structure and populate the tables_to_import vector */
     if (!validate_json(database_array, objects_to_import))
     {
+        api->godot_free((void *)char_path);
         return false;
     }
 
@@ -736,6 +759,7 @@ bool SQLite::import_from_json(String import_path)
         /* Open the database using the open_db method */
         if (!open_db())
         {
+            api->godot_free((void *)char_path);
             return false;
         }
     }
@@ -801,6 +825,7 @@ bool SQLite::import_from_json(String import_path)
             if (object.row_array[i].get_type() != Variant::DICTIONARY)
             {
                 GODOT_LOG(2, "GDSQLite Error: All elements of the Array should be of type Dictionary")
+                api->godot_free((void *)char_path);
                 return false;
             }
             if (!insert_row(object.name, object.row_array[i]))
@@ -810,11 +835,13 @@ bool SQLite::import_from_json(String import_path)
                 String previous_error_message = error_message;
                 query("END TRANSACTION;");
                 error_message = previous_error_message;
+                api->godot_free((void *)char_path);
                 return false;
             }
         }
     }
     query("END TRANSACTION;");
+    api->godot_free((void *)char_path);
     return true;
 }
 
@@ -892,12 +919,16 @@ bool SQLite::export_to_json(String export_path)
     if (ofs.fail())
     {
         GODOT_LOG(2, "GDSQLite Error: Can't open specified json-file, file does not exist or is locked")
+        api->godot_free((void *)char_path);
         return false;
     }
     String json_string = JSON::get_singleton()->print(database_array, "\t");
-    ofs << json_string.alloc_c_string();
+    const char *json_char = json_string.alloc_c_string();
+    ofs << json_char;
+    api->godot_free((void *)json_char);
     ofs.close();
 
+    api->godot_free((void *)char_path);
     return true;
 }
 
