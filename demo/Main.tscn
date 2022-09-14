@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://database.gd" id="1"]
 [ext_resource type="Script" path="res://Main.gd" id="2"]
 
-[sub_resource type="StyleBoxFlat" id="1"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45gfi"]
 content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
@@ -57,7 +57,7 @@ offset_right = 1104.0
 offset_bottom = 600.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_styles/bg = SubResource("1")
+theme_override_styles/panel = SubResource("StyleBoxFlat_45gfi")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
 layout_mode = 2
