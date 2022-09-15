@@ -69,7 +69,7 @@ bool SQLite::open_db()
 {
     char *zErrMsg = 0;
     int rc;
-    if (path != ":memory:")
+    if (path.find(":memory:") == -1)
     {
         /* Add the default_extension to the database path if no extension is present */
         /* Skip if the default_extension is an empty string to allow for paths without extension */
@@ -108,7 +108,7 @@ bool SQLite::open_db()
     /* Try to open the database */
     if (read_only)
     {
-        if (path != ":memory:")
+        if (path.find(":memory:") == -1)
         {
             sqlite3_vfs_register(gdsqlite_vfs(), 0);
             rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
@@ -122,7 +122,7 @@ bool SQLite::open_db()
     }
     else
     {
-        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
         /* Identical to: `rc = sqlite3_open(char_path, &db);`*/
     }
 
