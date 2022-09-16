@@ -1,3 +1,5 @@
+***NOTE**: The Godot 4.0 version of this plugin is currently in development on the `gd-extension`-branch as found [here](https://github.com/2shady4u/godot-sqlite/tree/gd-extension).*
+
 ![Godot SQLite banner](icon/godot-sqlite-banner-v2.png?raw=true "Godot SQLite Banner")
 
 # godot-sqlite

@@ -14,3 +14,5 @@ In chronological order based on the first contribution.
 - [Aaron Franke (aaronfranke)](https://github.com/aaronfranke)
 - [Akshay Sunil Masare (aksmas)](https://github.com/aksmas)
 - [Geoffrey Casper (Geo25rey)](https://github.com/Geo25rey)
+- [Chris Ridenour (cridenour)](https://github.com/cridenour)
+- [lightyears (lightyears1998)](https://github.com/lightyears1998)
