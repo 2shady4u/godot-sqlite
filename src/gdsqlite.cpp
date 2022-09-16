@@ -131,7 +131,7 @@ bool SQLite::open_db()
 
     if (rc != SQLITE_OK)
     {
-        UtilityFunctions::printerr("GDSQLite Error: Can't open database: " + String(sqlite3_errmsg(db)));
+        UtilityFunctions::printerr("GDSQLite Error: Can't open database: " + String::utf8(sqlite3_errmsg(db)));
         return false;
     }
     else if (verbosity_level > VerbosityLevel::QUIET)
@@ -145,7 +145,7 @@ bool SQLite::open_db()
         rc = sqlite3_exec(db, "PRAGMA foreign_keys=on;", NULL, NULL, &zErrMsg);
         if (rc != SQLITE_OK)
         {
-            UtilityFunctions::printerr("GDSQLite Error: Can't enable foreign keys: " + String(zErrMsg));
+            UtilityFunctions::printerr("GDSQLite Error: Can't enable foreign keys: " + String::utf8(zErrMsg));
             sqlite3_free(zErrMsg);
             return false;
         }
@@ -200,7 +200,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
     /* Prepare an SQL statement */
     rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &pzTail);
     zErrMsg = sqlite3_errmsg(db);
-    error_message = String(zErrMsg);
+    error_message = String::utf8(zErrMsg);
     if (rc != SQLITE_OK)
     {
         UtilityFunctions::printerr(" --> SQL error: " + error_message);
@@ -263,7 +263,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
     if (verbosity_level > VerbosityLevel::NORMAL)
     {
         char *expanded_sql = sqlite3_expanded_sql(stmt);
-        UtilityFunctions::print(expanded_sql);
+        UtilityFunctions::print(String::utf8(expanded_sql));
         sqlite3_free(expanded_sql);
     }
 
@@ -289,7 +289,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
                 break;
 
             case SQLITE_TEXT:
-                column_value = Variant((char *)sqlite3_column_text(stmt, i));
+                column_value = Variant(String::utf8((char *)sqlite3_column_text(stmt, i)));
                 break;
 
             case SQLITE_BLOB:
@@ -310,7 +310,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
             }
 
             const char *azColName = sqlite3_column_name(stmt, i);
-            column_dict[String(azColName)] = column_value;
+            column_dict[String::utf8(azColName)] = column_value;
         }
         /* Add result to query_result Array */
         query_result.append(column_dict);
@@ -321,7 +321,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
 
     rc = sqlite3_errcode(db);
     zErrMsg = sqlite3_errmsg(db);
-    error_message = String(zErrMsg);
+    error_message = String::utf8(zErrMsg);
     if (rc != SQLITE_OK)
     {
         UtilityFunctions::printerr(" --> SQL error: " + error_message);
@@ -626,7 +626,7 @@ bool SQLite::import_from_json(String import_path)
     std::stringstream buffer;
     buffer << ifs.rdbuf();
     std::string str = buffer.str();
-    String json_string = String(str.c_str());
+    String json_string = String::utf8(str.c_str());
     ifs.close();
 
     /* Attempt to parse the result and, if unsuccessful, throw a parse error specifying the erroneous line */
