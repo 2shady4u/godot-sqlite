@@ -123,6 +123,8 @@ bool SQLite::open_db()
     }
     else
     {
+        /* The `SQLITE_OPEN_URI`-flag is solely required for in-memory databases with shared cache, but it is safe to use in most general cases */
+        /* As discussed here: https://www.sqlite.org/uri.html */
         rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
         /* Identical to: `rc = sqlite3_open(char_path, &db);`*/
     }
