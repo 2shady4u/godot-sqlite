@@ -23,9 +23,8 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 		gdsqlite_file::deviceCharacteristics, /* xDeviceCharacteristics */
 	};
 	gdsqlite_file *p = reinterpret_cast<gdsqlite_file *>(pFile);
-	Ref<File> file;
-	file.instantiate();
-	File::ModeFlags godot_flags;
+	Ref<FileAccess> file;
+	FileAccess::ModeFlags godot_flags;
 
 	ERR_FAIL_COND_V(zName == NULL, SQLITE_IOERR); /* How does this respond to :memory:? */
 
@@ -39,7 +38,7 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 	if (flags & SQLITE_OPEN_READONLY)
 	{
 		// UtilityFunctions::print("READ");
-		godot_flags = File::READ;
+		godot_flags = FileAccess::READ;
 	}
 	// TODO: Figure out if checking for SQLITE_OPEN_READWRITE is necessary when the database is readonly?
 	if (flags & SQLITE_OPEN_READWRITE)
@@ -49,23 +48,24 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 			if (file->file_exists(String(zName)))
 			{
 				// UtilityFunctions::print("READ WRITE");
-				godot_flags = File::READ_WRITE;
+				godot_flags = FileAccess::READ_WRITE;
 			}
 			else
 			{
 				// UtilityFunctions::print("WRITE READ");
-				godot_flags = File::WRITE_READ;
+				godot_flags = FileAccess::WRITE_READ;
 			}
 		}
 		else
 		{
 			// UtilityFunctions::print("READ WRITE");
-			godot_flags = File::READ_WRITE;
+			godot_flags = FileAccess::READ_WRITE;
 		}
 	}
 
 	/* Attempt to open the database or journal file using Godot's `open()`-function */
-	Error err_code = file->open(String(zName), godot_flags);
+	file = FileAccess::open(String(zName), godot_flags);
+	Error err_code = FileAccess::get_open_error();
 	if (err_code != Error::OK)
 	{
 		/* File can't be opened! */
@@ -93,8 +93,8 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 */
 static int gdsqlite_vfs_delete(sqlite3_vfs *pVfs, const char *zPath, int dirSync)
 {
-	Ref<Directory> dir;
-	dir.instantiate();
+	String base_dir = String(zPath).get_base_dir();
+	Ref<DirAccess> dir = DirAccess::open(base_dir);
 	Error err_code = dir->remove(zPath);
 	/* Probably we'll also need to check if the file exists and check the err_code! */
 	return SQLITE_OK;
@@ -106,8 +106,7 @@ static int gdsqlite_vfs_delete(sqlite3_vfs *pVfs, const char *zPath, int dirSync
 */
 static int gdsqlite_vfs_access(sqlite3_vfs *pVfs, const char *zPath, int flags, int *pResOut)
 {
-	Ref<File> file;
-	file.instantiate();
+	Ref<FileAccess> file;
 	Error err_code = Error::OK;
 
 	switch (flags)
@@ -117,12 +116,14 @@ static int gdsqlite_vfs_access(sqlite3_vfs *pVfs, const char *zPath, int flags, 
 		break;
 
 	case SQLITE_ACCESS_READWRITE:
-		err_code = file->open(zPath, File::READ_WRITE);
+		file = FileAccess::open(zPath, FileAccess::READ_WRITE);
+		err_code = FileAccess::get_open_error();
 		*pResOut = (err_code == Error::OK);
 		break;
 
 	case SQLITE_ACCESS_READ:
-		err_code = file->open(zPath, File::READ);
+		file = FileAccess::open(zPath, FileAccess::READ);
+		err_code = FileAccess::get_open_error();
 		*pResOut = (err_code == Error::OK);
 		break;
 

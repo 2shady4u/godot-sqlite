@@ -1,7 +1,7 @@
 #ifndef GDSQLITE_FILE_H
 #define GDSQLITE_FILE_H
 
-#include <godot_cpp/classes/file.hpp>
+#include <godot_cpp/classes/file_access.hpp>
 
 #include <cstring>
 #include "./sqlite/sqlite3.h"
@@ -11,7 +11,7 @@ namespace godot
     struct gdsqlite_file
     {
         sqlite3_file base; /* Base class. Must be first. */
-        Ref<File> file;    /* File descriptor */
+        Ref<FileAccess> file;    /* File descriptor */
 
         static int close(sqlite3_file *pFile);
         static int read(sqlite3_file *pFile, void *zBuf, int iAmt, sqlite_int64 iOfst);

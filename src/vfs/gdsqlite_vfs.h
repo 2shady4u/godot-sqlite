@@ -3,7 +3,7 @@
 
 #include <godot_cpp/variant/utility_functions.hpp>
 
-#include <godot_cpp/classes/directory.hpp>
+#include <godot_cpp/classes/dir_access.hpp>
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/os.hpp>
 
