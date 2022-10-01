@@ -72,14 +72,15 @@ void SQLite::_bind_methods()
 
 SQLite::SQLite()
 {
-    UtilityFunctions::print("constructor");
     db = nullptr;
+    query_result = Array();
 }
 
 SQLite::~SQLite()
 {
-    UtilityFunctions::print("destructor");
-    /* Automatically close the open database connection */
+    /* Clean up the function_registry */
+    function_registry.clear();
+    function_registry.shrink_to_fit();
     close_db();
 }
 
@@ -606,7 +607,7 @@ bool SQLite::delete_rows(const String &p_name, const String &p_conditions)
 static void function_callback(sqlite3_context *context, int argc, sqlite3_value **argv)
 {
     void *temp = sqlite3_user_data(context);
-    Callable callable = *(Callable *)&temp;
+    Callable callable = *(Callable *)temp;
     /* Can also be done with following single-line statement, but I prefer the above */
     /* Ref<FuncRef> func_ref = reinterpret_cast<Ref<FuncRef> >(sqlite3_user_data(context)); */
 
@@ -658,11 +659,7 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
         argv += 1;
     }
 
-    Object *object = callable.get_object();
-    StringName method = callable.get_method();
-    Variant output = object->call(method, argument_array);
-    // Ideally we would use the call()-method on the Callable itself, but this doesn't seem to work?
-    //Variant output = callable.call(argument_array);
+    Variant output = callable.callv(argument_array);
 
     switch (output.get_type())
     {
@@ -704,7 +701,7 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 bool SQLite::create_function(const String &p_name, const Callable &p_callable, int p_argc)
 {
     /* Add the func_ref to a std::vector to increase the ref_count */
-    function_registry.push_back(p_callable);
+    function_registry.push_back(std::make_unique<Callable>(p_callable));
 
     int rc;
     CharString dummy_name = p_name.utf8();
@@ -714,7 +711,7 @@ bool SQLite::create_function(const String &p_name, const Callable &p_callable, i
     int eTextRep = SQLITE_UTF8;
 
     /* Get a void pointer to the current value stored at the back of the vector */
-    void *pApp = *(void **)&function_registry.back();
+    void *pApp = (void *)function_registry.back().get();
     void (*xFunc)(sqlite3_context *, int, sqlite3_value **) = function_callback;
     void (*xStep)(sqlite3_context *, int, sqlite3_value **) = NULL;
     void (*xFinal)(sqlite3_context *) = NULL;

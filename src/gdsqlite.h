@@ -40,7 +40,7 @@ namespace godot
         bool validate_json(const Array &import_json, std::vector<object_struct> &tables_to_import);
 
         sqlite3 *db;
-        std::vector<Callable> function_registry;
+        std::vector<std::unique_ptr<Callable>> function_registry;
 
         int64_t verbosity_level = 1;
         bool foreign_keys = false;
