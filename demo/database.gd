@@ -18,6 +18,10 @@ var ages := [32,25,23,25,30,63,13]
 var addresses := ["California","Texas","Baltimore","Richmond","Texas","Atlanta","New-York"]
 var salaries := [20000.00,15000.00,20000.00,65000.00,65000.00,65000.00,65000.00]
 
+var percentage_above_thirty := 0.05
+var percentage_below_thirty := 0.1
+var doomed_city := "Texas"
+
 signal output_received(text)
 signal texture_received(texture)
 
@@ -25,6 +29,7 @@ func _ready():
 	# Enable/disable examples here:
 	example_of_basic_database_querying()
 	example_of_in_memory_and_foreign_key_support()
+	example_of_call_external_functions()
 	example_of_blob_io()
 	example_of_read_only_database()
 
@@ -196,6 +201,64 @@ func example_of_in_memory_and_foreign_key_support():
 	# Close the database.
 	db.close_db()
 
+func should_employee_be_fired(address : String) -> bool:
+	if address == doomed_city:
+		return true
+	else:
+		return false
+
+func increase_wages(salary : float, age : int) -> float:
+	if age > 30:
+		return (1.0 + percentage_above_thirty)*salary
+	else:
+		return (1.0 + percentage_below_thirty)*salary
+
+func example_of_call_external_functions():
+	# Make a big table containing the variable types.
+	var table_dict : Dictionary = Dictionary()
+	table_dict["id"] = {"data_type":"int", "primary_key": true, "not_null": true}
+	table_dict["name"] = {"data_type":"text", "not_null": true}
+	table_dict["age"] = {"data_type":"int", "not_null": true}
+	table_dict["address"] = {"data_type":"char(50)"}
+	table_dict["salary"] = {"data_type":"real"}
+
+	db = SQLite.new()
+	db.path = db_name
+	db.verbosity_level = verbosity_level
+	# Open the database using the db_name found in the path variable
+	db.open_db()
+	# Throw away any table that was already present
+	db.drop_table(table_name)
+	# Create a table with the structure found in table_dict and add it to the database
+	db.create_table(table_name, table_dict)
+
+	var row_array : Array = []
+	var row_dict : Dictionary = Dictionary()
+	for i in range(0,ids.size()):
+		row_dict["id"] = ids[i]
+		row_dict["name"] = names[i]
+		row_dict["age"] = ages[i]
+		row_dict["address"] = addresses[i]
+		row_dict["salary"] = salaries[i]
+		row_array.append(row_dict.duplicate())
+
+		# Insert a new row in the table
+		db.insert_row(table_name, row_dict)
+		row_dict.clear()
+
+	var callable := Callable(self, "should_employee_be_fired")
+	db.create_function("should_employee_be_fired", callable, 1)
+
+	callable = Callable(self, "increase_wages")
+	db.create_function("increase_wages", callable, 2)
+
+	db.query("UPDATE company SET salary = increase_wages(salary, age);")
+	db.query("DELETE FROM company WHERE should_employee_be_fired(address);")
+
+	var select_condition := ""
+	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "salary", "name"])
+	cprint("result: {0}".format([str(selected_array)]))
+
 # The BLOB-datatype is useful when lots of raw data has to be stored.
 # For example images fall into this category!
 func example_of_blob_io():
@@ -227,8 +290,7 @@ func example_of_blob_io():
 
 		var image := Image.new()
 		var _error : int = image.load_png_from_buffer(selected_data)
-		var loaded_texture := ImageTexture.new()
-		loaded_texture.create_from_image(image)
+		var loaded_texture := ImageTexture.create_from_image(image)
 		emit_signal("texture_received", loaded_texture)
 
 	# Export the table to a json-file and automatically encode BLOB data to base64.
@@ -244,12 +306,20 @@ func example_of_blob_io():
 
 		var image := Image.new()
 		var _error : int = image.load_png_from_buffer(selected_data)
-		var loaded_texture := ImageTexture.new()
-		loaded_texture.create_from_image(image)
+		var loaded_texture := ImageTexture.create_from_image(image)
 		emit_signal("texture_received", loaded_texture)
 
 	# Close the current database
 	db.close_db()
+
+func regexp(pattern : String, subject : String) -> bool:
+	var regex = RegEx.new()
+	regex.compile(pattern)
+	var result = regex.search(subject)
+	if result:
+		return true
+	else:
+		return false
 
 # Example of accessing a packaged database by using the custom Virtual File System (VFS)
 # which allows packaged databases to be opened in read_only modus.
@@ -263,6 +333,9 @@ func example_of_read_only_database():
 
 	db.open_db()
 
+	var callable := Callable(self, "regexp")
+	db.create_function("regexp", callable, 2)
+
 	# Select all the creatures
 	var select_condition : String = ""
 	var selected_array : Array = db.select_rows(packaged_table_name, select_condition, ["*"])
@@ -274,6 +347,16 @@ func example_of_read_only_database():
 	selected_array = db.select_rows(packaged_table_name, select_condition, ["name"])
 	cprint("condition: " + select_condition)
 	cprint("Following creatures start with the letter 'b':")
+	for row in selected_array:
+		cprint("* " + row["name"])
+
+	# Do the same thing by using the REGEXP operator
+	# This function has to be user-defined as discussed here:
+	# https://www.sqlite.org/lang_expr.html#regexp
+	select_condition = "name REGEXP '^s.*'"
+	selected_array = db.select_rows(packaged_table_name, select_condition, ["name"])
+	cprint("condition: " + select_condition)
+	cprint("Following creatures start with the letter 's':")
 	for row in selected_array:
 		cprint("* " + row["name"])
 
