@@ -608,10 +608,8 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 {
     void *temp = sqlite3_user_data(context);
     Callable callable = *(Callable *)temp;
-    /* Can also be done with following single-line statement, but I prefer the above */
-    /* Ref<FuncRef> func_ref = reinterpret_cast<Ref<FuncRef> >(sqlite3_user_data(context)); */
 
-    /* Check validity of the function reference */
+    /* Check if the callable is valid */
     if (!callable.is_valid())
     {
         UtilityFunctions::printerr("GDSQLite Error: Supplied function reference is invalid! Aborting callback...");
@@ -700,7 +698,9 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 
 bool SQLite::create_function(const String &p_name, const Callable &p_callable, int p_argc)
 {
-    /* Add the func_ref to a std::vector to increase the ref_count */
+    /* The exact memory position of the std::vector's elements changes during memory reallocation (= when adding additional elements) */
+    /* Luckily, the pointer to the managed object (of the std::unique_ptr) won't change during execution! (= consistent) */
+    /* The std::unique_ptr is stored in a std::vector and is thus allocated on the heap */
     function_registry.push_back(std::make_unique<Callable>(p_callable));
 
     int rc;
@@ -710,7 +710,7 @@ bool SQLite::create_function(const String &p_name, const Callable &p_callable, i
     int nArg = p_argc;
     int eTextRep = SQLITE_UTF8;
 
-    /* Get a void pointer to the current value stored at the back of the vector */
+    /* Get a void pointer to the managed object of the smart pointer that is stored at the back of the vector */
     void *pApp = (void *)function_registry.back().get();
     void (*xFunc)(sqlite3_context *, int, sqlite3_value **) = function_callback;
     void (*xStep)(sqlite3_context *, int, sqlite3_value **) = NULL;

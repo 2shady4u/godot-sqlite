@@ -290,8 +290,7 @@ func example_of_blob_io():
 
 		var image := Image.new()
 		var _error : int = image.load_png_from_buffer(selected_data)
-		var loaded_texture := ImageTexture.new()
-		loaded_texture.create_from_image(image)
+		var loaded_texture := ImageTexture.create_from_image(image)
 		emit_signal("texture_received", loaded_texture)
 
 	# Export the table to a json-file and automatically encode BLOB data to base64.
@@ -307,12 +306,20 @@ func example_of_blob_io():
 
 		var image := Image.new()
 		var _error : int = image.load_png_from_buffer(selected_data)
-		var loaded_texture := ImageTexture.new()
-		loaded_texture.create_from_image(image)
+		var loaded_texture := ImageTexture.create_from_image(image)
 		emit_signal("texture_received", loaded_texture)
 
 	# Close the current database
 	db.close_db()
+
+func regexp(pattern : String, subject : String) -> bool:
+	var regex = RegEx.new()
+	regex.compile(pattern)
+	var result = regex.search(subject)
+	if result:
+		return true
+	else:
+		return false
 
 # Example of accessing a packaged database by using the custom Virtual File System (VFS)
 # which allows packaged databases to be opened in read_only modus.
@@ -326,6 +333,9 @@ func example_of_read_only_database():
 
 	db.open_db()
 
+	var callable := Callable(self, "regexp")
+	db.create_function("regexp", callable, 2)
+
 	# Select all the creatures
 	var select_condition : String = ""
 	var selected_array : Array = db.select_rows(packaged_table_name, select_condition, ["*"])
@@ -337,6 +347,16 @@ func example_of_read_only_database():
 	selected_array = db.select_rows(packaged_table_name, select_condition, ["name"])
 	cprint("condition: " + select_condition)
 	cprint("Following creatures start with the letter 'b':")
+	for row in selected_array:
+		cprint("* " + row["name"])
+
+	# Do the same thing by using the REGEXP operator
+	# This function has to be user-defined as discussed here:
+	# https://www.sqlite.org/lang_expr.html#regexp
+	select_condition = "name REGEXP '^s.*'"
+	selected_array = db.select_rows(packaged_table_name, select_condition, ["name"])
+	cprint("condition: " + select_condition)
+	cprint("Following creatures start with the letter 's':")
 	for row in selected_array:
 		cprint("* " + row["name"])
 
