@@ -15,6 +15,7 @@
 #include <vector>
 #include <sstream>
 #include <cstring>
+#include <memory>
 #include <sqlite/sqlite3.h>
 #include <vfs/gdsqlite_vfs.h>
 
