@@ -104,6 +104,7 @@ bool SQLite::open_db()
         // }
     }
 
+    /* NOTE: Memory allocated by the alloc_c_string()-method needs to be freed manually! */
     const char *char_path = path.alloc_c_string();
     /* Try to open the database */
     if (read_only)
@@ -123,7 +124,16 @@ bool SQLite::open_db()
     else
     {
         rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
-        /* Identical to: `rc = sqlite3_open(char_path, &db);`*/
+        /* The first two flags are default flags with behaviour that is identical to: `rc = sqlite3_open(char_path, &db);`*/
+        /* The SQLITE_OPEN_URI flag is solely useful when using shared in-memory databases (shared cache), but it is safe to include in most situations */
+        /* As found in the SQLite documentation: (https://www.sqlite.org/uri.html)*/
+
+        /*     Since SQLite always interprets any filename that does not begin with "file:" as an ordinary filename regardless of the URI */
+        /*     setting, and because it is very unusual to have an actual file begin with "file:", it is safe for most applications to enable URI */
+        /*     processing even if URI filenames are not currently being used. */
+
+        /* In-memory databases with shard cache can be opened by setting the path-variable to `file::memory:?cache=shared` */
+        /* More information can be found here: https://www.sqlite.org/inmemorydb.html */
     }
 
     if (rc != SQLITE_OK)
