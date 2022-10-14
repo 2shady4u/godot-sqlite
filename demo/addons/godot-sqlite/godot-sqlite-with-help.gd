@@ -1,8 +1,10 @@
+extends Node
 class_name SQLite_Documented
-## Wrapper for SQLite class
-##
-## Makes documentation accessable. Can be used instead of gdsqlite.gdns
-# Removed functionality: verbose_mode - Deprecated
+## Wrapper for SQLite class [br]
+## [br]
+## Makes documentation accessable. Can be used almost interchangablt with gdsqlite.gdns [br]
+## Functionality altered: [br]
+## verbose_mode variable removed - Deprecated.
 
 var SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
 
@@ -20,12 +22,15 @@ const VERY_VERBOSE = 3
 ## should be set before opening the database with `open_db()`. [br]
 ## If no database with this name exists, a new one at the supplied path will be created. [br]
 ## Both `res://` and `user://` keywords can be used to define the path.
-var path : String setget set_path, get_path
+var path : String setget set_db_path, get_db_path
 
-func set_path(value : String) -> void:
-	db.path = value
+func set_db_path(value : String) -> void:
+	if db:
+		db.path = value
 
-func get_path() -> String:
+func get_db_path() -> String:
+	if !db:
+		return ""
 	return db.path
 
 
@@ -34,11 +39,13 @@ func get_path() -> String:
 var error_message : String setget set_error_message, get_error_message
 
 func set_error_message(message: String) -> void:
-	db.error_message = message
+	if db:
+		db.error_message = message
 	
 func get_error_message() -> String:
+	if !db:
+		return ""
 	return db.error_message
-	pass
 
 
 ## Default extension that is automatically appended to the `path`-variable whenever **no** extension is detected/given.
@@ -46,9 +53,12 @@ func get_error_message() -> String:
 var default_extension :String setget set_default_extension, get_default_extension
 
 func set_default_extension(extension : String) -> void:
-	db.default_extension = extension
+	if db:
+		db.default_extension = extension
 
 func get_default_extension() -> String:
+	if !db:
+		return ""
 	return db.default_extension
 
 
@@ -56,9 +66,12 @@ func get_default_extension() -> String:
 var foreign_keys : bool setget set_foreign_keys, get_foreign_keys
 
 func set_foreign_keys(value : bool) -> void:
-	db.foreign_keys = value
+	if db:
+		db.foreign_keys = value
 
 func get_foreign_keys() -> bool:
+	if !db:
+		return false
 	return db.foreign_keys
 #- **read_only** (Boolean, default=false)
 #
@@ -70,9 +83,12 @@ func get_foreign_keys() -> bool:
 var read_only : bool setget set_read_only, get_read_only
 
 func set_read_only(value : bool) -> void:
-	db.read_only = value
+	if db:
+		db.read_only = value
 	
 func get_read_only() -> bool:
+	if !db:
+		return false
 	return db.read_only
 
 
@@ -81,9 +97,12 @@ func get_read_only() -> bool:
 var query_result : Array setget set_query_result, get_query_result
 
 func set_query_result(value : Array) -> void:
-	db.query_result = value
+	if db:
+		db.query_result = value
 
 func get_query_result() -> Array:
+	if !db:
+		return []
 	return db.query_result
 
 
@@ -91,9 +110,12 @@ func get_query_result() -> Array:
 var query_result_by_reference : Array setget set_query_result_by_reference, get_query_result_by_reference
 
 func set_query_result_by_reference(value : Array) -> void:
-	db.query_result_by_reference = value
+	if db:
+		db.query_result_by_reference = value
 
 func get_query_result_by_reference() -> Array:
+	if !db:
+		return []
 	return db.query_result_by_reference
 
 
@@ -101,9 +123,12 @@ func get_query_result_by_reference() -> Array:
 var last_insert_rowid : int setget set_last_insert_rowid, get_last_insert_rowid
 
 func set_last_insert_rowid(value : int) -> void:
-	db.last_insert_rowid = value
+	if db:
+		db.last_insert_rowid = value
 	
 func get_last_insert_rowid() -> int:
+	if !db:
+		return -1
 	return db.last_insert_rowid
 
 
@@ -120,16 +145,21 @@ func get_last_insert_rowid() -> int:
 var verbosity_level : int setget set_verbosity_level, get_verbosity_level
 
 func set_verbosity_level(var value) -> void:
-	db.verbosity_level = value
+	if db:
+		db.verbosity_level = value
 
 func get_verbosity_level() -> int:
+	if !db:
+		return -1
 	return db.verbosity_level
 
 
+## Opens a connection to the database. Be sure to set the path first.
 func open_db() -> bool:
 	return db.open_db()
 	
 	
+## Closes connection to the database.
 func close_db() -> bool:
 	return db.close_db()
 	
@@ -263,7 +293,7 @@ func get_autocommit() -> int:
 	return db.get_autocommit()
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func _init():
 	db = SQLite.new()
 	pass # Replace with function body.
 
