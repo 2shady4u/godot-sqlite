@@ -1,4 +1,3 @@
-extends Node
 class_name SQLite_Documented
 ## Wrapper for SQLite class [br]
 ## [br]
