@@ -166,7 +166,7 @@ func close_db() -> bool:
 ## Passes a query as-is to the database
 func query(query_string : String) -> bool:
 	return db.query(query_string)
-#- Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
+
 
 ##    Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
 ##
@@ -244,6 +244,7 @@ func create_table(table_name: String, table_dictionary: Dictionary) -> bool:
 func drop_table(table_name: String) -> bool:
 	return db.drop_table(table_name)
 
+
 ##    Each key/value pair of the `row_dictionary`-variable defines the column values of a single row.  
 ##
 ##    Columns should adhere to the table schema as instantiated using the `table_dictionary`-variable and are required if their corresponding **"not_null"**-column value is set to `True`.
@@ -258,8 +259,8 @@ func insert_rows(table_name: String, row_array : Array) -> bool:
 
 func select_rows(table_name : String, query_conditions: String, selected_columns: Array) -> Array:
 	return db.select_rows(table_name,query_conditions,selected_columns)
-## Boolean success = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary **)**
-##
+
+
 ##    With the `updated_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
 func update_rows(table_name : String, query_conditions: String, updated_row_dictionary: Dictionary) -> bool:
 	return db.update_rows(table_name,query_conditions,updated_row_dictionary)
@@ -285,15 +286,14 @@ func export_to_json(export_path : String) -> bool:
 ##    [br] Creating function should only be seen as a measure of last resort and only be used when you perfectly know what you are doing. Be sure to first check out the available native list of scalar SQL applications that is already available in SQLite3.
 func create_function(function_name: String, function_reference: FuncRef, number_of_arguments: int) -> bool:
 	return db.create_function(function_name,function_reference,number_of_arguments)
-#- Integer mode = **get_autocommit()**
-#
+
+
 ##    Get the current autocommit mode of the open database connection which can be used to check if there's any database transactions in progress, see [here](http://www.sqlite.org/c3ref/get_autocommit.html). A non-zero return value indicates that the database is in autocommit mode and thus has no active transaction.
 func get_autocommit() -> int:
 	return db.get_autocommit()
 
-# Called when the node enters the scene tree for the first time.
+# Constructor
 func _init():
 	db = SQLite.new()
-	pass # Replace with function body.
 
 
