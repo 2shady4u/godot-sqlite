@@ -166,7 +166,7 @@ func close_db() -> bool:
 	
 ## Passes a query as-is to the database
 func query(query_string : String) -> bool:
-	return db.query_string(query_string)
+	return db.query(query_string)
 #- Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
 
 ##    Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
@@ -268,7 +268,7 @@ func update_rows(table_name : String, query_conditions: String, updated_row_dict
 
 ## Boolean success = **delete_rows(** String table_name, String query_conditions **)**
 func delete_rows(table_name: String, query_conditions: String) -> bool:
-	return db.delete_rows()
+	return db.delete_rows(table_name,query_conditions)
 
 
 ##   Drops all database tables and imports the database structure and content present inside of `import_path.json`.
