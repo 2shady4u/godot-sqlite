@@ -108,7 +108,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - Boolean success = **open_db()**
 
-- Boolean success = **close_db()**
+- **close_db()**
 
 - Boolean success = **query(** String query_string **)**
 
