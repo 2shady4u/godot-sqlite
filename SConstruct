@@ -7,8 +7,8 @@ target_name = ARGUMENTS.pop("target_name", "libgdsqlite")
 
 env = SConscript("godot-cpp/SConstruct")
 
-target = "{}{}.{}.{}".format(
-    target_path, target_name, env["platform"], env["target"]
+target = "{}{}".format(
+    target_path, target_name
 )
 
 # For the reference:
@@ -31,9 +31,9 @@ if env["platform"] == "macos":
         env["target"]
     )
 else:
-    target = "{}.{}{}".format(
+    target = "{}{}{}".format(
         target,
-        env["arch_suffix"],
+        env["suffix"],
         env["SHLIBSUFFIX"]
     )
 
