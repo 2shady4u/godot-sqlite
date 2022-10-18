@@ -8,8 +8,14 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "Reference",
+"class": "SQLite_Documented",
+"language": "GDScript",
+"path": "res://addons/godot-sqlite/godot-sqlite-with-help.gd"
+} ]
 _global_script_class_icons={
+"SQLite_Documented": ""
 }
 
 [application]

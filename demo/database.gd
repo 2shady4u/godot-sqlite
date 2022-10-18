@@ -1,6 +1,6 @@
 extends Node
 
-const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
+const SQLite = preload("res://addons/godot-sqlite/godot-sqlite-with-help.gd")
 var db
 
 enum VerbosityLevel {
