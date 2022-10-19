@@ -1,7 +1,7 @@
 class_name SQLite_Documented
 ## Wrapper for SQLite class [br]
 ## [br]
-## Makes documentation accessable. Can be used almost interchangablt with gdsqlite.gdns [br]
+## Makes documentation accessable. Can be used almost interchangeably with gdsqlite.gdns [br]
 ## Functionality altered: [br]
 ## verbose_mode variable removed - Deprecated.
 
@@ -74,7 +74,7 @@ func get_foreign_keys() -> bool:
 	return db.foreign_keys
 #- **read_only** (Boolean, default=false)
 #
-## Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. [br]
+## Enabling this property opens the database in read-only mode & allows databases to be packaged inside of the PCK. [br]
 ## To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API. [br]
 ## ***NOTE:** Godot opens files in a mode that is not shareable i.e. the database file cannot be open in any other program. [br]
 ## Attempting to open a read-only database that is locked by another program fails and returns `ERR_FILE_CANT_OPEN` (`12`). [br]
@@ -179,8 +179,14 @@ func query(query_string : String) -> bool:
 ##    # Executes following query: 
 ##    # SELECT name FROM company WHERE age < 24;
 ##    ```
+##    example db.query_result after above query is run:
+##    
+##    [
+##        {"name": "Jeff"},
+##        {"name": "Todd"}
+##    ]
 ##
-##    Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+##    Using bindings is optional, except for PoolByteArray (= raw binary data) which has to be bound to allow the insertion and selection of BLOB data in the database.
 ##
 ##    ***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
 func query_with_bindings(query_string : String, param_bindings : Array) -> bool:
