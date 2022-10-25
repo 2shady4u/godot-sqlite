@@ -1,4 +1,4 @@
-name: 🌈 All Builds - debug
+name: 🌈 All Builds
 on:
   push:
     branches: [ gd-extension ]
@@ -10,7 +10,7 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/
   TARGET_NAME: libgdsqlite
-  TARGET: template_debug
+  TARGET: template_release
 
 jobs:
   build:
