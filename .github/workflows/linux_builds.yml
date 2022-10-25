@@ -8,7 +8,7 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/x11/
   TARGET_NAME: libgdsqlite
-  TARGET: release
+  TARGET: debug
 
 jobs:
   linux-compilation:
