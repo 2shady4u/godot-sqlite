@@ -1,4 +1,4 @@
-name: 🐧 Linux Builds
+name: 🐧 Linux Builds - debug
 on:
   push:
     branches: [ master, main ]
