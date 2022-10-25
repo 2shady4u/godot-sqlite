@@ -1,4 +1,4 @@
-name: 🏁 Windows Builds
+name: 🏁 Windows Builds - debug
 on:
   push:
     branches: [ master, main ]
@@ -8,7 +8,7 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/win64/
   TARGET_NAME: libgdsqlite
-  TARGET: release
+  TARGET: debug
 
 jobs:
   windows-compilation:
