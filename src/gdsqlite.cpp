@@ -395,6 +395,11 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
             query_string = query_string + String(" DEFAULT ") + (const String &)column_dict["default"];
             //query_string += String(" DEFAULT ") + (const String &)column_dict["default"];
         }
+        /* Unique check */
+        if (column_dict.get("unique", false))
+        {
+            query_string = query_string + String(" UNIQUE");
+        }
         /* Autoincrement check */
         if (column_dict.get("auto_increment", false))
         {

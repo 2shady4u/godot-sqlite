@@ -2,7 +2,7 @@
 
 # godot-sqlite
 
-This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.2+. Additionally, it
+This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 4+. Additionally, it
 does not require any additional compilation or mucking about with build scripts.
 
 ### Supported operating systems:
@@ -11,29 +11,29 @@ does not require any additional compilation or mucking about with build scripts.
 - Windows
 - Android (arm64-v8a, armeabi-v7a & x86)
 - iOS (arm64 & armv7)
-- HTML5 (**requires Godot 3.3+**)
+- HTML5
 
 _DISLAIMER_: iOS is still untested! (as of 24/12/2020)
 
 # How to install?
 
-Re-building Godot from scratch is **NOT** required, the proper way of installing this plugin is to either install it through the Asset Library or to just manually download the build files yourself.
+Re-building Godot from scratch is **NOT** required, the proper way of installing this plugin is to clone this branch and either build or manually download the built files yourself. 
 
-### Godot Asset Library
+## Cloning this branch
 
-**Godot-SQLite** is available through the official Godot Asset Library, and can be installed in the following way:
-
-- Click on the 'AssetLib' button at the top of the editor.
-- Search for 'godot-sqlite' and click on the resulting element.
-- In the dialog pop-up, click 'Download'.
-- Once the download is complete, click on the install button...
-- Once more, click on the 'Install' button.
-- Activate the plugin in the 'Project Settings/Plugins'-menu.
-- All done!
+```
+git clone -b gd-extension git@github.com:2shady4u/godot-sqlite.git
+```
 
 ### Manually
 
-It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the `gdsqlite.gdns`-resource and that it is available in the `res://`-environment.
+Download the build files found in [GitHub actions' artifacts](https://github.com/2shady4u/godot-sqlite/actions?query=branch%3Agd-extension). 
+Click the last successful build and pick the Artifact for your plaftform.
+Extract the archive's files on your system in `godot-sqlite/demo/addons/godot-sqlite/bin/` (you might need to create the `bin` dir first).
+
+You can then:
+* copy the `demo/addons/godot-sqlite/` to your project. If the Godot editor tries to load the debug version of the lib you must build it [see this section](#how-to-contribute).
+* test-run with the supplied demo-project in `demo/`. Make sure that Godot is correctly loading `gdsqlite.gdextension` and the extracted file `bin/libgdsqlite.<platform>.<target>.<arch>.<extension>`.
 
 An example project, named "demo", can also be downloaded from the releases tab.
 
@@ -139,7 +139,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     - **"default"**: The default value of the column if not explicitly given.
 
-    - **"primary_key"** *(default = false)*: Is this the primary key of this table?  
+    - **"primary_key"** *(default = false)*: Is this the primary key of this table?
     Evidently, only a single column can be set as the primary key.
 
     - **"auto_increment"** *(default = false)*: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
@@ -149,6 +149,10 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     - **"foreign_key"**: Enforce an "exist" relationship between tables by setting this variable to `foreign_table.foreign_column`. In other words, when adding an additional row, the column value should be an existing value as found in the column with name `foreign_column` of the table with name `foreign_table`.
 
         ***NOTE**: Availability of foreign keys has to be enabled by setting the `foreign_keys`-variable to true BEFORE opening the database.*
+
+    - **"unique"**: Enforce each row to contain a unique combination of values in the columns identified by this constraint.
+ 
+        ***NOTE**: For the purposes of UNIQUE constraints, NULL values are considered distinct from all other values, including other NULLs.*
 
     **Example usage**:
 

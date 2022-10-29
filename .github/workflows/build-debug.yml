@@ -1,0 +1,99 @@
+name: 🌈 All Builds - debug
+on:
+  push:
+    branches: [ gd-extension ]
+    tags:
+      - "v*"
+
+# Global Settings
+env:
+  PROJECT_FOLDER: .
+  TARGET_PATH: demo/addons/godot-sqlite/bin/
+  TARGET_NAME: libgdsqlite
+  TARGET: template_debug
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows Compilation
+            os: "windows-latest"
+            artifact-name: windows
+            artifact-extension: dll
+            additional-python-packages: pywin32
+
+          - name: Ubuntu Compilation
+            os: "ubuntu-20.04"
+            artifact-name: linux
+            artifact-extension: so
+
+          - name: MacOS Compilation
+            os: "macos-11"
+            artifact-name: macos
+            artifact-extension: framework
+
+          - name: Android Compilation
+            os: "ubuntu-20.04"
+            artifact-name: android
+            artifact-extension: so
+            flags: ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64
+
+          - name: iOS Compilation
+            os: "macos-11"
+            artifact-name: ios
+            artifact-extension: dylib
+            flags: arch=arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+          submodules: recursive
+
+      # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.x'
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: 'x64'
+
+      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons ${{ matrix.additional-python-packages }}
+          python --version
+          scons --version
+
+      - name: Windows Compilation
+        if: runner.os == 'Windows'
+        run: |
+          if(-Not (Test-Path -Path ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}))
+          {
+            mkdir ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}
+          }
+          cd ${{ env.PROJECT_FOLDER }}
+          scons platform=windows target=${{ env.TARGET }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
+
+      - name: Not Windows Compilation
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          cd ${{ env.PROJECT_FOLDER }}
+          scons platform=${{ matrix.artifact-name }} target=${{ env.TARGET }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
+
+      - name: Upload Artifact
+        env:
+          ARTIFACT_FOLDER: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
+          if-no-files-found: error
