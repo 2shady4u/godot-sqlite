@@ -24,8 +24,10 @@ env.Append(CPPPATH=["src/"])
 sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), 'src/sqlite/sqlite3.c']
 
 if env["platform"] == "macos":
-    target = "{}.framework/{}.{}.{}".format(
-        target, 
+    target = "{}.{}.{}.framework/{}.{}.{}".format(
+        target,
+        env["platform"], 
+        env["target"],
         target_name,
         env["platform"],
         env["target"]
