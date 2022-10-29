@@ -10,41 +10,43 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/
   TARGET_NAME: libgdsqlite
-  TARGET: template_release
 
 jobs:
   build:
-    name: ${{ matrix.name }}
+    name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        name: ['Windows (x86_64, MSVC)', Ubuntu (GCC), MacOS (universal), Android (arm64), iOS (arm64)]
+        target: [template_debug, template_release]
         include:
-          - name: Windows Compilation
+          - name: Windows (x86_64, MSVC)
             os: "windows-latest"
-            artifact-name: windows
+            platform: windows
             artifact-extension: dll
             additional-python-packages: pywin32
 
-          - name: Ubuntu Compilation
+          - name: Ubuntu (GCC)
             os: "ubuntu-20.04"
-            artifact-name: linux
+            platform: linux
             artifact-extension: so
 
-          - name: MacOS Compilation
+          - name: MacOS (universal)
             os: "macos-11"
-            artifact-name: macos
+            platform: macos
             artifact-extension: framework
+            flags: arch=universal
 
-          - name: Android Compilation
+          - name: Android (arm64)
             os: "ubuntu-20.04"
-            artifact-name: android
+            platform: android
             artifact-extension: so
             flags: ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64
 
-          - name: iOS Compilation
+          - name: iOS (arm64)
             os: "macos-11"
-            artifact-name: ios
+            platform: ios
             artifact-extension: dylib
             flags: arch=arm64
 
@@ -80,20 +82,20 @@ jobs:
             mkdir ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}
           }
           cd ${{ env.PROJECT_FOLDER }}
-          scons platform=windows target=${{ env.TARGET }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
+          scons platform=windows target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
 
       - name: Not Windows Compilation
         if: runner.os != 'Windows'
         run: |
           mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
           cd ${{ env.PROJECT_FOLDER }}
-          scons platform=${{ matrix.artifact-name }} target=${{ env.TARGET }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
+          scons platform=${{ matrix.platform }} target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
 
       - name: Upload Artifact
         env:
           ARTIFACT_FOLDER: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.artifact-name }}
+          name: ${{ matrix.platform}}
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
           if-no-files-found: error
