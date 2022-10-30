@@ -14,23 +14,20 @@ env:
 
 jobs:
   matrix:
-    name: Generate test matrix
+    name: Generate build matrix
     runs-on: ubuntu-latest
     outputs:
       matrix-json: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - id: set-matrix
         shell: pwsh
-        # Use a small PowerShell script to generate the test matrix
-        run: |
-          $Jobs = Get-Content -Raw -Path ${{ env.VAR_PATH }} | ConvertFrom-Json
-          Write-Host ($Jobs | ConvertTo-JSON)
-          Write-Host "::set-output name=matrix::$($Jobs | ConvertTo-JSON -Compress))"
+        # Use a small PowerShell script to generate the build matrix
+        run: "& .github/workflows/create-build-matrix.ps1"
 
   build:
-    needs: [matrix]
+    needs: [ matrix ]
     name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
     strategy:
