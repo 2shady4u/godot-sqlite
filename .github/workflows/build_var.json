@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Windows (x86_64, MSVC)",
+        "os": "windows-latest",
+        "platform": "windows",
+        "artifact-extension": "dll",
+        "additional-python-packages": "pywin32",
+        "target": "template_debug"
+    },
+    {
+        "name": "Ubuntu (GCC)",
+        "os": "ubuntu-20.04",
+        "platform": "linux",
+        "artifact-extension": "so",
+        "target": "template_release"
+    }
+]
