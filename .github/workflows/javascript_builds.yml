@@ -63,7 +63,7 @@ jobs:
           scons platform=javascript target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: javascript
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
@@ -81,7 +81,7 @@ jobs:
           lfs: true
 
       - name: Download Artefacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
 
       - name: Copy Libraries to Project Folder
         run: |
@@ -100,7 +100,7 @@ jobs:
           godot -v --export "HTML5" ../build/web/index.html
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: web
           path: build/web
@@ -113,6 +113,5 @@ jobs:
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@releases/v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
           FOLDER: build/web # The folder the action should deploy.

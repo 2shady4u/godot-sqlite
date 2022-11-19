@@ -48,7 +48,7 @@ jobs:
           scons platform=osx target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: osx
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}

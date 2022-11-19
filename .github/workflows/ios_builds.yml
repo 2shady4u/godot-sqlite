@@ -54,7 +54,7 @@ jobs:
           cp godot-cpp/bin/libgodot-cpp.ios.release.armv7.a ${{env.TARGET_PATH}}/armv7/libgodot-cpp.ios.release.armv7.a
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: ios
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}

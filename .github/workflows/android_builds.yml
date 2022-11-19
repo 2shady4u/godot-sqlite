@@ -23,9 +23,10 @@ jobs:
             submodules: recursive
 
       - name: Set up Java 8
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
-          java-version: 8
+          distribution: 'zulu'
+          java-version: '8'
 
       # Use python 3.x release (works cross platform)
       - name: Set up Python 3.x
@@ -57,7 +58,7 @@ jobs:
           $ANDROID_NDK_LATEST_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=./${{env.TARGET_PATH}}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: android
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
