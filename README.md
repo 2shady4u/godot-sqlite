@@ -152,6 +152,8 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     **Optional fields**:
 
     - **"not_null"** *(default = false)*: Is the NULL value an invalid value for this column?
+    
+    - **"unique"** *(default = false)*: Does the column have a unique constraint?
 
     - **"default"**: The default value of the column if not explicitly given.
 
