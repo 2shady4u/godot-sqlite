@@ -18,14 +18,14 @@ jobs:
     runs-on: "ubuntu-20.04"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2 
+        uses: actions/checkout@v3
         with:
             lfs: true
             submodules: recursive
 
       # Use python 3.x release (works cross platform)
       - name: Set up Python 3.x
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           # Semantic version range syntax or exact version of a Python version
           python-version: '3.x'
@@ -40,7 +40,7 @@ jobs:
           scons --version
 
       - name: Cloning emsdk
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: emscripten-core/emsdk
           path: emsdk
@@ -76,7 +76,7 @@ jobs:
       image: barichello/godot-ci:3.5.1 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           lfs: true
 
@@ -111,7 +111,7 @@ jobs:
           apt-get update && apt-get install -y rsync
 
       - name: Deploy to GitHub Pages 🚀
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+        uses: JamesIves/github-pages-deploy-action@releases/v4
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
