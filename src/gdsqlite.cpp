@@ -505,7 +505,7 @@ bool SQLite::insert_rows(String p_name, Array p_row_array)
     return true;
 }
 
-Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_array)
+Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_array = ["*"])
 {
     String query_string;
     /* Create SQL statement */
