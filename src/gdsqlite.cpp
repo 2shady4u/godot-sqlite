@@ -252,9 +252,14 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
         case Variant::PACKED_BYTE_ARRAY:
         {
             PackedByteArray binding = ((const PackedByteArray &)binding_value);
-            if (binding.size() == 0) {
+            /* Calling .ptr() on an empty PackedByteArray returns an error */
+            if (binding.size() == 0)
+            {
                 sqlite3_bind_null(stmt, i + 1);
-            } else {
+                /* Identical to: `sqlite3_bind_blob64(stmt, i + 1, nullptr, 0, SQLITE_TRANSIENT);`*/
+            }
+            else
+            {
                 sqlite3_bind_blob64(stmt, i + 1, binding.ptr(), binding.size(), SQLITE_TRANSIENT);
             }
             break;
