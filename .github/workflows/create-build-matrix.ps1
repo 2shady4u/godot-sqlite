@@ -15,4 +15,4 @@ foreach ($job in $Jobs)
 }
 
 Write-Host ($Matrix | ConvertTo-JSON)
-Write-Host "::set-output name=matrix::$($Matrix | ConvertTo-JSON -Compress))"
+Write-Output "matrix=$($Matrix | ConvertTo-JSON -Compress)" >> $env:GITHUB_OUTPUT
