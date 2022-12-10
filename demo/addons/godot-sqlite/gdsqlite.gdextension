@@ -4,18 +4,18 @@ entry_symbol = "sqlite_library_init"
 
 [libraries]
 
-macos.debug = "res://addons/godot-sqlite/bin/libgdsqlite.macos.template_debug.framework"
-macos.release = "res://addons/godot-sqlite/bin/libgdsqlite.macos.template_release.framework"
-windows.debug.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.windows.template_debug.x86_64.dll"
-windows.release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.windows.template_release.x86_64.dll"
-linux.debug.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.linux.template_debug.x86_64.so"
-linux.release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.linux.template_release.x86_64.so"
+macos = "res://addons/godot-sqlite/bin/libgdsqlite.macos.template_debug.framework"
+macos.template_release = "res://addons/godot-sqlite/bin/libgdsqlite.macos.template_release.framework"
+windows.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.windows.template_debug.x86_64.dll"
+windows.template_release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.windows.template_release.x86_64.dll"
+linux.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.linux.template_debug.x86_64.so"
+linux.template_release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.linux.template_release.x86_64.so"
 
 [dependencies]
 
-macos.debug = {}
-macos.release = {}
-windows.debug.x86_64 = {}
-windows.release.x86_64 = {}
-linux.debug.x86_64 = {}
-linux.release.x86_64 = {}
+macos = {}
+macos.template_release = {}
+windows.x86_64 = {}
+windows.template_release.x86_64 = {}
+linux.x86_64 = {}
+linux.template_release.x86_64 = {}
