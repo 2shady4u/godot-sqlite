@@ -157,7 +157,7 @@ bool SQLite::open_db()
     return true;
 }
 
-void SQLite::close_db()
+bool SQLite::close_db()
 {
     if (db)
     {
@@ -165,6 +165,7 @@ void SQLite::close_db()
         if (sqlite3_close_v2(db) != SQLITE_OK)
         {
             UtilityFunctions::printerr("GDSQLite Error: Can't close database!");
+            return false;
         }
         else
         {
@@ -173,8 +174,11 @@ void SQLite::close_db()
             {
                 UtilityFunctions::print("Closed database (" + path + ")");
             }
+            return true;
         }
     }
+
+    return false;
 }
 
 bool SQLite::query(const String &p_query)

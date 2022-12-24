@@ -69,7 +69,7 @@ namespace godot
 
         // Functions.
         bool open_db();
-        void close_db();
+        bool close_db();
         bool query(const String &p_query);
         bool query_with_bindings(const String &p_query, Array param_bindings);
 

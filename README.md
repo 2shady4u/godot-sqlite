@@ -1,19 +1,18 @@
-![Godot SQLite banner](icon/godot-sqlite-banner-v2.png?raw=true "Godot SQLite Banner")
+***NOTE**: This branch is compatible with Godot 4.x. Older versions of Godot (3.x) are supported on the `master`-branch as found [here](https://github.com/2shady4u/godot-sqlite/tree/master).*
+
+![Godot SQLite banner](icon/godot-sqlite-banner-4.x.png?raw=true "Godot SQLite Banner")
 
 # godot-sqlite
 
-This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.2+. Additionally, it
+This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 4.0+. Additionally, it
 does not require any additional compilation or mucking about with build scripts.
 
 ### Supported operating systems:
-- Mac OS X
+- Mac OS X (universal)
 - Linux
 - Windows
-- Android (arm64-v8a, armeabi-v7a & x86)
-- iOS (arm64 & armv7)
-- HTML5 (**requires Godot 3.3+**)
-
-_DISLAIMER_: iOS is still untested! (as of 24/12/2020)
+- Android (arm64)
+- iOS (arm64)
 
 # How to install?
 
@@ -63,10 +62,6 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     ***NOTE:** If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.*
 
-- **verbose_mode** (Boolean, default=false)
-
-    Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
-
 - **foreign_keys** (Boolean, default=false)
 
     Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database.
@@ -79,14 +74,29 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - **query_result** (Array, default=[])
 
-    Contains the results from the latest query and is cleared after every new query. 
+    Contains the results from the latest query **by value**; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.
 
-    ***NOTE:** If you want your result to persist you'll have to **duplicate()** this array yourself BEFORE running additional queries.*
+- **query_result_by_reference** (Array, default=[])
+
+    Contains the results from the latest query **by reference** and is, as a direct result, cleared and repopulated after every new query.
 
 - **last_insert_rowid** (Integer, default=0)
 
     Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
     Attempting to modify this variable directly is forbidden and throws an error.
+
+- **verbosity_level** (Integer, default=1)
+
+    The verbosity_level determines the amount of logging to the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
+
+    | Level            | Description                                 |
+    |----------------- | ------------------------------------------- |
+    | QUIET (0)        | Don't print anything to the console         |
+    | NORMAL (1)       | Print essential information to the console  |
+    | VERBOSE (2)      | Print additional information to the console |
+    | VERY_VERBOSE (3) | Same as VERBOSE                             |
+
+    ***NOTE:** VERBOSE and higher levels might considerably slow down your queries due to excessive logging.*
 
 ## Functions
 
@@ -110,7 +120,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     # SELECT name FROM company WHERE age < 24;
     ```
 
-    Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+    Using bindings is optional, except for PackedByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 
     ***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
 
@@ -122,13 +132,13 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     - **"data_type"**: type of the column variable, following values are valid\*:
 
-        | value       | SQLite         | Godot          |
-        |:-----------:|:--------------:|:--------------:|
-        | int         | INTEGER        | TYPE_INT       |
-        | real        | REAL           | TYPE_REAL      |
-        | text        | TEXT           | TYPE_STRING    |
-        | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING    |
-        | blob        | BLOB           | TYPE_RAW_ARRAY |
+        | value       | SQLite         | Godot                  |
+        |:-----------:|:--------------:|:----------------------:|
+        | int         | INTEGER        | TYPE_INT               |
+        | real        | REAL           | TYPE_REAL              |
+        | text        | TEXT           | TYPE_STRING            |
+        | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING            |
+        | blob        | BLOB           | TYPE_PACKED_BYTE_ARRAY |
 
         \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.*  
         \*\* *with the question mark being replaced by the maximum amount of characters*
@@ -136,6 +146,8 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     **Optional fields**:
 
     - **"not_null"** *(default = false)*: Is the NULL value an invalid value for this column?
+
+    - **"unique"** *(default = false)*: Does the column have a unique constraint?
 
     - **"default"**: The default value of the column if not explicitly given.
 
@@ -347,27 +359,38 @@ libgdsqlite.dll
 
 # How to contribute?
 
-First clone the project and install SCons. Secondly, the C++ bindings have to be build from scratch using the files present in the godot-cpp submodule and following command:
+## Using GitHub Actions CI/CD
 
+Fork the repository to your GitHub own account by following the recommended [procedure](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
+
+Afterwards you can push your own code to the `master`-branch of this forked repository and [GitHub Actions](https://docs.github.com/en/actions/quickstart) will automatically build new versions for all the supported platforms. These binaries then have to be downloaded and placed inside of the `addons/godot-sqlite/bin/`-folder, as found in your Godot project, alongside any existing binaries.
+
+***NOTE**: Compiled binaries for the latest development version of `godot-sqlite` are available [here](https://github.com/2shady4u/godot-sqlite/actions/workflows/build.yml).*
+
+## Using your own device
+
+First clone the project and initialize the `godot-cpp`-submodule as such:
 ```
-scons p=<platform> bits=64 generate_bindings=yes -j4
+git clone https://github.com/2shady4u/godot-sqlite.git
+git submodule update --init
 ```
 
-In the case of Android and iOS, additional parameters have to be supplied to specify the architecture. In the case of android, the `android_arch`-parameter has to be supplied (with valid values being 'arm64v8', 'armv7' and/or 'x86'), and in the case of iOS, the `ios_arch`-parameter serves similar purposes (with valid values being 'arm64' and/or 'arm7')
+Secondly, [SCons](https://scons.org/), Python and a viable C++ compiler have to be installed on your device. On Windows, both Visual Studio Community (2017+) and/or MinGW-w64 can be used to compile the plugin from scratch. More detailed instructions for compiling the plugin on Windows, Linux and other supported platforms can be found [here](https://docs.godotengine.org/en/stable/development/compiling/index.html) in the Official Godot documentation.
 
-Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac&nbsp;OS&nbsp;X, Windows, iOS (for both architectures) and HTML5 with the help of following command:
+Depending on the wanted target platform, some additional dependencies have to be installed:
+- In the case of Android, the [Android NDK](https://developer.android.com/ndk) needs to be installed on a Linux host to allow building for Android targets.
+
+Afterwards, the SContruct file found in this repository should be sufficient to build this project's C++ source code for Linux, Mac&nbsp;OS&nbsp;X, Windows, iOS and android with the help of following command:
 
 ```
 scons p=<platform> target_path=<target_path> target_name=libgdsqlite
 ```
 
-In the case of Android, the [Android NDK](https://developer.android.com/ndk) needs to be installed on a Linux host to allow building for Android targets. Following command then compiles the C++ source code to all three available Android architectures at once:
+In the case of both Android and iOS, an additional `arch`-parameter has to be supplied to specify the CPU architecture. In the case of android, valid values for the architecture are 'arm64' (= default), 'arm32', 'x86_64' and/or 'x86_32', and in the case of iOS, the valid values are 'universal' (= default), 'arm64' and/or 'x86_64'.
 
-```
- $ANDROID_NDK_ROOT/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=<target_path>
-```
+Additionally, in the case of Android, the `ANDROID_NDK_ROOT`-parameter has to be set to the location of the Android NDK installed previously.
 
-For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts, the `SConstruct`-file (for Windows, Linux, Mac OS X, iOS and HTML5 compilation) and both the `Android.mk`- and `jni/Application.mk`-files for the Android build process.
+For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts and the `SConstruct`-file as found in this repository.
 
-Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-cpp-example.html)
+Tutorials for making and extending GDExtension scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-cpp-example.html)
 in the Official Godot Documentation.
