@@ -18,3 +18,4 @@ In chronological order based on the first contribution.
 - [lightyears (lightyears1998)](https://github.com/lightyears1998)
 - [Unkorunk](https://github.com/Unkorunk)
 - [DamienBlack](https://github.com/DamienBlack)
+- [Epic_Null (engineer-pearl)](https://github.com/engineer-pearl)
