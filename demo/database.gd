@@ -1,15 +1,11 @@
 extends Node
 
-const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
+const SQLite = preload("res://addons/godot-sqlite/godot-sqlite-wrapper.gd")
+# Or alternatively:
+# const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
 var db
 
-enum VerbosityLevel {
-	QUIET = 0,
-	NORMAL = 1,
-	VERBOSE = 2,
-	VERY_VERBOSE = 3
-}
-const verbosity_level : int = VerbosityLevel.VERBOSE
+const verbosity_level : int = SQLite.VerbosityLevel.VERBOSE
 
 var db_name := "res://data/test"
 var packaged_db_name := "res://data_to_be_packaged"
