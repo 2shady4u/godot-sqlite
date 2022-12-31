@@ -1,6 +1,6 @@
 class_name SQLiteWrapper
 # This class aims to make documentation accessible in the Godot editor and
-# is ment to be fully interchangeable with `gdsqlite.gdns`.
+# is meant to be fully interchangeable with `gdsqlite.gdns`.
 # More extensive documentation can be found here:
 # https://github.com/2shady4u/godot-sqlite/blob/master/README.md
 
@@ -197,7 +197,7 @@ func update_rows(table_name : String, query_conditions: String, updated_row_dict
 # For example, calling `delete_rows("monsters", "name = 'Wolf' AND health > 18")`
 # would delete all the rows in the "monsters" table that match the following conditions:
 # - A "name" column value equal to "Wolf"
-# - A "health" column value that is greater than 25
+# - A "health" column value that is greater than 18
 func delete_rows(table_name: String, query_conditions: String) -> bool:
 	return db.delete_rows(table_name, query_conditions)
 
