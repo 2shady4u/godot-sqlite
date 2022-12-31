@@ -123,7 +123,15 @@ bool SQLite::open_db()
     }
     else
     {
+#ifdef __EMSCRIPTEN__
+        /* In the case of the web build, we'll have to use the custom VFS such that the file system (IndexedDB) gets synced correctly */
+        /* Syncing the file system doesn't happen automatically nor is it, at the time of writing, possible to manually trigger a synchronization event */
+        /* The custom VFS uses Godot's File class internally which syncs the file system whenever the file gets closed */
+        sqlite3_vfs_register(gdsqlite_vfs(), 0);
+        rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, "godot");
+#else
         rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
+#endif
         /* The first two flags are default flags with behaviour that is identical to: `rc = sqlite3_open(char_path, &db);`*/
         /* The SQLITE_OPEN_URI flag is solely useful when using shared in-memory databases (shared cache), but it is safe to include in most situations */
         /* As found in the SQLite documentation: (https://www.sqlite.org/uri.html)*/
