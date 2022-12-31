@@ -1,0 +1,42 @@
+{
+    "targets": [
+        "template_debug",
+        "template_release"
+    ],
+    "jobs": [
+        {
+            "name": "Windows (x86_64, MSVC)",
+            "os": "windows-latest",
+            "platform": "windows",
+            "artifact-extension": "dll",
+            "additional-python-packages": "pywin32"
+        },
+        {
+            "name": "Ubuntu (GCC)",
+            "os": "ubuntu-20.04",
+            "platform": "linux",
+            "artifact-extension": "so"
+        },
+        {
+            "name": "MacOS (universal)",
+            "os": "macos-11",
+            "platform": "macos",
+            "artifact-extension": "framework",
+            "flags": "arch=universal"
+        },
+        {
+            "name": "Android (arm64)",
+            "os": "ubuntu-20.04",
+            "platform": "android",
+            "artifact-extension": "so",
+            "flags": "ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64"
+        },
+        {
+            "name": "iOS (arm64)",
+            "os": "macos-11",
+            "platform": "ios",
+            "artifact-extension": "dylib",
+            "flags": "arch=arm64"
+        }
+    ]
+}
