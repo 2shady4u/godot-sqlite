@@ -266,6 +266,21 @@ There are a couple of things you can do before panicking, namely:
     db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?;", [100, 1])
     ```
 
+- SQLite's `query_with_bindings` as also used by `update_rows` is injection-safe. That is, any attempt to use sql inside a bound variable will escape it and insert it directly into the record. So the two equivalent statements:
+
+  ```gdscript
+  var table_name := "characters"
+  db.query_with_bindings("UPDATE "+ table_name +" SET level=? WHERE id=?;", ["level+1", 1])
+  db.update_rows(table_name, "id=1", {"level":"level+1"})
+  ```
+  
+  will insert a literal `'level+1'` into the database, in stead of incrementing the value by one. In stead, build a direct query like before:
+  
+  ```gdscript
+  var table_name := "characters"
+  db.query("UPDATE "+ table_name +" SET level=level+1 WHERE id=1")
+  ```
+
 After exhausting these options, please open an issue that describes the error in proper detail.
 
 ### 2. Your plugin fails to load on my Windows machine!
