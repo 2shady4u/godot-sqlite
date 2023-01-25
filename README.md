@@ -266,7 +266,7 @@ There are a couple of things you can do before panicking, namely:
     db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?;", [100, 1])
     ```
 
-- SQLite's `query_with_bindings` as also used by `update_rows` is injection-safe. That is, any attempt to use sql inside a bound variable will escape it and insert it directly into the record. So the two equivalent statements:
+- SQLite's `query_with_bindings`, as also used by `update_rows`, is injection-safe. That is, any attempt to use sql inside of a bound variable will escape and insert it directly into the record. So the two equivalent statements:
 
   ```gdscript
   var table_name := "characters"
@@ -274,7 +274,7 @@ There are a couple of things you can do before panicking, namely:
   db.update_rows(table_name, "id=1", {"level":"level+1"})
   ```
   
-  will insert a literal `'level+1'` into the database, in stead of incrementing the value by one. In stead, build a direct query like before:
+  will insert a literal `'level+1'` into the database, instead of incrementing the value by one. In stead, build a direct query:
   
   ```gdscript
   var table_name := "characters"
