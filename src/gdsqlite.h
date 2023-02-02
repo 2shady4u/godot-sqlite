@@ -120,6 +120,6 @@ namespace godot
 
 }
 
-VARIANT_ENUM_CAST(SQLite, VerbosityLevel);
+VARIANT_ENUM_CAST(SQLite::VerbosityLevel);
 
 #endif // ! SQLITE_CLASS_H
