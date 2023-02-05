@@ -14,5 +14,5 @@ foreach ($job in $Jobs)
   }
 }
 
-Write-Host ($Matrix | ConvertTo-JSON)
-Write-Output "matrix=$($Matrix | ConvertTo-JSON -Compress)" >> $env:GITHUB_OUTPUT
+Write-Host (ConvertTo-JSON -InputObject $Matrix -Compress)
+Write-Output "matrix=$(ConvertTo-JSON -InputObject $Matrix -Compress)" >> $env:GITHUB_OUTPUT

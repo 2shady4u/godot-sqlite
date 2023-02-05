@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ gd-extension, switch-to-json-matrix ]
+    branches: [ gd-extension, add-release-job ]
     tags:
       - "v*"
 
@@ -84,3 +84,40 @@ jobs:
           name: ${{ matrix.platform}}
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
           if-no-files-found: error
+
+  release:
+    name: Release
+    runs-on: "ubuntu-20.04"
+    needs: [ build ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+          submodules: recursive
+
+      - name: Download Artifacts
+        id: download
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Copy Artifacts to bin/-folder
+        run: |
+          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          cd ${{ env.PROJECT_FOLDER }}
+          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+          zip -r demo.zip demo/
+          zip -r bin.zip ${{ env.TARGET_PATH }}/..
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ env.PROJECT_FOLDER }}/.github/workflows/release_template.md
+          files: |
+            ${{ env.PROJECT_FOLDER }}/demo.zip
+            ${{ env.PROJECT_FOLDER }}/bin.zip
+            ${{ steps.download.outputs.download-path }}/**/*
+          draft: true
+          prerelease: true
