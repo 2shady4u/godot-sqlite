@@ -10,11 +10,23 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "Reference",
+"class": "GutHookScript",
+"language": "GDScript",
+"path": "res://addons/gut/hook_script.gd"
+}, {
+"base": "Node",
+"class": "GutTest",
+"language": "GDScript",
+"path": "res://addons/gut/test.gd"
+}, {
+"base": "Reference",
 "class": "SQLiteWrapper",
 "language": "GDScript",
 "path": "res://addons/godot-sqlite/godot-sqlite-wrapper.gd"
 } ]
 _global_script_class_icons={
+"GutHookScript": "",
+"GutTest": "",
 "SQLiteWrapper": ""
 }
 
@@ -30,7 +42,7 @@ settings/stdout/verbose_stdout=true
 
 [editor_plugins]
 
-enabled=PoolStringArray( "godot-sqlite" )
+enabled=PoolStringArray( "res://addons/godot-sqlite/plugin.cfg", "res://addons/gut/plugin.cfg" )
 
 [rendering]
 
