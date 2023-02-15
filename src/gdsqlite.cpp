@@ -10,6 +10,9 @@ void SQLite::_bind_methods()
     ClassDB::bind_method(D_METHOD("query"), &SQLite::query);
     ClassDB::bind_method(D_METHOD("query_with_bindings"), &SQLite::query_with_bindings);
 
+    ClassDB::bind_method(D_METHOD("backup_to"), &SQLite::backup_to);
+    ClassDB::bind_method(D_METHOD("restore_from"), &SQLite::restore_from);
+
     ClassDB::bind_method(D_METHOD("create_table"), &SQLite::create_table);
     ClassDB::bind_method(D_METHOD("drop_table"), &SQLite::drop_table);
 
@@ -361,6 +364,61 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
 
     return true;
 }
+
+bool SQLite::backup_to(const String &destination) {
+    String real_destination = ProjectSettings::get_singleton()->globalize_path(destination.strip_edges());
+
+    sqlite3 *destination_db;
+    int result = sqlite3_open_v2(real_destination.utf8().get_data(), &destination_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
+    if (result != SQLITE_OK) {
+        return false;
+    }
+
+    sqlite3_backup *backup = sqlite3_backup_init(destination_db, "main", db, "main");
+    if (backup == NULL) {
+        return false;
+    }
+
+    result = sqlite3_backup_step(backup, -1);
+    if (result != SQLITE_DONE) {
+        return false;
+    }
+
+    result = sqlite3_backup_finish(backup);
+    if (result != SQLITE_OK) {
+        return false;
+    }
+
+    return true;
+}
+
+bool SQLite::restore_from(const String &source) {
+    String real_source = ProjectSettings::get_singleton()->globalize_path(source.strip_edges());
+
+    sqlite3 *source_db;
+    int result = sqlite3_open_v2(real_source.utf8().get_data(), &source_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
+    if (result != SQLITE_OK) {
+        return false;
+    }
+
+    sqlite3_backup *backup = sqlite3_backup_init(db, "main", source_db, "main");
+    if (backup == NULL) {
+        return false;
+    }
+
+    result = sqlite3_backup_step(backup, -1);
+    if (result != SQLITE_DONE) {
+        return false;
+    }
+
+    result = sqlite3_backup_finish(backup);
+    if (result != SQLITE_OK) {
+        return false;
+    }
+
+    return true;
+}
+
 
 bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
 {

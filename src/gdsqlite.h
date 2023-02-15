@@ -73,6 +73,9 @@ namespace godot
         bool query(const String &p_query);
         bool query_with_bindings(const String &p_query, Array param_bindings);
 
+        bool backup_to(const String &destination);
+        bool restore_from(const String &source);
+
         bool create_table(const String &p_name, const Dictionary &p_table_dict);
         bool drop_table(const String &p_name);
 
