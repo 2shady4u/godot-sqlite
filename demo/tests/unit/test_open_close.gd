@@ -25,7 +25,7 @@ func copy_data_to_user() -> void:
         gut.p("An error occurred when trying to access the path.")
 
 func before_all():
-    if OS.get_name() in ["Android", "iOS", "HTML5", "X11"]:
+    if OS.get_name() in ["Android", "iOS", "HTML5"]:
         copy_data_to_user()
         db_name = "user://data/test"
     else:

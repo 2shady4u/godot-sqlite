@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Gut (gut.sh)
+      - name: Gut
         run: |
           cd demo/
           godot -s --path $PWD addons/gut/gut_cmdln.gd -gdir=res://tests -glog=1 -ginclude_subdirs -gexit
