@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ gd-extension, add-release-job ]
+    branches: [ gd-extension ]
     tags:
       - "v*"
 
@@ -96,6 +96,7 @@ jobs:
     name: Release
     runs-on: "ubuntu-20.04"
     needs: [ build ]
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
 
     steps:
       - name: Checkout
