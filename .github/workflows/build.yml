@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ gd-extension, switch-to-json-matrix ]
+    branches: [ gd-extension ]
     tags:
       - "v*"
 
@@ -11,6 +11,7 @@ env:
   TARGET_PATH: demo/addons/godot-sqlite/bin/
   TARGET_NAME: libgdsqlite
   VAR_PATH: .github/workflows/build_var.json
+  SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
 
 jobs:
   matrix:
@@ -41,6 +42,12 @@ jobs:
         with:
           lfs: true
           submodules: recursive
+
+      - name: Setup Godot build cache
+        uses: ./godot-cpp/.github/actions/godot-cache
+        with:
+          cache-name: ${{ matrix.cache-name }}-${{ matrix.target }}
+        continue-on-error: true
 
       # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
       - name: Set up Python 3.x
@@ -84,3 +91,41 @@ jobs:
           name: ${{ matrix.platform}}
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
           if-no-files-found: error
+
+  release:
+    name: Release
+    runs-on: "ubuntu-20.04"
+    needs: [ build ]
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+          submodules: recursive
+
+      - name: Download Artifacts
+        id: download
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Copy Artifacts to bin/-folder
+        run: |
+          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          cd ${{ env.PROJECT_FOLDER }}
+          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+          zip -r demo.zip demo/
+          cd ${{ env.TARGET_PATH }}/..
+          zip -r bin.zip bin/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ env.PROJECT_FOLDER }}/.github/workflows/release_template.md
+          files: |
+            ${{ env.PROJECT_FOLDER }}/demo.zip
+            ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/../bin.zip
+          draft: true
+          prerelease: true
