@@ -383,7 +383,7 @@ Depending on the wanted target platform, some additional dependencies have to be
 Afterwards, the SContruct file found in this repository should be sufficient to build this project's C++ source code for Linux, Mac&nbsp;OS&nbsp;X, Windows, iOS and android with the help of following command:
 
 ```
-scons p=<platform> target_path=<target_path> target_name=libgdsqlite
+scons platform=<platform> target_path=<target_path> target_name=libgdsqlite
 ```
 
 In the case of both Android and iOS, an additional `arch`-parameter has to be supplied to specify the CPU architecture. In the case of android, valid values for the architecture are 'arm64' (= default), 'arm32', 'x86_64' and/or 'x86_32', and in the case of iOS, the valid values are 'universal' (= default), 'arm64' and/or 'x86_64'.
