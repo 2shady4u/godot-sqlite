@@ -49,7 +49,7 @@ namespace godot
         String path = "default";
         String error_message = "";
         String default_extension = "db";
-        Array query_result = Array();
+        TypedArray<Dictionary> query_result = TypedArray<Dictionary>();
 
     protected:
         static void _bind_methods();
@@ -112,10 +112,10 @@ namespace godot
         void set_default_extension(const String &p_default_extension);
         String get_default_extension() const;
 
-        void set_query_result(const Array &p_query_result);
-        Array get_query_result() const;
+        void set_query_result(const TypedArray<Dictionary> &p_query_result);
+        TypedArray<Dictionary> get_query_result() const;
 
-        Array get_query_result_by_reference() const;
+        TypedArray<Dictionary> get_query_result_by_reference() const;
     };
 
 }

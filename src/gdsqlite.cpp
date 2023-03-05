@@ -73,7 +73,7 @@ void SQLite::_bind_methods()
 SQLite::SQLite()
 {
     db = nullptr;
-    query_result = Array();
+    query_result = TypedArray<Dictionary>();
 }
 
 SQLite::~SQLite()
@@ -809,7 +809,7 @@ bool SQLite::import_from_json(String import_path)
     /* Find all tables that are present in this database */
     /* We don't care about triggers here since they get dropped automatically when their table is dropped */
     query(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
-    Array old_database_array = query_result.duplicate(true);
+    TypedArray<Dictionary> old_database_array = query_result.duplicate(true);
     int64_t old_number_of_tables = query_result.size();
     /* Drop all old tables present in the database */
     for (int64_t i = 0; i <= old_number_of_tables - 1; i++)
@@ -889,7 +889,7 @@ bool SQLite::export_to_json(String export_path)
     /* Get all names and sql templates for all tables present in the database */
     query(String("SELECT name,sql,type FROM sqlite_master WHERE type = 'table' OR type = 'trigger';"));
     int64_t number_of_objects = query_result.size();
-    Array database_array = query_result.duplicate(true);
+    TypedArray<Dictionary> database_array = query_result.duplicate(true);
     /* Construct a Dictionary for each table, convert it to JSON and write it to file */
     for (int64_t i = 0; i <= number_of_objects - 1; i++)
     {
@@ -1124,17 +1124,17 @@ String SQLite::get_default_extension() const
     return default_extension;
 }
 
-void SQLite::set_query_result(const Array &p_query_result)
+void SQLite::set_query_result(const TypedArray<Dictionary> &p_query_result)
 {
     query_result = p_query_result;
 }
 
-Array SQLite::get_query_result() const
+TypedArray<Dictionary> SQLite::get_query_result() const
 {
     return query_result.duplicate(true);
 }
 
-Array SQLite::get_query_result_by_reference() const
+TypedArray<Dictionary> SQLite::get_query_result_by_reference() const
 {
     return query_result;
 }
