@@ -149,6 +149,7 @@ jobs:
         run: |
           cd demo
           ls ../
+          chmod +x ../${{ matrix.godot-path }}
           ../${{ matrix.godot-path }} -d -s --path $PWD addons/gut/gut_cmdln.gd
 
   release:
