@@ -1,3 +1,5 @@
+# specific stuffs
+/demo/addons/godot-sqlite/bin/
 
 # Godot-specific ignores
 *.gen.*
