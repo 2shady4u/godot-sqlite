@@ -13,7 +13,7 @@ env:
   TARGET_NAME: libgdsqlite
   VAR_PATH: .github/workflows/build_var.json
   SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
-  GODOT_VERSION: 4.0
+  GODOT_VERSION: "4.0"
 
 jobs:
   matrix:
@@ -29,6 +29,7 @@ jobs:
         # Use a small PowerShell script to generate the build matrix
         run: "& .github/workflows/create-build-matrix.ps1"
 
+
   build:
     needs: [ matrix ]
     name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
@@ -37,9 +38,6 @@ jobs:
       fail-fast: false
       matrix: 
         include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
-        exclude:
-          - target: template_debug
-          - platform: [ android, ios ]
 
     steps:
       - name: Checkout
@@ -98,8 +96,8 @@ jobs:
           if-no-files-found: error
 
   test:
-    needs: [ build ]
-    name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
+    # needs: [ build ]
+    name: ${{ matrix.os }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
     
     # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -109,10 +107,13 @@ jobs:
         include:
           - godot-suffix: win64.exe
             godot-path: Godotv4.0-stable_win64_console.exe
+            os: windows-latest
           - godot-suffix: linux.x86_64
             godot-path: Godotv4.0-stable_linux.x86_64
+            os: ubuntu-20.04
           - godot-suffix: macos.universal
             godot-path: Godot.app/Contents/MacOS/Godot
+            os: macos-11
 
         # include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
         # exclude:
@@ -132,11 +133,11 @@ jobs:
         with:
           path: artifacts
 
-      - name: Copy Artifacts to bin/-folder
-        run: |
-          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
-          cd ${{ env.PROJECT_FOLDER }}
-          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+      # - name: Copy Artifacts to bin/-folder
+      #   run: |
+      #     mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+      #     cd ${{ env.PROJECT_FOLDER }}
+      #     cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
       
       - name: Download Godot 4
         run: |
@@ -147,6 +148,7 @@ jobs:
       - name: test
         run: |
           cd demo
+          ls ../
           ../${{ matrix.godot-path }} -d -s --path $PWD addons/gut/gut_cmdln.gd
 
   release:
