@@ -96,6 +96,7 @@ jobs:
           if-no-files-found: error
 
   test:
+    if: ${{ always() }}
     needs: [ build ]
     name: ${{ matrix.os }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
@@ -150,8 +151,7 @@ jobs:
           cd demo
           ls ../
           chmod +x ../${{ matrix.godot-path }}
-          ../${{ matrix.godot-path }} -s --headless --path $PWD addons/gut/gut_cmdln.gd \
-          -gdir=res://test/unit -gexit
+          ../${{ matrix.godot-path }} -s --headless --path $PWD addons/gut/gut_cmdln.gd -gdir=res://test/unit -gexit
 
   release:
     name: Release
