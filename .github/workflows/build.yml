@@ -106,10 +106,10 @@ jobs:
       matrix:
         include:
           - godot-suffix: win64.exe
-            godot-path: Godotv4.0-stable_win64_console.exe
+            godot-path: Godot_v4.0-stable_win64_console.exe
             os: windows-latest
           - godot-suffix: linux.x86_64
-            godot-path: Godotv4.0-stable_linux.x86_64
+            godot-path: Godot_v4.0-stable_linux.x86_64
             os: ubuntu-20.04
           - godot-suffix: macos.universal
             godot-path: Godot.app/Contents/MacOS/Godot
