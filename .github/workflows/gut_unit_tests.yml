@@ -6,7 +6,7 @@ on:
     branches: [ master, main ]
 
 jobs:
-  gut:
+  gut-linux:
     runs-on: ubuntu-latest
     container:
       image:
@@ -14,6 +14,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Gut
+        run: |
+          cd demo/
+          godot -s --path $PWD addons/gut/gut_cmdln.gd -gdir=res://tests -glog=1 -ginclude_subdirs -gexit
+
+  gut-osx:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: download godot
+        run: |
+          wget https://downloads.tuxfamily.org/godotengine/${{env.GODOT_VERSION}}/Godot_v${{env.GODOT_VERSION}}-stable_osx.universal.zip
+          unzip Godot_v${{env.GODOT_VERSION}}-stable_osx.universal.zip
+          rm Godot_v${{env.GODOT_VERSION}}-stable_osx.universal.zip
 
       - name: Gut
         run: |
