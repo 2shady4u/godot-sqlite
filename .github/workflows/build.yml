@@ -38,7 +38,7 @@ jobs:
       matrix: 
         include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
         exclude:
-          - targets: template_debug
+          - target: template_debug
           - platform: [ android, ios ]
 
     steps:
