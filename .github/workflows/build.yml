@@ -96,7 +96,7 @@ jobs:
           if-no-files-found: error
 
   test:
-    # needs: [ build ]
+    needs: [ build ]
     name: ${{ matrix.os }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
     
@@ -133,11 +133,11 @@ jobs:
         with:
           path: artifacts
 
-      # - name: Copy Artifacts to bin/-folder
-      #   run: |
-      #     mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
-      #     cd ${{ env.PROJECT_FOLDER }}
-      #     cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+      - name: Copy Artifacts to bin/-folder
+        run: |
+          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          cd ${{ env.PROJECT_FOLDER }}
+          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
       
       - name: Download Godot 4
         run: |
