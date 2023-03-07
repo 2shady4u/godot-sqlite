@@ -1,5 +1,6 @@
 {
     "targets": [
+        "template_debug",
         "template_release"
     ],
     "jobs": [

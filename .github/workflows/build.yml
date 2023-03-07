@@ -37,6 +37,9 @@ jobs:
       fail-fast: false
       matrix: 
         include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
+        exclude:
+          - targets: template_debug
+          - platform: [ android, ios ]
 
     steps:
       - name: Checkout
