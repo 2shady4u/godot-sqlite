@@ -10,14 +10,16 @@
             "platform": "windows",
             "artifact-extension": "dll",
             "additional-python-packages": "pywin32",
-            "cache-name": "win-x86_64"
+            "cache-name": "win-x86_64",
+            "godot-suffix" : "win64.exe"
         },
         {
             "name": "Ubuntu (GCC)",
             "os": "ubuntu-20.04",
             "platform": "linux",
             "artifact-extension": "so",
-            "cache-name": "linux-x86_64"
+            "cache-name": "linux-x86_64",
+            "godot-suffix" : "linux.x86_64"
         },
         {
             "name": "MacOS (universal)",
@@ -25,7 +27,8 @@
             "platform": "macos",
             "artifact-extension": "framework",
             "flags": "arch=universal",
-            "cache-name": "macos-universal"
+            "cache-name": "macos-universal",
+            "godot-suffix" : "macos.universal"
         },
         {
             "name": "Android (x86_64)",

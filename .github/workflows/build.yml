@@ -1,7 +1,8 @@
 name: 🌈 All Builds
 on:
+  pull_request:
   push:
-    branches: [ gd-extension ]
+    branches: [ gd-extension* ]
     tags:
       - "v*"
 
@@ -12,6 +13,7 @@ env:
   TARGET_NAME: libgdsqlite
   VAR_PATH: .github/workflows/build_var.json
   SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
+  GODOT_VERSION: 4.0
 
 jobs:
   matrix:
@@ -91,6 +93,57 @@ jobs:
           name: ${{ matrix.platform}}
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
           if-no-files-found: error
+
+  test:
+    name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
+    runs-on: ${{ matrix.os }}
+    needs: [ build ]
+    # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - godot-suffix: win64.exe
+            godot-path: Godotv4.0-stable_win64_console.exe
+          - godot-suffix: linux.x86_64
+            godot-path: Godotv4.0-stable_linux.x86_64
+          - godot-suffix: macos.universal
+            godot-path: Godot.app/Contents/MacOS/Godot
+
+        # include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
+        # exclude:
+        #   - platform: android
+        #   - platform: ios
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+          submodules: recursive
+
+      - name: Download Artifacts
+        id: download
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Copy Artifacts to bin/-folder
+        run: |
+          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          cd ${{ env.PROJECT_FOLDER }}
+          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+      
+      - name: Download Godot 4
+        run: |
+          wget https://downloads.tuxfamily.org/godotengine/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}-stable_${{ matrix.godot-suffix }}.zip
+          unzip Godot_v${{env.GODOT_VERSION}}-stable_${{ matrix.godot-suffix }}.zip
+          rm Godot_v${{env.GODOT_VERSION}}-stable_${{ matrix.godot-suffix }}.zip
+
+      - name: test
+        run: |
+          cd demo
+          ../${{ matrix.godot-path }} -d -s --path $PWD addons/gut/gut_cmdln.gd
 
   release:
     name: Release
