@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ gd-extension* ]
+    branches: [ gd-extension ]
     tags:
       - "v*"
 
@@ -10,45 +10,31 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/
   TARGET_NAME: libgdsqlite
+  VAR_PATH: .github/workflows/build_var.json
+  SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
 
 jobs:
+  matrix:
+    name: Generate build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix-json: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - id: set-matrix
+        shell: pwsh
+        # Use a small PowerShell script to generate the build matrix
+        run: "& .github/workflows/create-build-matrix.ps1"
+
   build:
+    needs: [ matrix ]
     name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        name: ['Windows (x86_64, MSVC)', Ubuntu (GCC), MacOS (universal), Android (arm64), iOS (arm64)]
-        target: [template_debug, template_release]
-        include:
-          - name: Windows (x86_64, MSVC)
-            os: "windows-latest"
-            platform: windows
-            artifact-extension: dll
-            additional-python-packages: pywin32
-
-          - name: Ubuntu (GCC)
-            os: "ubuntu-20.04"
-            platform: linux
-            artifact-extension: so
-
-          - name: MacOS (universal)
-            os: "macos-11"
-            platform: macos
-            artifact-extension: framework
-            flags: arch=universal
-
-          - name: Android (arm64)
-            os: "ubuntu-20.04"
-            platform: android
-            artifact-extension: so
-            flags: ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64
-
-          - name: iOS (arm64)
-            os: "macos-11"
-            platform: ios
-            artifact-extension: dylib
-            flags: arch=arm64
+      matrix: 
+        include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
 
     steps:
       - name: Checkout
@@ -56,6 +42,12 @@ jobs:
         with:
           lfs: true
           submodules: recursive
+
+      - name: Setup Godot build cache
+        uses: ./godot-cpp/.github/actions/godot-cache
+        with:
+          cache-name: ${{ matrix.cache-name }}-${{ matrix.target }}
+        continue-on-error: true
 
       # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
       - name: Set up Python 3.x
@@ -100,44 +92,11 @@ jobs:
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
           if-no-files-found: error
 
-  test:
-    name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        name: ['Ubuntu (GCC)']
-          # ['Windows (x86_64, MSVC)', Ubuntu (GCC), MacOS (universal), Android (arm64), iOS (arm64)]
-        target: [template_debug, template_release]
-        include:
-          # - name: Windows (x86_64, MSVC)
-          #   os: "windows-latest"
-          #   platform: windows
-          #   artifact-extension: dll
-          #   additional-python-packages: pywin32
-
-          - name: Ubuntu (GCC)
-            os: "ubuntu-20.04"
-            platform: linux
-            artifact-extension: so
-
-          # - name: MacOS (universal)
-          #   os: "macos-11"
-          #   platform: macos
-          #   artifact-extension: framework
-          #   flags: arch=universal
-
-          # - name: Android (arm64)
-          #   os: "ubuntu-20.04"
-          #   platform: android
-          #   artifact-extension: so
-          #   flags: ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64
-
-          # - name: iOS (arm64)
-          #   os: "macos-11"
-          #   platform: ios
-          #   artifact-extension: dylib
-          #   flags: arch=arm64
+  release:
+    name: Release
+    runs-on: "ubuntu-20.04"
+    needs: [ build ]
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
 
     steps:
       - name: Checkout
@@ -145,7 +104,28 @@ jobs:
         with:
           lfs: true
           submodules: recursive
-      
-      - name: test-godot
+
+      - name: Download Artifacts
+        id: download
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Copy Artifacts to bin/-folder
         run: |
-        godot
+          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          cd ${{ env.PROJECT_FOLDER }}
+          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+          zip -r demo.zip demo/
+          cd ${{ env.TARGET_PATH }}/..
+          zip -r bin.zip bin/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ env.PROJECT_FOLDER }}/.github/workflows/release_template.md
+          files: |
+            ${{ env.PROJECT_FOLDER }}/demo.zip
+            ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/../bin.zip
+          draft: true
+          prerelease: true
