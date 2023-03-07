@@ -150,7 +150,7 @@ jobs:
           cd demo
           ls ../
           chmod +x ../${{ matrix.godot-path }}
-          ../${{ matrix.godot-path }} -d -s --headless --path $PWD addons/gut/gut_cmdln.gd
+          ../${{ matrix.godot-path }} -s --headless --path $PWD addons/gut/gut_cmdln.gd
 
   release:
     name: Release
