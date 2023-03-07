@@ -95,9 +95,10 @@ jobs:
           if-no-files-found: error
 
   test:
+    needs: [ build ]
     name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
-    needs: [ build ]
+    
     # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     strategy:
       fail-fast: false
