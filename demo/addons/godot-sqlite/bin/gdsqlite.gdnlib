@@ -1,0 +1,34 @@
+[general]
+
+singleton=false
+load_once=true
+symbol_prefix="godot_"
+reloadable=false
+
+[entry]
+
+Android.armeabi-v7a="res://addons/godot-sqlite/bin/android/armeabi-v7a/libgdsqlite.so"
+Android.arm64-v8a="res://addons/godot-sqlite/bin/android/arm64-v8a/libgdsqlite.so"
+Android.x86="res://addons/godot-sqlite/bin/android/x86/libgdsqlite.so"
+Android.x86_64="res://addons/godot-sqlite/bin/android/x86_64/libgdsqlite.so"
+HTML5.wasm32="res://addons/godot-sqlite/bin/javascript/libgdsqlite.wasm"
+OSX.64="res://addons/godot-sqlite/bin/osx/libgdsqlite.dylib"
+Windows.64="res://addons/godot-sqlite/bin/win64/libgdsqlite.dll"
+X11.64="res://addons/godot-sqlite/bin/x11/libgdsqlite.so"
+iOS.armv7="res://addons/godot-sqlite/bin/ios/armv7/libgdsqlite.a"
+iOS.arm64="res://addons/godot-sqlite/bin/ios/arm64/libgdsqlite.a"
+Server="res://addons/godot-sqlite/bin/x11/libgdsqlite.so"
+
+[dependencies]
+
+Android.armeabi-v7a=[  ]
+Android.arm64-v8a=[  ]
+Android.x86=[  ]
+Android.x86_64=[  ]
+HTML5.wasm32=[  ]
+OSX.64=[  ]
+Windows.64=[  ]
+X11.64=[  ]
+iOS.armv7=[ "res://addons/godot-sqlite/bin/ios/armv7/libgodot-cpp.ios.release.armv7.a" ]
+iOS.arm64=[ "res://addons/godot-sqlite/bin/ios/arm64/libgodot-cpp.ios.release.arm64.a" ]
+Server=[  ]
