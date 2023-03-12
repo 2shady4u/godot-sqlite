@@ -6,6 +6,7 @@ const verbosity_level : int = SQLite.VERBOSE
 
 var db_name := "res://data/test"
 var packaged_db_name := "res://data_to_be_packaged"
+var peristent_db_name := "user://my_database"
 var json_name := "res://data/test_backup"
 
 var table_name := "company"
@@ -32,6 +33,7 @@ func _ready():
 	example_of_call_external_functions()
 	example_of_blob_io()
 	example_of_read_only_database()
+	example_of_database_persistency()
 
 func cprint(text : String) -> void:
 	print(text)
@@ -376,6 +378,36 @@ func example_of_read_only_database():
 	select_condition = "name = 'mimic'"
 	selected_array = other_db.select_rows(packaged_table_name, select_condition, ["experience"])
 	cprint("Killing a mimic yields " + str(selected_array[0]["experience"]) + " experience points!")
+
+	# Close the current database
+	db.close_db()
+
+func example_of_database_persistency():
+	var table_dict : Dictionary = Dictionary()
+	table_dict["id"] = {"data_type":"int", "primary_key": true, "not_null": true}
+	table_dict["count"] = {"data_type":"int", "not_null": true, "default": 0}
+
+	db = SQLite.new()
+	db.path = peristent_db_name
+	db.verbosity_level = verbosity_level
+	db.open_db()
+	db.create_table(table_name, table_dict)
+
+	# Does the row already exist?
+	db.select_rows(table_name, "id = 1", ["count"])
+	var query_result : Array = db.query_result
+	var count : int = 0
+	if query_result.is_empty():
+		# It doesn't exist yet! Add it!
+		db.insert_row(table_name, {"id": 1, "count": 0})
+	else:
+		var result : Dictionary = query_result[0]
+		count = int(result.get("count", count))
+
+	cprint("Count is: {0}".format([count]))
+
+	# Increment the value for the next time!
+	db.update_rows(table_name, "id = 1", {"count": count + 1 })
 
 	# Close the current database
 	db.close_db()
