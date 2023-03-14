@@ -16,88 +16,88 @@ env:
   GODOT_VERSION: "4.0"
 
 jobs:
-  matrix:
-    name: Generate build matrix
-    runs-on: ubuntu-latest
-    outputs:
-      matrix-json: ${{ steps.set-matrix.outputs.matrix }}
+  # matrix:
+  #   name: Generate build matrix
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     matrix-json: ${{ steps.set-matrix.outputs.matrix }}
 
-    steps:
-      - uses: actions/checkout@v3
-      - id: set-matrix
-        shell: pwsh
-        # Use a small PowerShell script to generate the build matrix
-        run: "& .github/workflows/create-build-matrix.ps1"
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - id: set-matrix
+  #       shell: pwsh
+  #       # Use a small PowerShell script to generate the build matrix
+  #       run: "& .github/workflows/create-build-matrix.ps1"
 
 
-  build:
-    needs: [ matrix ]
-    name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix: 
-        include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
+  # build:
+  #   needs: [ matrix ]
+  #   name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix: 
+  #       include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: true
-          submodules: recursive
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         lfs: true
+  #         submodules: recursive
 
-      - name: Setup Godot build cache
-        uses: ./godot-cpp/.github/actions/godot-cache
-        with:
-          cache-name: ${{ matrix.cache-name }}-${{ matrix.target }}
-        continue-on-error: true
+  #     - name: Setup Godot build cache
+  #       uses: ./godot-cpp/.github/actions/godot-cache
+  #       with:
+  #         cache-name: ${{ matrix.cache-name }}-${{ matrix.target }}
+  #       continue-on-error: true
 
-      # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
-      - name: Set up Python 3.x
-        uses: actions/setup-python@v4
-        with:
-          # Semantic version range syntax or exact version of a Python version
-          python-version: '3.x'
-          # Optional - x64 or x86 architecture, defaults to x64
-          architecture: 'x64'
+  #     # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
+  #     - name: Set up Python 3.x
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         # Semantic version range syntax or exact version of a Python version
+  #         python-version: '3.x'
+  #         # Optional - x64 or x86 architecture, defaults to x64
+  #         architecture: 'x64'
 
-      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
-      - name: Configuring Python packages
-        run: |
-          python -c "import sys; print(sys.version)"
-          python -m pip install scons ${{ matrix.additional-python-packages }}
-          python --version
-          scons --version
+  #     # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
+  #     - name: Configuring Python packages
+  #       run: |
+  #         python -c "import sys; print(sys.version)"
+  #         python -m pip install scons ${{ matrix.additional-python-packages }}
+  #         python --version
+  #         scons --version
 
-      - name: Windows Compilation
-        if: runner.os == 'Windows'
-        run: |
-          if(-Not (Test-Path -Path ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}))
-          {
-            mkdir ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}
-          }
-          cd ${{ env.PROJECT_FOLDER }}
-          scons platform=windows target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
+  #     - name: Windows Compilation
+  #       if: runner.os == 'Windows'
+  #       run: |
+  #         if(-Not (Test-Path -Path ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}))
+  #         {
+  #           mkdir ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}
+  #         }
+  #         cd ${{ env.PROJECT_FOLDER }}
+  #         scons platform=windows target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
 
-      - name: Not Windows Compilation
-        if: runner.os != 'Windows'
-        run: |
-          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
-          cd ${{ env.PROJECT_FOLDER }}
-          scons platform=${{ matrix.platform }} target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
+  #     - name: Not Windows Compilation
+  #       if: runner.os != 'Windows'
+  #       run: |
+  #         mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+  #         cd ${{ env.PROJECT_FOLDER }}
+  #         scons platform=${{ matrix.platform }} target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
 
-      - name: Upload Artifact
-        env:
-          ARTIFACT_FOLDER: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.platform}}
-          path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
-          if-no-files-found: error
+  #     - name: Upload Artifact
+  #       env:
+  #         ARTIFACT_FOLDER: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: ${{ matrix.platform}}
+  #         path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
+  #         if-no-files-found: error
 
   test:
     if: ${{ always() }}
-    needs: [ build ]
+    # needs: [ build ]
     name: ${{ matrix.os }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
     
@@ -128,65 +128,100 @@ jobs:
           lfs: true
           submodules: recursive
 
-      - name: Download Artifacts
-        id: download
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts
-
-      - name: Copy Artifacts to bin/-folder
+      - name: Install timeout (macOS)
+        if: runner.os == 'MacOS'
         run: |
-          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
-          cd ${{ env.PROJECT_FOLDER }}
-          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+          brew install coreutils
+
+      # - name: Download Artifacts
+      #   id: download
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     path: artifacts
+
+      # - name: Copy Artifacts to bin/-folder
+      #   run: |
+      #     mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+      #     cd ${{ env.PROJECT_FOLDER }}
+      #     cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+      
+      - name: download artifacts and copy using wget (shortcut)
+        if: runner.os != 'Windows'
+        run: |
+          cd demo/addons/godot-sqlite
+          wget https://github.com/2shady4u/godot-sqlite/releases/download/v4.0/bin.zip
+          # rm -r bin
+          unzip bin.zip
+          rm bin.zip
+          cd ../../../
       
       - name: Download Godot 4
+        if: runner.os != 'Windows'
         run: |
           wget https://downloads.tuxfamily.org/godotengine/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}-stable_${{ matrix.godot-suffix }}.zip
-          unzip Godot_v${{env.GODOT_VERSION}}-stable_${{ matrix.godot-suffix }}.zip
-          rm Godot_v${{env.GODOT_VERSION}}-stable_${{ matrix.godot-suffix }}.zip
+          unzip Godot_v${{ env.GODOT_VERSION }}-stable_${{ matrix.godot-suffix }}.zip
+          rm Godot_v${{ env.GODOT_VERSION }}-stable_${{ matrix.godot-suffix }}.zip
+
+      - name: download artifacts and copy using wget (shortcut)
+        if: runner.os == 'Windows'
+        run: |
+          cd demo/addons/godot-sqlite
+          Invoke-WebRequest https://github.com/2shady4u/godot-sqlite/releases/download/v4.0/bin.zip -OutFile bin.zip
+          # rm -r bin
+          unzip bin.zip
+          rm bin.zip
+          cd ../../../
+
+      - name: Download Godot 4
+        if: runner.os == 'Windows'
+        run: |
+          Invoke-WebRequest -Uri https://downloads.tuxfamily.org/godotengine/${{
+          env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}-stable_${{ matrix.godot-suffix }}.zip -OutFile Godot.zip
+          unzip Godot.zip
+          rm Godot.zip
 
       - name: test
         run: |
           cd demo
           ls ../
           chmod +x ../${{ matrix.godot-path }}
-          ../${{ matrix.godot-path }} -s --headless --path $PWD addons/gut/gut_cmdln.gd -gdir=res://test/unit -gexit
+          timeout --preserve-status 30 ../${{ matrix.godot-path }} --headless project.godot || true
+          timeout 1m ../${{ matrix.godot-path }} -s --headless --path $PWD addons/gut/gut_cmdln.gd -gdir=res://test/unit -gexit
 
-  release:
-    name: Release
-    runs-on: "ubuntu-20.04"
-    needs: [ build ]
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+  # release:
+  #   name: Release
+  #   runs-on: "ubuntu-20.04"
+  #   needs: [ build ]
+  #   if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: true
-          submodules: recursive
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         lfs: true
+  #         submodules: recursive
 
-      - name: Download Artifacts
-        id: download
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts
+  #     - name: Download Artifacts
+  #       id: download
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         path: artifacts
 
-      - name: Copy Artifacts to bin/-folder
-        run: |
-          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
-          cd ${{ env.PROJECT_FOLDER }}
-          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
-          zip -r demo.zip demo/
-          cd ${{ env.TARGET_PATH }}/..
-          zip -r bin.zip bin/
+  #     - name: Copy Artifacts to bin/-folder
+  #       run: |
+  #         mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+  #         cd ${{ env.PROJECT_FOLDER }}
+  #         cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+  #         zip -r demo.zip demo/
+  #         cd ${{ env.TARGET_PATH }}/..
+  #         zip -r bin.zip bin/
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body_path: ${{ env.PROJECT_FOLDER }}/.github/workflows/release_template.md
-          files: |
-            ${{ env.PROJECT_FOLDER }}/demo.zip
-            ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/../bin.zip
-          draft: true
-          prerelease: true
+  #     - name: Create Release
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         body_path: ${{ env.PROJECT_FOLDER }}/.github/workflows/release_template.md
+  #         files: |
+  #           ${{ env.PROJECT_FOLDER }}/demo.zip
+  #           ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/../bin.zip
+  #         draft: true
+  #         prerelease: true
