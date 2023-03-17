@@ -387,6 +387,8 @@ if env['platform'] == 'ios':
     arch_suffix = env['ios_arch']
 if env['platform'] == 'javascript':
     arch_suffix = 'wasm'
+if env['macos_arch'] != 'universal':
+    arch_suffix = env['macos_arch']
 
 cpp_bindings_libname = 'libgodot-cpp.{}.{}.{}'.format(
                         env['platform'],
