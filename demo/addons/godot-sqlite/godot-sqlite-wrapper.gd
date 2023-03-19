@@ -184,6 +184,7 @@ func insert_rows(table_name: String, row_array : Array) -> bool:
 # Select all rows from the table that match the given conditions and return the wanted columns.
 # For example, calling `select_rows("monsters", "health < 24", ["name", "health"])`
 # would select all monsters with health below 24 and return their names & health in an array of dictionaries.
+# Returns the results from the latest query by value; meaning that this property does not get overwritten by any successive queries.
 func select_rows(table_name : String, query_conditions: String, selected_columns: Array) -> Array:
 	return db.select_rows(table_name,query_conditions,selected_columns)
 

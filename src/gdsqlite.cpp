@@ -542,7 +542,8 @@ Array SQLite::select_rows(String p_name, String p_conditions, Array p_columns_ar
     query_string += ";";
 
     query(query_string);
-    return query_result;
+    /* Return the duplicated result */
+    return get_query_result();
 }
 
 bool SQLite::update_rows(String p_name, String p_conditions, Dictionary p_updated_row_dict)

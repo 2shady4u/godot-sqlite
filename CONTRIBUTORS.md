@@ -19,3 +19,4 @@ In chronological order based on the first contribution.
 - [Unkorunk](https://github.com/Unkorunk)
 - [DamienBlack](https://github.com/DamienBlack)
 - [Epic_Null (engineer-pearl)](https://github.com/engineer-pearl)
+- [Anton P. Kolosov (Antokolos)](https://github.com/Antokolos)
