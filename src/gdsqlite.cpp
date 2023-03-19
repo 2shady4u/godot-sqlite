@@ -565,7 +565,8 @@ Array SQLite::select_rows(const String &p_name, const String &p_conditions, cons
     query_string += ";";
 
     query(query_string);
-    return query_result;
+    /* Return the duplicated result */
+    return get_query_result();
 }
 
 bool SQLite::update_rows(const String &p_name, const String &p_conditions, const Dictionary &p_updated_row_dict)
