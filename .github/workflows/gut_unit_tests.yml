@@ -1,0 +1,38 @@
+name: Gut
+
+on:
+  pull_request:
+  push:
+    branches: [ master, main ]
+
+jobs:
+  gut-linux:
+    runs-on: ubuntu-latest
+    container:
+      image:
+        barichello/godot-ci:3.5.1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Gut
+        run: |
+          cd demo/
+          godot -s --path $PWD addons/gut/gut_cmdln.gd -gdir=res://tests -glog=1 -ginclude_subdirs -gexit
+
+  gut-osx:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: download godot
+        run: |
+          wget https://downloads.tuxfamily.org/godotengine/${{env.GODOT_VERSION}}/Godot_v${{env.GODOT_VERSION}}-stable_osx.universal.zip
+          unzip Godot_v${{env.GODOT_VERSION}}-stable_osx.universal.zip
+          rm Godot_v${{env.GODOT_VERSION}}-stable_osx.universal.zip
+
+      - name: Gut
+        run: |
+          cd demo/
+          godot -s --path $PWD addons/gut/gut_cmdln.gd -gdir=res://tests -glog=1 -ginclude_subdirs -gexit
