@@ -14,6 +14,8 @@ env:
   VAR_PATH: .github/workflows/build_var.json
   SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
   GODOT_VERSION: "4.0"
+  GUT_CMD: -s --headless --path $PWD addons/gut/gut_cmdln.gd -gdir=res://test/unit -gexit
+  GODOT_CMD: --headless project.godot
 
 jobs:
   # matrix:
@@ -145,7 +147,7 @@ jobs:
       #     cd ${{ env.PROJECT_FOLDER }}
       #     cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
       
-      - name: download artifacts and copy using wget (shortcut)
+      - name: download artifacts and copy using wget (shortcut) (not win)
         if: runner.os != 'Windows'
         run: |
           cd demo/addons/godot-sqlite
@@ -162,7 +164,7 @@ jobs:
           unzip Godot_v${{ env.GODOT_VERSION }}-stable_${{ matrix.godot-suffix }}.zip
           rm Godot_v${{ env.GODOT_VERSION }}-stable_${{ matrix.godot-suffix }}.zip
 
-      - name: download artifacts and copy using wget (shortcut)
+      - name: download artifacts and copy using wget (shortcut) (win)
         if: runner.os == 'Windows'
         run: |
           cd demo/addons/godot-sqlite
@@ -180,13 +182,24 @@ jobs:
           unzip Godot.zip
           rm Godot.zip
 
-      - name: test
+      - name: test (not win)
+        if: runner.os != 'Windows'
         run: |
           cd demo
           ls ../
           chmod +x ../${{ matrix.godot-path }}
-          timeout --preserve-status 30 ../${{ matrix.godot-path }} --headless project.godot || true
-          timeout 1m ../${{ matrix.godot-path }} -s --headless --path $PWD addons/gut/gut_cmdln.gd -gdir=res://test/unit -gexit
+          # run godot first to initialize .godot folder (imports)
+          timeout --preserve-status 30 ../${{ matrix.godot-path }} ${{ env.GODOT_CMD }} || true
+          timeout 1m ../${{ matrix.godot-path }} ${{ env.GUT_CMD }}
+
+      - name: test (win)
+        if: runner.os == 'Windows'
+        run: |
+          cd demo
+          ls ../
+          $dir = $pwd
+          Start-Job { $dir\..\${{ matrix.godot-path }} ${{ env.GODOT_CMD }} | Wait-Job -Timeout 30
+          Start-Job { $dir/../${{ matrix.godot-path }} ${{ env.GUT_CMD }} | Wait-Job -Timeout 30
 
   # release:
   #   name: Release
