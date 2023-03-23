@@ -10,9 +10,7 @@ int gdsqlite_file::close(sqlite3_file *pFile)
     gdsqlite_file *p = reinterpret_cast<gdsqlite_file *>(pFile);
     ERR_FAIL_COND_V(!p->file->is_open(), SQLITE_IOERR_CLOSE);
 
-    /* FileAccess is now reference counted and shouldn't be closed manually anymore */
-    /* Instead, for safety's sake, we call the flush method such that the buffer is written to the disk */
-    p->file->flush();
+    p->file->close();
     p->file.unref();
 
     return SQLITE_OK;

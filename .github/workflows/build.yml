@@ -128,11 +128,6 @@ jobs:
           lfs: true
           submodules: recursive
 
-      - name: Install timeout (macOS)
-        if: runner.os == 'MacOS'
-        run: |
-          brew install coreutils
-
       # - name: Download Artifacts
       #   id: download
       #   uses: actions/download-artifact@v3
@@ -155,7 +150,7 @@ jobs:
           rm bin.zip
           cd ../../../
       
-      - name: Download Godot 4
+      - name: Download Godot 4 (not win)
         if: runner.os != 'Windows'
         run: |
           wget https://downloads.tuxfamily.org/godotengine/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}-stable_${{ matrix.godot-suffix }}.zip
@@ -172,7 +167,7 @@ jobs:
           rm bin.zip
           cd ../../../
 
-      - name: Download Godot 4
+      - name: Download Godot 4 (win)
         if: runner.os == 'Windows'
         run: |
           Invoke-WebRequest -Uri https://downloads.tuxfamily.org/godotengine/${{

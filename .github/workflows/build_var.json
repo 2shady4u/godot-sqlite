@@ -1,5 +1,6 @@
 {
     "targets": [
+        "template_debug",
         "template_release"
     ],
     "jobs": [
@@ -9,25 +10,22 @@
             "platform": "windows",
             "artifact-extension": "dll",
             "additional-python-packages": "pywin32",
-            "cache-name": "win-x86_64",
-            "godot-suffix" : "win64.exe"
+            "cache-name": "win-x86_64"
         },
         {
             "name": "Ubuntu (GCC)",
             "os": "ubuntu-20.04",
             "platform": "linux",
             "artifact-extension": "so",
-            "cache-name": "linux-x86_64",
-            "godot-suffix" : "linux.x86_64"
+            "cache-name": "linux-x86_64"
         },
         {
             "name": "MacOS (universal)",
             "os": "macos-11",
             "platform": "macos",
             "artifact-extension": "framework",
-            "flags": "arch=universal",
-            "cache-name": "macos-universal",
-            "godot-suffix" : "macos.universal"
+            "flags": "arch=universal",,
+            "cache-name": "macos-universal"
         },
         {
             "name": "Android (x86_64)",
