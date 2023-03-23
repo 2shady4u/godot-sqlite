@@ -128,6 +128,11 @@ jobs:
           lfs: true
           submodules: recursive
 
+      - name: Install timeout (macOS)
+        if: runner.os == 'MacOS'
+        run: |
+          brew install coreutils
+
       # - name: Download Artifacts
       #   id: download
       #   uses: actions/download-artifact@v3
