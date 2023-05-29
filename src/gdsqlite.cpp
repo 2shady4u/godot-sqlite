@@ -61,10 +61,10 @@ void SQLite::_bind_methods()
 
     ClassDB::bind_method(D_METHOD("set_query_result", "query_result"), &SQLite::set_query_result);
     ClassDB::bind_method(D_METHOD("get_query_result"), &SQLite::get_query_result);
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "query_result"), "set_query_result", "get_query_result");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "query_result", PROPERTY_HINT_ARRAY_TYPE, MAKE_RESOURCE_TYPE_HINT("Dictionary")), "set_query_result", "get_query_result");
 
     ClassDB::bind_method(D_METHOD("get_query_result_by_reference"), &SQLite::get_query_result_by_reference);
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "query_result_by_reference"), "set_query_result", "get_query_result_by_reference");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "query_result_by_reference", PROPERTY_HINT_ARRAY_TYPE, MAKE_RESOURCE_TYPE_HINT("Dictionary")), "set_query_result", "get_query_result_by_reference");
 
     // Constants.
     BIND_ENUM_CONSTANT(QUIET);
