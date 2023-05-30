@@ -7,26 +7,26 @@ void SQLite::_bind_methods()
     // Methods.
     ClassDB::bind_method(D_METHOD("open_db"), &SQLite::open_db);
     ClassDB::bind_method(D_METHOD("close_db"), &SQLite::close_db);
-    ClassDB::bind_method(D_METHOD("query"), &SQLite::query);
-    ClassDB::bind_method(D_METHOD("query_with_bindings"), &SQLite::query_with_bindings);
+    ClassDB::bind_method(D_METHOD("query", "query_string"), &SQLite::query);
+    ClassDB::bind_method(D_METHOD("query_with_bindings", "query_string", "param_bindings"), &SQLite::query_with_bindings);
 
-    ClassDB::bind_method(D_METHOD("backup_to"), &SQLite::backup_to);
-    ClassDB::bind_method(D_METHOD("restore_from"), &SQLite::restore_from);
+    ClassDB::bind_method(D_METHOD("backup_to", "destination"), &SQLite::backup_to);
+    ClassDB::bind_method(D_METHOD("restore_from", "source"), &SQLite::restore_from);
 
-    ClassDB::bind_method(D_METHOD("create_table"), &SQLite::create_table);
-    ClassDB::bind_method(D_METHOD("drop_table"), &SQLite::drop_table);
+    ClassDB::bind_method(D_METHOD("create_table", "table_name", "table_data"), &SQLite::create_table);
+    ClassDB::bind_method(D_METHOD("drop_table", "table_name"), &SQLite::drop_table);
 
-    ClassDB::bind_method(D_METHOD("insert_row"), &SQLite::insert_row);
-    ClassDB::bind_method(D_METHOD("insert_rows"), &SQLite::insert_rows);
+    ClassDB::bind_method(D_METHOD("insert_row", "table_name", "row_data"), &SQLite::insert_row);
+    ClassDB::bind_method(D_METHOD("insert_rows", "table_name", "row_array"), &SQLite::insert_rows);
 
-    ClassDB::bind_method(D_METHOD("select_rows"), &SQLite::select_rows);
-    ClassDB::bind_method(D_METHOD("update_rows"), &SQLite::update_rows);
-    ClassDB::bind_method(D_METHOD("delete_rows"), &SQLite::delete_rows);
+    ClassDB::bind_method(D_METHOD("select_rows", "table_name", "conditions", "columns"), &SQLite::select_rows);
+    ClassDB::bind_method(D_METHOD("update_rows", "table_name", "conditions", "row_data"), &SQLite::update_rows);
+    ClassDB::bind_method(D_METHOD("delete_rows", "table_name", "conditions"), &SQLite::delete_rows);
 
-    ClassDB::bind_method(D_METHOD("create_function"), &SQLite::create_function);
+    ClassDB::bind_method(D_METHOD("create_function", "function_name", "callable", "arguments"), &SQLite::create_function);
 
-    ClassDB::bind_method(D_METHOD("import_from_json"), &SQLite::import_from_json);
-    ClassDB::bind_method(D_METHOD("export_to_json"), &SQLite::export_to_json);
+    ClassDB::bind_method(D_METHOD("import_from_json", "import_path"), &SQLite::import_from_json);
+    ClassDB::bind_method(D_METHOD("export_to_json", "export_path"), &SQLite::export_to_json);
 
     ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLite::get_autocommit);
 
