@@ -10,6 +10,10 @@ windows.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.windows.template_deb
 windows.template_release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.windows.template_release.x86_64.dll"
 linux.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.linux.template_debug.x86_64.so"
 linux.template_release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.linux.template_release.x86_64.so"
+android.arm64 = "res://addons/godot-sqlite/bin/libgdsqlite.android.template_debug.arm64.so"
+android.template_release.arm64 = "res://addons/godot-sqlite/bin/libgdsqlite.android.template_release.arm64.so"
+android.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.android.template_debug.x86_64.so"
+android.template_release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.android.template_release.x86_64.so"
 
 [dependencies]
 
@@ -19,3 +23,7 @@ windows.x86_64 = {}
 windows.template_release.x86_64 = {}
 linux.x86_64 = {}
 linux.template_release.x86_64 = {}
+android.arm64 = {}
+android.template_release.arm64 = {}
+android.x86_64 = {}
+android.template_release.x86_64 = {}
