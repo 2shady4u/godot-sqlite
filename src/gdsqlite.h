@@ -39,6 +39,7 @@ namespace godot
 
     private:
         bool validate_json(const Array &import_json, std::vector<object_struct> &tables_to_import);
+        bool validate_table_dict(const Dictionary &p_table_dict);
 
         sqlite3 *db;
         std::vector<std::unique_ptr<Callable>> function_registry;

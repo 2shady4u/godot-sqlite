@@ -364,6 +364,10 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings)
 
 bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
 {
+    if (!validate_table_dict(p_table_dict)) {
+        return false;
+    }
+
     String query_string, type_string, key_string;
     String integer_datatype = "int";
     /* Create SQL statement */
@@ -376,11 +380,6 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
     for (int64_t i = 0; i <= number_of_columns - 1; i++)
     {
         column_dict = p_table_dict[columns[i]];
-        if (!column_dict.has("data_type"))
-        {
-            UtilityFunctions::printerr("GDSQLite Error: The field \"data_type\" is a required part of the table dictionary");
-            return false;
-        }
         query_string += (const String &)columns[i] + String(" ");
         type_string = (const String &)column_dict["data_type"];
         if (type_string.to_lower().begins_with(integer_datatype))
@@ -443,6 +442,36 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
     query_string += key_string + ");";
 
     return query(query_string);
+}
+
+bool SQLite::validate_table_dict(const Dictionary &p_table_dict) {
+    Dictionary column_dict;
+    Array columns = p_table_dict.keys();
+    int64_t number_of_columns = columns.size();
+    for (int64_t i = 0; i <= number_of_columns - 1; i++)
+    {
+        if (p_table_dict[columns[i]].get_type() != Variant::DICTIONARY) {
+            UtilityFunctions::printerr("GDSQLite Error: All values of the table dictionary should be of type Dictionary");
+            return false;
+        }
+
+        column_dict = p_table_dict[columns[i]];
+        if (!column_dict.has("data_type"))
+        {
+            UtilityFunctions::printerr("GDSQLite Error: The field \"data_type\" is a required part of the table dictionary");
+            return false;
+        }
+
+        if (column_dict.has("default"))
+        {
+            if (column_dict["default"].get_type() != Variant::STRING) {
+                UtilityFunctions::printerr("GDSQLite Error: The field \"default\" should be of type String");
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 bool SQLite::drop_table(const String &p_name)
