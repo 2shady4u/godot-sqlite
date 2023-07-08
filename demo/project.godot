@@ -25,6 +25,7 @@ enabled=PackedStringArray()
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
 quality/driver/driver_name="GLES2"
 vram_compression/import_etc=true
 environment/default_environment="res://default_env.tres"
