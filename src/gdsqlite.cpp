@@ -7,23 +7,23 @@ void SQLite::_bind_methods()
     // Methods.
     ClassDB::bind_method(D_METHOD("open_db"), &SQLite::open_db);
     ClassDB::bind_method(D_METHOD("close_db"), &SQLite::close_db);
-    ClassDB::bind_method(D_METHOD("query"), &SQLite::query);
-    ClassDB::bind_method(D_METHOD("query_with_bindings"), &SQLite::query_with_bindings);
+    ClassDB::bind_method(D_METHOD("query", "query_string"), &SQLite::query);
+    ClassDB::bind_method(D_METHOD("query_with_bindings", "query_string", "param_bindings"), &SQLite::query_with_bindings);
 
-    ClassDB::bind_method(D_METHOD("create_table"), &SQLite::create_table);
-    ClassDB::bind_method(D_METHOD("drop_table"), &SQLite::drop_table);
+    ClassDB::bind_method(D_METHOD("create_table", "table_name", "table_data"), &SQLite::create_table);
+    ClassDB::bind_method(D_METHOD("drop_table", "table_name"), &SQLite::drop_table);
 
-    ClassDB::bind_method(D_METHOD("insert_row"), &SQLite::insert_row);
-    ClassDB::bind_method(D_METHOD("insert_rows"), &SQLite::insert_rows);
+    ClassDB::bind_method(D_METHOD("insert_row", "table_name", "row_data"), &SQLite::insert_row);
+    ClassDB::bind_method(D_METHOD("insert_rows", "table_name", "row_array"), &SQLite::insert_rows);
 
-    ClassDB::bind_method(D_METHOD("select_rows"), &SQLite::select_rows);
-    ClassDB::bind_method(D_METHOD("update_rows"), &SQLite::update_rows);
-    ClassDB::bind_method(D_METHOD("delete_rows"), &SQLite::delete_rows);
+    ClassDB::bind_method(D_METHOD("select_rows", "table_name", "conditions", "columns"), &SQLite::select_rows);
+    ClassDB::bind_method(D_METHOD("update_rows", "table_name", "conditions", "row_data"), &SQLite::update_rows);
+    ClassDB::bind_method(D_METHOD("delete_rows", "table_name", "conditions"), &SQLite::delete_rows);
 
-    ClassDB::bind_method(D_METHOD("create_function"), &SQLite::create_function);
+    ClassDB::bind_method(D_METHOD("create_function", "function_name", "callable", "arguments"), &SQLite::create_function);
 
-    ClassDB::bind_method(D_METHOD("import_from_json"), &SQLite::import_from_json);
-    ClassDB::bind_method(D_METHOD("export_to_json"), &SQLite::export_to_json);
+    ClassDB::bind_method(D_METHOD("import_from_json", "import_path"), &SQLite::import_from_json);
+    ClassDB::bind_method(D_METHOD("export_to_json", "export_path"), &SQLite::export_to_json);
 
     ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLite::get_autocommit);
 
@@ -58,10 +58,10 @@ void SQLite::_bind_methods()
 
     ClassDB::bind_method(D_METHOD("set_query_result", "query_result"), &SQLite::set_query_result);
     ClassDB::bind_method(D_METHOD("get_query_result"), &SQLite::get_query_result);
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "query_result"), "set_query_result", "get_query_result");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "query_result", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "set_query_result", "get_query_result");
 
     ClassDB::bind_method(D_METHOD("get_query_result_by_reference"), &SQLite::get_query_result_by_reference);
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "query_result_by_reference"), "set_query_result", "get_query_result_by_reference");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "query_result_by_reference", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "set_query_result", "get_query_result_by_reference");
 
     // Constants.
     BIND_ENUM_CONSTANT(QUIET);
