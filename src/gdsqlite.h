@@ -40,6 +40,7 @@ namespace godot
     private:
         bool validate_json(const Array &import_json, std::vector<object_struct> &tables_to_import);
         bool validate_table_dict(const Dictionary &p_table_dict);
+        int backup_database(sqlite3 *source_db, sqlite3 *destination_db);
 
         sqlite3 *db;
         std::vector<std::unique_ptr<Callable>> function_registry;
@@ -76,6 +77,9 @@ namespace godot
 
         bool create_table(const String &p_name, const Dictionary &p_table_dict);
         bool drop_table(const String &p_name);
+
+        bool backup_to(String destination_path);
+        bool restore_from(String source_path);
 
         bool insert_row(const String &p_name, const Dictionary &p_row_dict);
         bool insert_rows(const String &p_name, const Array &p_row_array);
