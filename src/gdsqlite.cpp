@@ -13,6 +13,9 @@ void SQLite::_bind_methods()
     ClassDB::bind_method(D_METHOD("create_table", "table_name", "table_data"), &SQLite::create_table);
     ClassDB::bind_method(D_METHOD("drop_table", "table_name"), &SQLite::drop_table);
 
+    ClassDB::bind_method(D_METHOD("backup_to", "destination"), &SQLite::backup_to);
+    ClassDB::bind_method(D_METHOD("restore_from", "source"), &SQLite::restore_from);
+
     ClassDB::bind_method(D_METHOD("insert_row", "table_name", "row_data"), &SQLite::insert_row);
     ClassDB::bind_method(D_METHOD("insert_rows", "table_name", "row_array"), &SQLite::insert_rows);
 
@@ -481,6 +484,46 @@ bool SQLite::drop_table(const String &p_name)
     query_string = "DROP TABLE " + p_name + ";";
 
     return query(query_string);
+}
+
+bool SQLite::backup_to(String destination_path) {
+    destination_path = ProjectSettings::get_singleton()->globalize_path(destination_path.strip_edges());
+    CharString dummy_path = destination_path.utf8();
+    const char *char_path = dummy_path.get_data();
+
+    sqlite3 *destination_db;
+    int result = sqlite3_open_v2(char_path, &destination_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
+    if (result == SQLITE_OK) {
+        result = backup_database(db, destination_db);
+    }
+    (void)sqlite3_close_v2(destination_db);
+    return result == SQLITE_OK;
+}
+
+bool SQLite::restore_from(String source_path) {
+    source_path = ProjectSettings::get_singleton()->globalize_path(source_path.strip_edges());
+    CharString dummy_path = source_path.utf8();
+    const char *char_path = dummy_path.get_data();
+
+    sqlite3 *source_db;
+    int result = sqlite3_open_v2(char_path, &source_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
+    if (result == SQLITE_OK) {
+        result = backup_database(source_db, db);
+    }
+    (void)sqlite3_close_v2(source_db);
+    return result == SQLITE_OK;
+}
+
+int SQLite::backup_database(sqlite3 *source_db, sqlite3 *destination_db) {
+    int rc;
+    sqlite3_backup *backup = sqlite3_backup_init(destination_db, "main", source_db, "main");
+    if (backup) {
+        (void)sqlite3_backup_step(backup, -1);
+        (void)sqlite3_backup_finish(backup);
+    }
+
+    rc = sqlite3_errcode(destination_db);
+    return rc;
 }
 
 bool SQLite::insert_row(const String &p_name, const Dictionary &p_row_dict)
