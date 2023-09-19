@@ -398,26 +398,26 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
         if (column_dict.get("primary_key", false))
         {
             query_string += String(" PRIMARY KEY");
+            /* Autoincrement check */
+            if (column_dict.get("auto_increment", false))
+            {
+                query_string += String(" AUTOINCREMENT");
+            }
         }
-        /* Default check */
-        if (column_dict.has("default"))
+        /* Not null check */
+        if (column_dict.get("not_null", false))
         {
-            query_string += String(" DEFAULT ") + (const String &)column_dict["default"];
+            query_string += String(" NOT NULL");
         }
         /* Unique check */
         if (column_dict.get("unique", false))
         {
             query_string += String(" UNIQUE");
         }
-        /* Autoincrement check */
-        if (column_dict.get("auto_increment", false))
+        /* Default check */
+        if (column_dict.has("default"))
         {
-            query_string += String(" AUTOINCREMENT");
-        }
-        /* Not null check */
-        if (column_dict.get("not_null", false))
-        {
-            query_string += String(" NOT NULL");
+            query_string += String(" DEFAULT ") + (const String &)column_dict["default"];
         }
         /* Apply foreign key constraint. */
         if (foreign_keys)
