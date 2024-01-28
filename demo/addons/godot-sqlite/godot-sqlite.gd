@@ -4,7 +4,7 @@
 # See LICENSE in the project root for license information.
 # ############################################################################ #
 
-tool
+@tool
 extends EditorPlugin
 
 func _enter_tree():

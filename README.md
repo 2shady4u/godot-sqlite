@@ -1,19 +1,18 @@
-***NOTE**: The Godot 4.0 version of this plugin is currently in development on the `gd-extension`-branch as found [here](https://github.com/2shady4u/godot-sqlite/tree/gd-extension).*
+***NOTE**: This branch is compatible with Godot 4.x. Older versions of Godot (3.x) are supported on the `master`-branch as found [here](https://github.com/2shady4u/godot-sqlite/tree/master).*
 
-![Godot SQLite banner](icon/godot-sqlite-banner-v2.png?raw=true "Godot SQLite Banner")
+![Godot SQLite banner](icon/godot-sqlite-banner-4.x.png?raw=true "Godot SQLite Banner")
 
 # godot-sqlite
 
-This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 3.2+. Additionally, it
+This GDNative script aims to serve as a custom wrapper that makes SQLite3 available in Godot 4.0+. Additionally, it
 does not require any additional compilation or mucking about with build scripts.
 
 ### Supported operating systems:
-- Mac OS X
+- Mac OS X (universal)
 - Linux
 - Windows
-- Android (arm64-v8a, armeabi-v7a & x86)
-- iOS (arm64 & armv7)
-- HTML5 (**requires Godot 3.3+**)
+- Android (arm64)
+- iOS (arm64)
 
 # How to install?
 
@@ -63,12 +62,6 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     ***NOTE:** If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.*
 
-- **verbose_mode** (Boolean, default=false) **[DEPRECATED]**
-
-    Setting verbose_mode on True results in an information dump in the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
-
-    ***NOTE:** This variable will be removed in later versions and is preserved only for the sake of backwards compatibility. See the new `verbosity_level`-variable below for the recommended way to control console logging.*
-
 - **foreign_keys** (Boolean, default=false)
 
     Enables or disables the availability of [foreign keys](https://www.sqlite.org/foreignkeys.html) in the SQLite database.
@@ -89,7 +82,8 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - **last_insert_rowid** (Integer, default=0)
 
-    Exposes both the `sqlite3_last_insert_rowid()`- and `sqlite3_set_last_insert_rowid()`-methods to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html) and [here](https://www.sqlite.org/c3ref/set_last_insert_rowid.html) respectively.
+    Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
+    Attempting to modify this variable directly is forbidden and throws an error.
 
 - **verbosity_level** (Integer, default=1)
 
@@ -108,7 +102,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - Boolean success = **open_db()**
 
-- **close_db()**
+- Boolean success = **close_db()**
 
 - Boolean success = **query(** String query_string **)**
 
@@ -126,7 +120,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     # SELECT name FROM company WHERE age < 24;
     ```
 
-    Using bindings is optional, except for PoolByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+    Using bindings is optional, except for PackedByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 
     ***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
 
@@ -138,13 +132,13 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     - **"data_type"**: type of the column variable, following values are valid\*:
 
-        | value       | SQLite         | Godot          |
-        |:-----------:|:--------------:|:--------------:|
-        | int         | INTEGER        | TYPE_INT       |
-        | real        | REAL           | TYPE_REAL      |
-        | text        | TEXT           | TYPE_STRING    |
-        | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING    |
-        | blob        | BLOB           | TYPE_RAW_ARRAY |
+        | value       | SQLite         | Godot                  |
+        |:-----------:|:--------------:|:----------------------:|
+        | int         | INTEGER        | TYPE_INT               |
+        | real        | REAL           | TYPE_REAL              |
+        | text        | TEXT           | TYPE_STRING            |
+        | char(?)\*\* | CHAR(?)\*\*    | TYPE_STRING            |
+        | blob        | BLOB           | TYPE_PACKED_BYTE_ARRAY |
 
         \* *Data types not found in this table throw an error and end up finalizing the current SQLite statement.*  
         \*\* *with the question mark being replaced by the maximum amount of characters*
@@ -152,7 +146,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     **Optional fields**:
 
     - **"not_null"** *(default = false)*: Is the NULL value an invalid value for this column?
-    
+
     - **"unique"** *(default = false)*: Does the column have a unique constraint?
 
     - **"default"**: The default value of the column if not explicitly given.
@@ -214,10 +208,6 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
 
-- Integer mode = **get_autocommit()**
-
-    Get the current autocommit mode of the open database connection which can be used to check if there's any database transactions in progress, see [here](http://www.sqlite.org/c3ref/get_autocommit.html). A non-zero return value indicates that the database is in autocommit mode and thus has no active transaction.
-
 ## Frequently Asked Questions (FAQ)
 
 ### 1. My query fails and returns syntax errors, what should I do?
@@ -268,26 +258,9 @@ There are a couple of things you can do before panicking, namely:
     db.query_with_bindings("UPDATE "+ table_name +" SET "+ column_name +"=? WHERE id=?;", [100, 1])
     ```
 
-- SQLite's `query_with_bindings`, as also used by `update_rows`, is injection-safe. That is, any attempt to use sql inside of a bound variable will escape and insert it directly into the record. So the two equivalent statements:
-
-  ```gdscript
-  var table_name := "characters"
-  db.query_with_bindings("UPDATE "+ table_name +" SET level=? WHERE id=?;", ["level+1", 1])
-  db.update_rows(table_name, "id=1", {"level":"level+1"})
-  ```
-  
-  will insert a literal `'level+1'` into the database, instead of incrementing the value by one. In stead, build a direct query:
-  
-  ```gdscript
-  var table_name := "characters"
-  db.query("UPDATE "+ table_name +" SET level=level+1 WHERE id=1")
-  ```
-
 After exhausting these options, please open an issue that describes the error in proper detail.
 
 ### 2. Your plugin fails to load on my Windows machine!
-
-***NOTE**: The cause of this issue has been addressed in later releases of this plugin (3.1+) by swapping out the windows library with the MinGW cross-compiled version. This QA entry is preserved as a historical reference.* 
 
 Basically if your Windows machine device doesn't have the required VC++ redistributables installed, the dynamic library will fail to load and throw an error of the following sort:
 
@@ -339,10 +312,6 @@ Follow these steps to create a working Linux Server for your project:
 
 ***NOTE**: If you are using an older version of Linux on your server machine (with glibc version < 2.28), the plugin crashes due to the compiled version of glibc being too recent. In that case you can either recompile the Linux plugin binary yourself or you can download the legacy binaries (Ubuntu 16.04 with glibc version == 2.23) as found [here](https://github.com/2shady4u/godot-sqlite/actions/workflows/linux_builds.yml).* 
 
-### 6. How to export to iOS using Xcode?
-
-Apple disallows the usage of dynamic libraries in any and all user applications. As such, the compiled binaries for iOS are static libraries (`*.a`) and **both** the static godot-sqlite libraries (`libgdsqlite.a`) as the godot-cpp static libraries <nobr>(`libgodot-cpp.ios.release.<ios_arch>.a`</nobr>) need to be properly included in your Xcode-project.
-
 # How to export?
 
 The exporting strategy is dependent on the nature of your database.
@@ -392,27 +361,38 @@ libgdsqlite.dll
 
 # How to contribute?
 
-First clone the project and install SCons. Secondly, the C++ bindings have to be build from scratch using the files present in the godot-cpp submodule and following command:
+## Using GitHub Actions CI/CD
 
+Fork the repository to your GitHub own account by following the recommended [procedure](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
+
+Afterwards you can push your own code to the `master`-branch of this forked repository and [GitHub Actions](https://docs.github.com/en/actions/quickstart) will automatically build new versions for all the supported platforms. These binaries then have to be downloaded and placed inside of the `addons/godot-sqlite/bin/`-folder, as found in your Godot project, alongside any existing binaries.
+
+***NOTE**: Compiled binaries for the latest development version of `godot-sqlite` are available [here](https://github.com/2shady4u/godot-sqlite/actions/workflows/build.yml).*
+
+## Using your own device
+
+First clone the project and initialize the `godot-cpp`-submodule as such:
 ```
-scons p=<platform> bits=64 generate_bindings=yes -j4
-```
-
-In the case of Android and iOS, additional parameters have to be supplied to specify the architecture. In the case of android, the `android_arch`-parameter has to be supplied (with valid values being 'arm64v8', 'armv7' and/or 'x86'), and in the case of iOS, the `ios_arch`-parameter serves similar purposes (with valid values being 'arm64' and/or 'arm7')
-
-Afterwards, the SContruct file found in the repository should be sufficient to build this project's C++ source code for Linux, Mac&nbsp;OS&nbsp;X, Windows, iOS (for both architectures) and HTML5 with the help of following command:
-
-```
-scons p=<platform> target_path=<target_path> target_name=libgdsqlite
-```
-
-In the case of Android, the [Android NDK](https://developer.android.com/ndk) needs to be installed on a Linux host to allow building for Android targets. Following command then compiles the C++ source code to all three available Android architectures at once:
-
-```
- $ANDROID_NDK_ROOT/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_PLATFORM=android-21 NDK_LIBS_OUT=<target_path>
+git clone https://github.com/2shady4u/godot-sqlite.git
+git submodule update --init
 ```
 
-For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts, the `SConstruct`-file (for Windows, Linux, Mac OS X, iOS and HTML5 compilation) and both the `Android.mk`- and `jni/Application.mk`-files for the Android build process.
+Secondly, [SCons](https://scons.org/), Python and a viable C++ compiler have to be installed on your device. On Windows, both Visual Studio Community (2017+) and/or MinGW-w64 can be used to compile the plugin from scratch. More detailed instructions for compiling the plugin on Windows, Linux and other supported platforms can be found [here](https://docs.godotengine.org/en/stable/development/compiling/index.html) in the Official Godot documentation.
 
-Tutorials for making and extending GDNative scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-cpp-example.html)
+Depending on the wanted target platform, some additional dependencies have to be installed:
+- In the case of Android, the [Android NDK](https://developer.android.com/ndk) needs to be installed on a Linux host to allow building for Android targets.
+
+Afterwards, the SContruct file found in this repository should be sufficient to build this project's C++ source code for Linux, Mac&nbsp;OS&nbsp;X, Windows, iOS and android with the help of following command:
+
+```
+scons platform=<platform> target_path=<target_path> target_name=libgdsqlite
+```
+
+In the case of both Android and iOS, an additional `arch`-parameter has to be supplied to specify the CPU architecture. In the case of android, valid values for the architecture are 'arm64' (= default), 'arm32', 'x86_64' and/or 'x86_32', and in the case of iOS, the valid values are 'universal' (= default), 'arm64' and/or 'x86_64'.
+
+Additionally, in the case of Android, the `ANDROID_NDK_ROOT`-parameter has to be set to the location of the Android NDK installed previously.
+
+For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts and the `SConstruct`-file as found in this repository.
+
+Tutorials for making and extending GDExtension scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-cpp-example.html)
 in the Official Godot Documentation.

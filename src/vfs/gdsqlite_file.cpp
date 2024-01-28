@@ -29,9 +29,8 @@ int gdsqlite_file::read(sqlite3_file *pFile, void *zBuf, int iAmt, sqlite_int64 
     ERR_FAIL_COND_V(p->file->get_position() != iOfst, SQLITE_IOERR_READ);
 
     /* Read and populate the data */
-    PoolByteArray arr = p->file->get_buffer(iAmt);
-    PoolByteArray::Read r = arr.read();
-    memcpy(zBuf, r.ptr(), iAmt);
+    PackedByteArray arr = p->file->get_buffer(iAmt);
+    memcpy(zBuf, arr.ptr(), iAmt);
 
     if (arr.size() == iAmt)
     {
@@ -58,10 +57,9 @@ int gdsqlite_file::write(sqlite3_file *pFile, const void *zBuf, int iAmt, sqlite
     ERR_FAIL_COND_V(p->file->get_position() != iOfst, SQLITE_IOERR_READ);
 
     /* Write the data to the file */
-    PoolByteArray arr = PoolByteArray();
+    PackedByteArray arr = PackedByteArray();
     arr.resize(iAmt);
-    PoolByteArray::Write write = arr.write();
-    memcpy(write.ptr(), zBuf, iAmt);
+    memcpy(arr.ptrw(), zBuf, iAmt);
     p->file->store_buffer(arr);
 
     /* Was the write succesful? */
@@ -95,7 +93,7 @@ int gdsqlite_file::fileSize(sqlite3_file *pFile, sqlite_int64 *pSize)
     gdsqlite_file *p = reinterpret_cast<gdsqlite_file *>(pFile);
     ERR_FAIL_COND_V(!p->file->is_open(), SQLITE_IOERR_CLOSE);
 
-    *pSize = p->file->get_len();
+    *pSize = p->file->get_length();
 
     return SQLITE_OK;
 }

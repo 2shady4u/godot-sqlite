@@ -1,11 +1,8 @@
 extends Node
 
-const SQLite = preload("res://addons/godot-sqlite/godot-sqlite-wrapper.gd")
-# Or alternatively:
-# const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
-var db
+var db : SQLite = null
 
-const verbosity_level : int = SQLite.VerbosityLevel.VERBOSE
+const verbosity_level : int = SQLite.VERBOSE
 
 var db_name := "res://data/test"
 var packaged_db_name := "res://data_to_be_packaged"
@@ -30,12 +27,6 @@ signal output_received(text)
 signal texture_received(texture)
 
 func _ready():
-	if OS.get_name() in ["Android", "iOS", "HTML5"]:
-		copy_data_to_user()
-		db_name = "user://data/test"
-		json_name = "user://data/test_backup"
-
-	# TODO: At some point this should be cleaned and refactored
 	# Enable/disable examples here:
 	example_of_basic_database_querying()
 	example_of_in_memory_and_foreign_key_support()
@@ -47,25 +38,6 @@ func _ready():
 func cprint(text : String) -> void:
 	print(text)
 	emit_signal("output_received", text)
-
-func copy_data_to_user() -> void:
-	var data_path := "res://data"
-	var copy_path := "user://data"
-
-	var dir = Directory.new()
-	dir.make_dir(copy_path)
-	if dir.open(data_path) == OK:
-		dir.list_dir_begin();
-		var file_name = dir.get_next()
-		while (file_name != ""):
-			if dir.current_is_dir():
-				pass
-			else:
-				cprint("Copying " + file_name + " to /user-folder")
-				dir.copy(data_path + "/" + file_name, copy_path + "/" + file_name)
-			file_name = dir.get_next()
-	else:
-		cprint("An error occurred when trying to access the path.")
 
 # Basic example that goes over all the basic features available in the addon, such
 # as creating and dropping tables, inserting and deleting rows and doing more elementary
@@ -109,7 +81,7 @@ func example_of_basic_database_querying():
 	var select_condition : String = "age > 30"
 	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "age"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([String(selected_array)]))
+	cprint("result: {0}".format([str(selected_array)]))
 
 	# Change name of 'Amanda' to 'Olga' and her age to 30
 	db.update_rows(table_name, "name = 'Amanda'", {"AGE":30, "NAME":"Olga"})
@@ -118,7 +90,7 @@ func example_of_basic_database_querying():
 	select_condition = "name = 'Olga' and age = 30"
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([String(selected_array)]))
+	cprint("result: {0}".format([str(selected_array)]))
 
 	# Delete the employee named Olga
 	db.delete_rows(table_name, "name = 'Olga'")
@@ -127,7 +99,7 @@ func example_of_basic_database_querying():
 	select_condition = ""
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([String(selected_array)]))
+	cprint("result: {0}".format([str(selected_array)]))
 	# Check the types of the values in the dictionary
 	cprint("Types of selected columns:")
 	cprint("salary: {0}".format([typeof(selected_array[0]["salary"])]))
@@ -152,7 +124,7 @@ func example_of_basic_database_querying():
 
 	# Close the current database
 	db.close_db()
-
+	
 	# Import (and, consequently, open) a database from an old backup json-file
 	cprint("Overwriting database content with old backup...")
 	db.import_from_json(json_name + "_old")
@@ -161,7 +133,7 @@ func example_of_basic_database_querying():
 	select_condition = ""
 	selected_array = db.select_rows(table_name, select_condition, ["*"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([String(selected_array)]))
+	cprint("result: {0}".format([str(selected_array)]))
 	# Check the types of the values in the dictionary
 	cprint("Types of selected columns:")
 	cprint("salary: {0}".format([typeof(selected_array[0]["salary"])]))
@@ -276,18 +248,18 @@ func example_of_call_external_functions():
 		db.insert_row(table_name, row_dict)
 		row_dict.clear()
 
-	var func_ref := funcref(self, "should_employee_be_fired")
-	db.create_function("should_employee_be_fired", func_ref, 1)
+	var callable := Callable(self, "should_employee_be_fired")
+	db.create_function("should_employee_be_fired", callable, 1)
 
-	func_ref = funcref(self, "increase_wages")
-	db.create_function("increase_wages", func_ref, 2)
+	callable = Callable(self, "increase_wages")
+	db.create_function("increase_wages", callable, 2)
 
 	db.query("UPDATE company SET salary = increase_wages(salary, age);")
 	db.query("DELETE FROM company WHERE should_employee_be_fired(address);")
 
 	var select_condition := ""
 	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "salary", "name"])
-	cprint("result: {0}".format([String(selected_array)]))
+	cprint("result: {0}".format([str(selected_array)]))
 
 # The BLOB-datatype is useful when lots of raw data has to be stored.
 # For example images fall into this category!
@@ -299,7 +271,7 @@ func example_of_blob_io():
 
 	var texture := preload("res://icon.png")
 	emit_signal("texture_received", texture)
-	var tex_data : PoolByteArray = texture.get_data().save_png_to_buffer()
+	var tex_data : PackedByteArray = texture.get_image().save_png_to_buffer()
 
 	db = SQLite.new()
 	db.path = db_name
@@ -316,12 +288,11 @@ func example_of_blob_io():
 
 	var selected_array : Array = db.select_rows(table_name, "", ["data"])
 	for selected_row in selected_array:
-		var selected_data = selected_row.get("data", PoolByteArray())
+		var selected_data = selected_row.get("data", PackedByteArray())
 
 		var image := Image.new()
 		var _error : int = image.load_png_from_buffer(selected_data)
-		var loaded_texture := ImageTexture.new()
-		loaded_texture.create_from_image(image)
+		var loaded_texture := ImageTexture.create_from_image(image)
 		emit_signal("texture_received", loaded_texture)
 
 	# Export the table to a json-file and automatically encode BLOB data to base64.
@@ -333,12 +304,11 @@ func example_of_blob_io():
 	# Check out the 'old' icon stored in this backup file!
 	selected_array = db.select_rows(table_name, "", ["data"])
 	for selected_row in selected_array:
-		var selected_data = selected_row.get("data", PoolByteArray())
+		var selected_data = selected_row.get("data", PackedByteArray())
 
 		var image := Image.new()
 		var _error : int = image.load_png_from_buffer(selected_data)
-		var loaded_texture := ImageTexture.new()
-		loaded_texture.create_from_image(image)
+		var loaded_texture := ImageTexture.create_from_image(image)
 		emit_signal("texture_received", loaded_texture)
 
 	# Close the current database
@@ -365,14 +335,14 @@ func example_of_read_only_database():
 
 	db.open_db()
 
-	var func_ref := funcref(self, "regexp")
-	db.create_function("regexp", func_ref, 2)
+	var callable := Callable(self, "regexp")
+	db.create_function("regexp", callable, 2)
 
 	# Select all the creatures
 	var select_condition : String = ""
 	var selected_array : Array = db.select_rows(packaged_table_name, select_condition, ["*"])
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([String(selected_array)]))
+	cprint("result: {0}".format([str(selected_array)]))
 
 	# Select all the creatures that start with the letter 'b'
 	select_condition = "name LIKE 'b%'"
@@ -427,7 +397,7 @@ func example_of_database_persistency():
 	db.select_rows(table_name, "id = 1", ["count"])
 	var query_result : Array = db.query_result
 	var count : int = 0
-	if query_result.empty():
+	if query_result.is_empty():
 		# It doesn't exist yet! Add it!
 		db.insert_row(table_name, {"id": 1, "count": 0})
 	else:
