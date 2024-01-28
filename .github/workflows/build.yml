@@ -58,6 +58,13 @@ jobs:
           # Optional - x64 or x86 architecture, defaults to x64
           architecture: 'x64'
 
+      - name: Android dependencies
+        if: ${{ matrix.platform == 'android' }}
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r23c
+          link-to-sdk: true
+
       # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
       - name: Configuring Python packages
         run: |
