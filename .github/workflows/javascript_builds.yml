@@ -1,7 +1,7 @@
 name: 🌐 Javascript Builds
 on:
   push:
-    branches: [ master, main ]
+    branches: [ godot-3.x ]
 
 env:
   PROJECT_FOLDER: .
