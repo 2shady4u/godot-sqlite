@@ -15,6 +15,8 @@ android.arm64 = "res://addons/godot-sqlite/bin/libgdsqlite.android.template_debu
 android.template_release.arm64 = "res://addons/godot-sqlite/bin/libgdsqlite.android.template_release.arm64.so"
 android.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.android.template_debug.x86_64.so"
 android.template_release.x86_64 = "res://addons/godot-sqlite/bin/libgdsqlite.android.template_release.x86_64.so"
+web.wasm32 = "res://addons/godot-sqlite/bin/libgdsqlite.web.template_debug.wasm32.wasm"
+web.template_release.wasm32 = "res://addons/godot-sqlite/bin/libgdsqlite.web.template_release.wasm32.wasm"
 
 [dependencies]
 
@@ -28,3 +30,5 @@ android.arm64 = {}
 android.template_release.arm64 = {}
 android.x86_64 = {}
 android.template_release.x86_64 = {}
+web.wasm32 = {}
+web.template_release.wasm32 = {}

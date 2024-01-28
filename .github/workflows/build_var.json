@@ -50,6 +50,13 @@
             "artifact-extension": "dylib",
             "flags": "arch=arm64",
             "cache-name": "ios-arm64"
+        },
+        {
+            "name": "Web (wasm32)",
+            "os": "ubuntu-20.04",
+            "platform": "web",
+            "artifact-extension": "wasm",
+            "cache-name": "web-wasm32"
         }
     ]
 }

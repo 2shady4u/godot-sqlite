@@ -12,6 +12,8 @@ env:
   TARGET_NAME: libgdsqlite
   VAR_PATH: .github/workflows/build_var.json
   SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
+  EM_VERSION: 3.1.39
+  EM_CACHE_FOLDER: "emsdk-cache"
 
 jobs:
   matrix:
@@ -64,6 +66,13 @@ jobs:
         with:
           ndk-version: r23c
           link-to-sdk: true
+
+      - name: Web dependencies
+        if: ${{ matrix.platform == 'web' }}
+        uses: mymindstorm/setup-emsdk@v13
+        with:
+          version: ${{ env.EM_VERSION }}
+          actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}-${{ matrix.target }}
 
       # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
       - name: Configuring Python packages
