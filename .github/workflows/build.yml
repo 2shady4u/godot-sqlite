@@ -21,7 +21,7 @@ jobs:
       matrix-json: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: set-matrix
         shell: pwsh
         # Use a small PowerShell script to generate the build matrix
@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
           submodules: recursive
@@ -51,7 +51,7 @@ jobs:
 
       # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
       - name: Set up Python 3.x
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           # Semantic version range syntax or exact version of a Python version
           python-version: '3.x'
@@ -100,7 +100,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
           submodules: recursive
