@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ gd-extension ]
+    branches: [ master ]
     tags:
       - "v*"
 

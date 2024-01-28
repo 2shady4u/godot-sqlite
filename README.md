@@ -1,4 +1,4 @@
-***NOTE**: This branch is compatible with Godot 4.x. Older versions of Godot (3.x) are supported on the `master`-branch as found [here](https://github.com/2shady4u/godot-sqlite/tree/master).*
+***NOTE**: This branch is compatible with Godot 4.x. Older versions of Godot (3.x) are supported on the `godot-3.x`-branch as found [here](https://github.com/2shady4u/godot-sqlite/tree/godot-3.x).*
 
 ![Godot SQLite banner](icon/godot-sqlite-banner-4.x.png?raw=true "Godot SQLite Banner")
 

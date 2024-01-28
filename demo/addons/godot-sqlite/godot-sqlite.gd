@@ -1,5 +1,5 @@
 # ############################################################################ #
-# Copyright © 2019-2023 Piet Bronders & Jeroen De Geeter <piet.bronders@gmail.com>
+# Copyright © 2019-2024 Piet Bronders & Jeroen De Geeter <piet.bronders@gmail.com>
 # Licensed under the MIT License.
 # See LICENSE in the project root for license information.
 # ############################################################################ #
