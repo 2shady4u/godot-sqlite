@@ -447,13 +447,15 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict)
     return query(query_string);
 }
 
-bool SQLite::validate_table_dict(const Dictionary &p_table_dict) {
+bool SQLite::validate_table_dict(const Dictionary &p_table_dict) 
+{
     Dictionary column_dict;
     Array columns = p_table_dict.keys();
     int64_t number_of_columns = columns.size();
     for (int64_t i = 0; i <= number_of_columns - 1; i++)
     {
-        if (p_table_dict[columns[i]].get_type() != Variant::DICTIONARY) {
+        if (p_table_dict[columns[i]].get_type() != Variant::DICTIONARY)
+        {
             UtilityFunctions::printerr("GDSQLite Error: All values of the table dictionary should be of type Dictionary");
             return false;
         }
@@ -465,10 +467,34 @@ bool SQLite::validate_table_dict(const Dictionary &p_table_dict) {
             return false;
         }
 
+        if (column_dict["data_type"].get_type() != Variant::STRING)
+        {
+            UtilityFunctions::printerr("GDSQLite Error: The field \"data_type\" should be of type String");
+            return false;
+        }
+
         if (column_dict.has("default"))
         {
-            if (column_dict["default"].get_type() != Variant::STRING) {
-                UtilityFunctions::printerr("GDSQLite Error: The field \"default\" should be of type String");
+            Variant::Type default_type = column_dict["default"].get_type();
+
+            CharString dummy_data_type = ((const String &)column_dict["data_type"]).utf8();
+            const char *char_data_type = dummy_data_type.get_data();
+
+            /* Get the type of the "datatype"-field and compare with the type of the "default"-value */
+            /* Some types are not checked and might be added in a future version */
+            Variant::Type data_type_type = default_type;
+            if (strcmp(char_data_type, "int") == 0) {
+                data_type_type = Variant::Type::INT;
+            }
+            else if (strcmp(char_data_type, "text") == 0) {
+                data_type_type = Variant::Type::STRING;
+            }
+            else if (strcmp(char_data_type, "real") == 0) {
+                data_type_type = Variant::Type::FLOAT;
+            }
+            
+            if (data_type_type != default_type) {
+                UtilityFunctions::printerr("GDSQLite Error: The type of the field \"default\" ( " + String(std::to_string(default_type).c_str()) + " ) should be the same type as the \"datatype\"-field ( " + String(std::to_string(data_type_type).c_str()) + " )");
                 return false;
             }
         }
