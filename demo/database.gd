@@ -27,6 +27,11 @@ signal output_received(text)
 signal texture_received(texture)
 
 func _ready():
+	if OS.get_name() in ["Android", "iOS", "Web"]:
+		copy_data_to_user()
+		db_name = "user://data/test"
+		json_name = "user://data/test_backup"
+
 	# Enable/disable examples here:
 	example_of_basic_database_querying()
 	example_of_in_memory_and_foreign_key_support()
@@ -38,6 +43,25 @@ func _ready():
 func cprint(text : String) -> void:
 	print(text)
 	emit_signal("output_received", text)
+
+func copy_data_to_user() -> void:
+	var data_path := "res://data"
+	var copy_path := "user://data"
+
+	DirAccess.make_dir_absolute(copy_path)
+	var dir = DirAccess.open(data_path)
+	if dir:
+		dir.list_dir_begin();
+		var file_name = dir.get_next()
+		while (file_name != ""):
+			if dir.current_is_dir():
+				pass
+			else:
+				cprint("Copying " + file_name + " to /user-folder")
+				dir.copy(data_path + "/" + file_name, copy_path + "/" + file_name)
+			file_name = dir.get_next()
+	else:
+		cprint("An error occurred when trying to access the path.")
 
 # Basic example that goes over all the basic features available in the addon, such
 # as creating and dropping tables, inserting and deleting rows and doing more elementary
