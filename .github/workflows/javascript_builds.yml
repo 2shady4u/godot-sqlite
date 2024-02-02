@@ -15,17 +15,17 @@ env:
 jobs:
   javascript-compilation:
     name: Javascript Compilation
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
             lfs: true
             submodules: recursive
 
       # Use python 3.x release (works cross platform)
       - name: Set up Python 3.x
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           # Semantic version range syntax or exact version of a Python version
           python-version: '3.x'
@@ -76,7 +76,7 @@ jobs:
       image: barichello/godot-ci:3.5.1 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
 

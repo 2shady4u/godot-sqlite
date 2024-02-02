@@ -12,11 +12,11 @@ env:
 
 jobs:
   linux-compilation:
-    name: Ubuntu 20.04 Compilation
-    runs-on: "ubuntu-20.04"
+    name: Ubuntu 22.04 Compilation
+    runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
           submodules: recursive
@@ -30,7 +30,7 @@ jobs:
 
       # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
       - name: Set up Python 3.x
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           # Semantic version range syntax or exact version of a Python version
           python-version: '3.x'
@@ -61,11 +61,11 @@ jobs:
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
 
   linux-legacy-compilation:
-    name: Ubuntu 18.04 Compilation
-    runs-on: "ubuntu-18.04"
+    name: Ubuntu 20.04 Compilation
+    runs-on: "ubuntu-20.04"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
           submodules: recursive
@@ -79,7 +79,7 @@ jobs:
 
       # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
       - name: Set up Python 3.x
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           # Semantic version range syntax or exact version of a Python version
           python-version: '3.x'
