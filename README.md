@@ -13,6 +13,7 @@ does not require any additional compilation or mucking about with build scripts.
 - Windows
 - Android (arm64)
 - iOS (arm64)
+- HTML5 (stability depends on browser)
 
 # How to install?
 
@@ -32,7 +33,7 @@ Re-building Godot from scratch is **NOT** required, the proper way of installing
 
 ### Manually
 
-It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the `gdsqlite.gdns`-resource and that it is available in the `res://`-environment.
+It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-sqlite/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the `gdsqlite.gdextension`-resource and that it is available in the `res://`-environment.
 
 An example project, named "demo", can also be downloaded from the releases tab.
 
@@ -43,7 +44,7 @@ Examples of possible usage can be found in the supplied demo-project as download
 Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github.com/finepointcgi) is available here: 
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=HG-PV4rlzoY"><img src="https://img.youtube.com/vi/HG-PV4rlzoY/0.jpg"></a>
+  <a href="https://www.youtube.com/watch?v=j-BRiTrw_F0"><img src="https://img.youtube.com/vi/j-BRiTrw_F0/0.jpg"></a>
 </p>
 
 ## Variables
@@ -208,6 +209,10 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
 
+- int autocommit_mode = **get_autocommit()**
+
+    Check if the given database connection is or is not in autocommit mode, see [here](https://sqlite.org/c3ref/get_autocommit.html).
+
 ## Frequently Asked Questions (FAQ)
 
 ### 1. My query fails and returns syntax errors, what should I do?
@@ -298,19 +303,14 @@ If there is a better solution, one that does not involve copying the database to
 
 ### 5. Is this plugin compatible with a Godot Server binary? How to set it up?
 
-This plugin is fully compatible with the Godot Server binary.  
-Follow these steps to create a working Linux Server for your project:
+Follow the steps described in the Godot documentation as found [here](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_dedicated_servers.html).
 
-1. Export your project's `*.pck` using Godot's export functionalities for Linux.
-2. Alongside the exported package, paste the following files:
-    - `libgdsqlite.so` (as found in `addons/godot-sqlite/bin/x11/`)
-    - Your project's database(s) (`*.db`)
-    - The Godot Server binary as downloadable [here](https://godotengine.org/download/server)
-3. Rename the Godot Server binary to have the exact same name as the exported `*.pck`  
-(for example if your package is called `game.pck`, your binary should be named `game.x64`)
-4. Done!
+***NOTE**: If you are using an older version of Linux on your server machine (with glibc version < 2.31), the plugin crashes due to the compiled version of glibc being too recent. In that case you will have to recompile the Linux plugin binary yourself as Github Actions does not support Ubuntu versions lower than Ubuntu 20.04 LTS.*
 
-***NOTE**: If you are using an older version of Linux on your server machine (with glibc version < 2.28), the plugin crashes due to the compiled version of glibc being too recent. In that case you can either recompile the Linux plugin binary yourself or you can download the legacy binaries (Ubuntu 16.04 with glibc version == 2.23) as found [here](https://github.com/2shady4u/godot-sqlite/actions/workflows/linux_builds.yml).* 
+***NOTE**: The currently installed version of glibc can be obtained with following command:*
+```
+ldd --version
+```
 
 # How to export?
 
@@ -346,7 +346,7 @@ The commands to succesfully export a working executable for the demo-project are
 ```
 mkdir build
 godot -s export_data.gd
-godot -e --export-debug "Windows Desktop" 'build/SQLite Demo.exe'
+godot --export-debug "Windows Desktop" "build/SQLite Demo.exe"
 ```
 ("Windows Desktop" should be replaced by whatever the name of your relevant build template is.)
 
@@ -354,7 +354,8 @@ For the "Windows Desktop" export target this results in following folder/file-st
 ```
 data/test_backup_base64_old.json
 data/test_backup_old.json
-libgdsqlite.dll
+libgdsqlite.windows.template_release.x86_64.dll
+'SQLite Demo.console.exe'
 'SQLite Demo.exe'
 'SQlite Demo.pck'
 ```
@@ -394,5 +395,5 @@ Additionally, in the case of Android, the `ANDROID_NDK_ROOT`-parameter has to be
 
 For uncertainties regarding compilation & building specifics, please do check out the `.github\workflows\*.yml`-scripts and the `SConstruct`-file as found in this repository.
 
-Tutorials for making and extending GDExtension scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-cpp-example.html)
+Tutorials for making and extending GDExtension scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html)
 in the Official Godot Documentation.
