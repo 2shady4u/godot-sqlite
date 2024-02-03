@@ -89,6 +89,11 @@ SQLite::~SQLite()
 
 bool SQLite::open_db()
 {
+    if (db) {
+        UtilityFunctions::printerr("GDSQLite Error: Can't open database if connection is already open!");
+        return false;
+    }
+
     char *zErrMsg = 0;
     int rc;
     if (path.find(":memory:") == -1)
@@ -180,6 +185,7 @@ bool SQLite::close_db()
         }
     }
 
+    UtilityFunctions::printerr("GDSQLite Error: Can't close database if connection is not open!");
     return false;
 }
 
