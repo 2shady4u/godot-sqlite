@@ -6,6 +6,9 @@ $Jobs = $RawMatrix.jobs
 $Matrix = @()
 foreach ($job in $Jobs)
 {
+  if ($job.skip -eq $true) {
+    continue
+  }
   foreach ($target in $Targets) 
   {
     $MatrixJob = $job.PsObject.Copy()

@@ -104,7 +104,7 @@ jobs:
           ARTIFACT_FOLDER: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.platform}}
+          name: ${{ matrix.platform }}
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
           if-no-files-found: error
 

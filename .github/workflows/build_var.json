@@ -10,7 +10,16 @@
             "platform": "windows",
             "artifact-extension": "dll",
             "additional-python-packages": "pywin32",
-            "cache-name": "win-x86_64"
+            "cache-name": "win-x86_64-msvc",
+            "skip": true
+        },
+        {
+            "name": "Windows (x86_64, MinGW)",
+            "os": "windows-latest",
+            "platform": "windows",
+            "artifact-extension": "dll",
+            "flags": "use_mingw=yes",
+            "cache-name": "win-x86_64-mingw"
         },
         {
             "name": "Ubuntu (GCC)",
