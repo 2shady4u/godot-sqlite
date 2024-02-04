@@ -213,6 +213,11 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Check if the given database connection is or is not in autocommit mode, see [here](https://sqlite.org/c3ref/get_autocommit.html).
 
+- Boolean success = **backup_to(** String destination_path **)**
+- Boolean success = **restore_from(** String source_path **)**
+
+    Backup or restore the current database to/from a path, see [here](https://www.sqlite.org/backup.html). This feature is useful if you are using a database as your save file and you want to easily implement a saving/loading mechanic. Be warned that the original database will be overwritten entirely when restoring.
+
 ## Frequently Asked Questions (FAQ)
 
 ### 1. My query fails and returns syntax errors, what should I do?

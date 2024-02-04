@@ -1,0 +1,2 @@
+Download binaries and place them in this folder.
+Latest binaries: https://github.com/2shady4u/godot-sqlite/releases
