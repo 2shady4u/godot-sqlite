@@ -24,7 +24,7 @@ target = "{}{}".format(
 
 # tweak this if you want to use different folders, or more folders, to store your source code in.
 env.Append(CPPPATH=["src/"])
-sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), 'src/sqlite/sqlite3.c']
+sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), Glob('src/resource/*.cpp'), 'src/sqlite/sqlite3.c']
 
 if env["target"] in ["editor", "template_debug"]:
     doc_data = env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=Glob("doc_classes/*.xml"))
