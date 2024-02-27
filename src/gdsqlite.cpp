@@ -84,7 +84,10 @@ SQLite::~SQLite()
     /* Clean up the function_registry */
     function_registry.clear();
     function_registry.shrink_to_fit();
-    close_db();
+    /* Close the database connection if it is still open */
+    if (db) {
+        close_db();
+    }
 }
 
 bool SQLite::open_db()
