@@ -4,23 +4,22 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <godot_cpp/classes/dir_access.hpp>
-#include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/classes/time.hpp>
 
-#include <sstream>
-#include <iostream>
 #include "./sqlite/sqlite3.h"
 #include "gdsqlite_file.h"
+#include <iostream>
+#include <sstream>
 
 /*
 ** The maximum pathname length supported by this VFS.
 */
 #define MAXPATHNAME 512
 
-namespace godot
-{
+namespace godot {
 
-    sqlite3_vfs* gdsqlite_vfs();
+sqlite3_vfs *gdsqlite_vfs();
 
 }
 
