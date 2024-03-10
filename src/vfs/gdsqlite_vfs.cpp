@@ -5,21 +5,20 @@ using namespace godot;
 /*
 ** Open a file handle.
 */
-static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file *pFile, int flags, int *pOutFlags)
-{
+static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file *pFile, int flags, int *pOutFlags) {
 	static const sqlite3_io_methods gdsqlite_file_io_methods = {
-		1,									  /* iVersion */
-		gdsqlite_file::close,				  /* xClose */
-		gdsqlite_file::read,				  /* xRead */
-		gdsqlite_file::write,				  /* xWrite */
-		gdsqlite_file::truncate,			  /* xTruncate */
-		gdsqlite_file::sync,				  /* xSync */
-		gdsqlite_file::fileSize,			  /* xFileSize */
-		gdsqlite_file::lock,				  /* xLock */
-		gdsqlite_file::unlock,				  /* xUnlock */
-		gdsqlite_file::checkReservedLock,	  /* xCheckReservedLock */
-		gdsqlite_file::fileControl,			  /* xFileControl */
-		gdsqlite_file::sectorSize,			  /* xSectorSize */
+		1, /* iVersion */
+		gdsqlite_file::close, /* xClose */
+		gdsqlite_file::read, /* xRead */
+		gdsqlite_file::write, /* xWrite */
+		gdsqlite_file::truncate, /* xTruncate */
+		gdsqlite_file::sync, /* xSync */
+		gdsqlite_file::fileSize, /* xFileSize */
+		gdsqlite_file::lock, /* xLock */
+		gdsqlite_file::unlock, /* xUnlock */
+		gdsqlite_file::checkReservedLock, /* xCheckReservedLock */
+		gdsqlite_file::fileControl, /* xFileControl */
+		gdsqlite_file::sectorSize, /* xSectorSize */
 		gdsqlite_file::deviceCharacteristics, /* xDeviceCharacteristics */
 	};
 	gdsqlite_file *p = reinterpret_cast<gdsqlite_file *>(pFile);
@@ -35,29 +34,21 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 	*/
 
 	/* Convert SQLite's flags to something Godot might understand! */
-	if (flags & SQLITE_OPEN_READONLY)
-	{
+	if (flags & SQLITE_OPEN_READONLY) {
 		// UtilityFunctions::print("READ");
 		godot_flags = FileAccess::READ;
 	}
 	// TODO: Figure out if checking for SQLITE_OPEN_READWRITE is necessary when the database is readonly?
-	if (flags & SQLITE_OPEN_READWRITE)
-	{
-		if (flags & SQLITE_OPEN_CREATE)
-		{
-			if (file->file_exists(String(zName)))
-			{
+	if (flags & SQLITE_OPEN_READWRITE) {
+		if (flags & SQLITE_OPEN_CREATE) {
+			if (file->file_exists(String(zName))) {
 				// UtilityFunctions::print("READ WRITE");
 				godot_flags = FileAccess::READ_WRITE;
-			}
-			else
-			{
+			} else {
 				// UtilityFunctions::print("WRITE READ");
 				godot_flags = FileAccess::WRITE_READ;
 			}
-		}
-		else
-		{
+		} else {
 			// UtilityFunctions::print("READ WRITE");
 			godot_flags = FileAccess::READ_WRITE;
 		}
@@ -66,8 +57,7 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 	/* Attempt to open the database or journal file using Godot's `open()`-function */
 	file = FileAccess::open(String(zName), godot_flags);
 	Error err_code = FileAccess::get_open_error();
-	if (err_code != Error::OK)
-	{
+	if (err_code != Error::OK) {
 		/* File can't be opened! */
 		/* In most cases this is caused by the fact that Godot opens files in a non-shareable way, as discussed here: */
 		/* https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-s-wfopen-s?view=msvc-160 */
@@ -77,8 +67,7 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 		return SQLITE_CANTOPEN;
 	}
 
-	if (pOutFlags)
-	{
+	if (pOutFlags) {
 		*pOutFlags = flags;
 	}
 	p->file = file;
@@ -91,8 +80,7 @@ static int gdsqlite_vfs_open(sqlite3_vfs *pVfs, const char *zName, sqlite3_file 
 ** is non-zero, then ensure the file-system modification to delete the
 ** file has been synced to disk before returning.
 */
-static int gdsqlite_vfs_delete(sqlite3_vfs *pVfs, const char *zPath, int dirSync)
-{
+static int gdsqlite_vfs_delete(sqlite3_vfs *pVfs, const char *zPath, int dirSync) {
 	String base_dir = String(zPath).get_base_dir();
 	Ref<DirAccess> dir = DirAccess::open(base_dir);
 	Error err_code = dir->remove(zPath);
@@ -104,32 +92,30 @@ static int gdsqlite_vfs_delete(sqlite3_vfs *pVfs, const char *zPath, int dirSync
 ** Query the file-system to see if the named file exists, is readable or
 ** is both readable and writable.
 */
-static int gdsqlite_vfs_access(sqlite3_vfs *pVfs, const char *zPath, int flags, int *pResOut)
-{
+static int gdsqlite_vfs_access(sqlite3_vfs *pVfs, const char *zPath, int flags, int *pResOut) {
 	Ref<FileAccess> file;
 	Error err_code = Error::OK;
 
-	switch (flags)
-	{
-	case SQLITE_ACCESS_EXISTS:
-		*pResOut = file->file_exists(zPath);
-		break;
+	switch (flags) {
+		case SQLITE_ACCESS_EXISTS:
+			*pResOut = file->file_exists(zPath);
+			break;
 
-	case SQLITE_ACCESS_READWRITE:
-		file = FileAccess::open(zPath, FileAccess::READ_WRITE);
-		err_code = FileAccess::get_open_error();
-		*pResOut = (err_code == Error::OK);
-		break;
+		case SQLITE_ACCESS_READWRITE:
+			file = FileAccess::open(zPath, FileAccess::READ_WRITE);
+			err_code = FileAccess::get_open_error();
+			*pResOut = (err_code == Error::OK);
+			break;
 
-	case SQLITE_ACCESS_READ:
-		file = FileAccess::open(zPath, FileAccess::READ);
-		err_code = FileAccess::get_open_error();
-		*pResOut = (err_code == Error::OK);
-		break;
+		case SQLITE_ACCESS_READ:
+			file = FileAccess::open(zPath, FileAccess::READ);
+			err_code = FileAccess::get_open_error();
+			*pResOut = (err_code == Error::OK);
+			break;
 
-	default:
-		/* Probably throw some kind of error here? */
-		break;
+		default:
+			/* Probably throw some kind of error here? */
+			break;
 	}
 
 	return SQLITE_OK;
@@ -146,13 +132,10 @@ static int gdsqlite_vfs_access(sqlite3_vfs *pVfs, const char *zPath, int flags, 
 **   1. Path components are separated by a '/'. and
 **   2. Full paths begin with a '/' character.
 */
-static int gdsqlite_vfs_fullPathname(sqlite3_vfs *pVfs, const char *zPath, int nPathOut, char *zPathOut)
-{
-	for (int i = 0; i < nPathOut; ++i)
-	{
+static int gdsqlite_vfs_fullPathname(sqlite3_vfs *pVfs, const char *zPath, int nPathOut, char *zPathOut) {
+	for (int i = 0; i < nPathOut; ++i) {
 		zPathOut[i] = zPath[i];
-		if (zPath[i] == '\0')
-		{
+		if (zPath[i] == '\0') {
 			break;
 		}
 	}
@@ -172,21 +155,17 @@ static int gdsqlite_vfs_fullPathname(sqlite3_vfs *pVfs, const char *zPath, int n
 ** extensions compiled as shared objects. This simple VFS does not support
 ** this functionality, so the following functions are no-ops.
 */
-static void *gdsqlite_vfs_dlOpen(sqlite3_vfs *vfs, const char *filename)
-{
+static void *gdsqlite_vfs_dlOpen(sqlite3_vfs *vfs, const char *filename) {
 	return 0;
 }
-static void gdsqlite_vfs_dlError(sqlite3_vfs *vfs, int nBytes, char *errMsg)
-{
+static void gdsqlite_vfs_dlError(sqlite3_vfs *vfs, int nBytes, char *errMsg) {
 	sqlite3_snprintf(nBytes, errMsg, "Loadable extensions are not supported");
 	errMsg[nBytes - 1] = '\0';
 }
-static void (*gdsqlite_vfs_dlSym(sqlite3_vfs *vfs, void *data, const char *symbol))(void)
-{
+static void (*gdsqlite_vfs_dlSym(sqlite3_vfs *vfs, void *data, const char *symbol))(void) {
 	return 0;
 }
-static void gdsqlite_vfs_dlClose(sqlite3_vfs *vfs, void *data)
-{
+static void gdsqlite_vfs_dlClose(sqlite3_vfs *vfs, void *data) {
 	return;
 }
 
@@ -194,11 +173,9 @@ static void gdsqlite_vfs_dlClose(sqlite3_vfs *vfs, void *data)
 ** Parameter zByte points to a buffer nByte bytes in size. Populate this
 ** buffer with pseudo-random data.
 */
-static int gdsqlite_vfs_randomness(sqlite3_vfs *pVfs, int nByte, char *zByte)
-{
+static int gdsqlite_vfs_randomness(sqlite3_vfs *pVfs, int nByte, char *zByte) {
 	srand(Time::get_singleton()->get_unix_time_from_system());
-	for (int i = 0; i < nByte; ++i)
-	{
+	for (int i = 0; i < nByte; ++i) {
 		zByte[i] = rand();
 	}
 	return SQLITE_OK;
@@ -208,8 +185,7 @@ static int gdsqlite_vfs_randomness(sqlite3_vfs *pVfs, int nByte, char *zByte)
 ** Sleep for at least nMicro microseconds. Return the (approximate) number
 ** of microseconds slept for.
 */
-static int gdsqlite_vfs_sleep(sqlite3_vfs *pVfs, int nMicro)
-{
+static int gdsqlite_vfs_sleep(sqlite3_vfs *pVfs, int nMicro) {
 	OS::get_singleton()->delay_usec(nMicro);
 	return nMicro;
 }
@@ -225,21 +201,18 @@ static int gdsqlite_vfs_sleep(sqlite3_vfs *pVfs, int nMicro)
 ** value, it will stop working some time in the year 2038 AD (the so-called
 ** "year 2038" problem that afflicts systems that store time this way).
 */
-static int gdsqlite_vfs_currentTime(sqlite3_vfs *vfs, double *pTime)
-{
+static int gdsqlite_vfs_currentTime(sqlite3_vfs *vfs, double *pTime) {
 	uint64_t unix_time = Time::get_singleton()->get_unix_time_from_system();
 	*pTime = unix_time / 86400.0 + 2440587.5;
 	return SQLITE_OK;
 }
 
-static int gdsqlite_vfs_getLastError(sqlite3_vfs *vfs, int nBuf, char *buf)
-{
+static int gdsqlite_vfs_getLastError(sqlite3_vfs *vfs, int nBuf, char *buf) {
 	// TODO: Implement properly
 	return 0;
 }
 
-static int gdsqlite_vfs_currentTimeInt64(sqlite3_vfs *vfs, sqlite3_int64 *now)
-{
+static int gdsqlite_vfs_currentTimeInt64(sqlite3_vfs *vfs, sqlite3_int64 *now) {
 	uint64_t unix_time = Time::get_singleton()->get_unix_time_from_system();
 	*now = unix_time + 210866760000; // Add the number of ms since julian time
 	return SQLITE_OK;
@@ -251,31 +224,30 @@ static int gdsqlite_vfs_currentTimeInt64(sqlite3_vfs *vfs, sqlite3_int64 *now)
 **
 **   sqlite3_vfs_register(gdsqlite_vfs(), 0);
 */
-sqlite3_vfs *godot::gdsqlite_vfs()
-{
+sqlite3_vfs *godot::gdsqlite_vfs() {
 	static sqlite3_vfs godot_vfs = {
-		3,							   /* iVersion */
-		sizeof(gdsqlite_file),		   /* szOsFile */
-		MAXPATHNAME,				   /* mxPathname */
-		0,							   /* pNext */
-		"godot",					   /* zName */
-		NULL,						   /* pAppData */
-		gdsqlite_vfs_open,			   /* xOpen */
-		gdsqlite_vfs_delete,		   /* xDelete */
-		gdsqlite_vfs_access,		   /* xAccess */
-		gdsqlite_vfs_fullPathname,	   /* xFullPathname */
-		gdsqlite_vfs_dlOpen,		   /* xDlOpen */
-		gdsqlite_vfs_dlError,		   /* xDlError */
-		gdsqlite_vfs_dlSym,			   /* xDlSym */
-		gdsqlite_vfs_dlClose,		   /* xDlClose */
-		gdsqlite_vfs_randomness,	   /* xRandomness */
-		gdsqlite_vfs_sleep,			   /* xSleep */
-		gdsqlite_vfs_currentTime,	   /* xCurrentTime */
-		gdsqlite_vfs_getLastError,	   /* xGetLastError */
+		3, /* iVersion */
+		sizeof(gdsqlite_file), /* szOsFile */
+		MAXPATHNAME, /* mxPathname */
+		0, /* pNext */
+		"godot", /* zName */
+		NULL, /* pAppData */
+		gdsqlite_vfs_open, /* xOpen */
+		gdsqlite_vfs_delete, /* xDelete */
+		gdsqlite_vfs_access, /* xAccess */
+		gdsqlite_vfs_fullPathname, /* xFullPathname */
+		gdsqlite_vfs_dlOpen, /* xDlOpen */
+		gdsqlite_vfs_dlError, /* xDlError */
+		gdsqlite_vfs_dlSym, /* xDlSym */
+		gdsqlite_vfs_dlClose, /* xDlClose */
+		gdsqlite_vfs_randomness, /* xRandomness */
+		gdsqlite_vfs_sleep, /* xSleep */
+		gdsqlite_vfs_currentTime, /* xCurrentTime */
+		gdsqlite_vfs_getLastError, /* xGetLastError */
 		gdsqlite_vfs_currentTimeInt64, /* xCurrentTimeInt64 */
-		NULL,						   /* xSetSystemCall */
-		NULL,						   /* xGetSystemCall */
-		NULL						   /* xNextSystemCall */
+		NULL, /* xSetSystemCall */
+		NULL, /* xGetSystemCall */
+		NULL /* xNextSystemCall */
 	};
 	return &godot_vfs;
 }
