@@ -3,7 +3,7 @@
 
 #include <godot_cpp/classes/file_access.hpp>
 
-PackedByteArray SqliteResource::get_content() {
+PackedByteArray SQLiteResource::get_content() {
 	PackedByteArray content;
 	String p_path = get_file();
 	content = FileAccess::get_file_as_bytes(p_path);

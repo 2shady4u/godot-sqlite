@@ -7,8 +7,12 @@
 #include <godot_cpp/godot.hpp>
 
 #include "gdsqlite.h"
+#include "resource_loader_sqlite.h"
+#include "resource_sqlite.h"
 
 using namespace godot;
+
+static Ref<ResourceFormatLoaderSQLite> sqlite_loader;
 
 void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -16,12 +20,19 @@ void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 	}
 
 	ClassDB::register_class<SQLite>();
+	GDREGISTER_CLASS(ResourceFormatLoaderSQLite);
+	GDREGISTER_CLASS(SQLiteResource);
+
+	sqlite_loader.instantiate();
+	ResourceLoader::get_singleton()->add_resource_format_loader(sqlite_loader);
 }
 
 void uninitialize_sqlite_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+	ResourceLoader::get_singleton()->remove_resource_format_loader(sqlite_loader);
+	sqlite_loader.unref();
 }
 
 extern "C" {

@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://dsba4ukrk2ymt"]
+[gd_scene load_steps=5 format=3 uid="uid://dsba4ukrk2ymt"]
 
 [ext_resource type="Script" path="res://database.gd" id="1"]
 [ext_resource type="Script" path="res://Main.gd" id="2"]
+[ext_resource type="SQLiteResource" path="res://data/test.db" id="3_onnij"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45gfi"]
 content_margin_left = 24.0
@@ -21,6 +22,7 @@ script = ExtResource("2")
 
 [node name="Database" type="Node" parent="."]
 script = ExtResource("1")
+db_resource = ExtResource("3_onnij")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1

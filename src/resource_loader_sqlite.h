@@ -6,8 +6,8 @@
 
 using namespace godot;
 
-class ResourceFormatLoaderSqlite : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderSqlite, ResourceFormatLoader);
+class ResourceFormatLoaderSQLite : public ResourceFormatLoader {
+	GDCLASS(ResourceFormatLoaderSQLite, ResourceFormatLoader);
 
 protected:
 	static void _bind_methods() {}
