@@ -5,8 +5,8 @@
 
 using namespace godot;
 
-class SqliteResource : public Resource {
-	GDCLASS(SqliteResource, Resource);
+class SQLiteResource : public Resource {
+	GDCLASS(SQLiteResource, Resource);
 
 protected:
 	static void _bind_methods() {}
@@ -23,7 +23,7 @@ public:
 	}
 
 	PackedByteArray get_content();
-	SqliteResource() {}
-	~SqliteResource() {}
+	SQLiteResource() {}
+	~SQLiteResource() {}
 };
 #endif // SQLITE_RESOURCE_H
