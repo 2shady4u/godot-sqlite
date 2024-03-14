@@ -2,10 +2,10 @@
 
 #include <gdextension_interface.h>
 
+#include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
-#include <godot_cpp/classes/project_settings.hpp>
 
 #include "gdsqlite.h"
 #include "resource_loader_sqlite.h"
@@ -20,7 +20,7 @@ void register_setting(
 		const Variant &p_value,
 		PropertyHint p_hint,
 		const String &p_hint_string,
-    bool restart_if_changed) {
+		bool restart_if_changed) {
 	ProjectSettings *project_settings = ProjectSettings::get_singleton();
 
 	if (!project_settings->has_setting(p_name)) {
@@ -35,7 +35,7 @@ void register_setting(
 
 	project_settings->add_property_info(property_info);
 	project_settings->set_initial_value(p_name, p_value);
-  project_settings->set_restart_if_changed(p_name, true);
+	project_settings->set_restart_if_changed(p_name, true);
 }
 
 void initialize_sqlite_module(ModuleInitializationLevel p_level) {
@@ -49,7 +49,7 @@ void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 
 	sqlite_loader.instantiate();
 	ResourceLoader::get_singleton()->add_resource_format_loader(sqlite_loader);
-  PackedStringArray array;
+	PackedStringArray array;
 	array.push_back("db");
 	register_setting("filesystem/import/sqlite/default_extension", array, PROPERTY_HINT_NONE, {}, true);
 }
