@@ -21,7 +21,7 @@ target = "{}{}".format(
 
 # tweak this if you want to use different folders, or more folders, to store your source code in.
 env.Append(CPPPATH=["src/"])
-sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), 'src/sqlite/sqlite3.c']
+sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), Glob('src/resource/*.cpp'), 'src/sqlite/sqlite3.c']
 
 if env["platform"] == "macos":
     target = "{}.{}.{}.framework/{}.{}.{}".format(

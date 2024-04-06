@@ -8,35 +8,13 @@
 #include <godot_cpp/godot.hpp>
 
 #include "gdsqlite.h"
-#include "resource_loader_sqlite.h"
-#include "resource_sqlite.h"
+#include "resource/resource_loader_sqlite.h"
+#include "resource/resource_sqlite.h"
 
 using namespace godot;
 
 static Ref<ResourceFormatLoaderSQLite> sqlite_loader;
-
-void register_setting(
-		const String &p_name,
-		const Variant &p_value,
-		PropertyHint p_hint,
-		const String &p_hint_string,
-		bool restart_if_changed) {
-	ProjectSettings *project_settings = ProjectSettings::get_singleton();
-
-	if (!project_settings->has_setting(p_name)) {
-		project_settings->set(p_name, p_value);
-	}
-
-	Dictionary property_info;
-	property_info["name"] = p_name;
-	property_info["type"] = p_value.get_type();
-	property_info["hint"] = p_hint;
-	property_info["hint_string"] = p_hint_string;
-
-	project_settings->add_property_info(property_info);
-	project_settings->set_initial_value(p_name, p_value);
-	project_settings->set_restart_if_changed(p_name, true);
-}
+const char * DEFAULT_DB_NAME = "filesystem/import/sqlite/default_extension";
 
 void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -51,7 +29,19 @@ void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 	ResourceLoader::get_singleton()->add_resource_format_loader(sqlite_loader);
 	PackedStringArray array;
 	array.push_back("db");
-	register_setting("filesystem/import/sqlite/default_extension", array, PROPERTY_HINT_NONE, {}, true);
+	
+	ProjectSettings *project_settings = ProjectSettings::get_singleton();
+	
+	if (!project_settings->has_setting(DEFAULT_DB_NAME)) {
+		project_settings->set(DEFAULT_DB_NAME, "");
+	}
+
+	Dictionary property_info;
+	property_info["name"] = DEFAULT_DB_NAME;
+	property_info["type"] = godot::Variant::Type::STRING;
+
+	project_settings->add_property_info(property_info);
+	project_settings->set_initial_value(DEFAULT_DB_NAME, "db");
 }
 
 void uninitialize_sqlite_module(ModuleInitializationLevel p_level) {

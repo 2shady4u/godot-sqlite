@@ -13,17 +13,7 @@ protected:
 	String file;
 
 public:
-	void set_file(const String &p_file) {
-		file = p_file;
-		emit_changed();
-	}
-
-	String get_file() {
-		return file;
-	}
-
-	PackedByteArray get_content();
-	SQLiteResource() {}
-	~SQLiteResource() {}
+	void set_file(const String &p_file);
+	String get_file();
 };
 #endif // SQLITE_RESOURCE_H
