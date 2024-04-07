@@ -14,7 +14,7 @@
 using namespace godot;
 
 static Ref<ResourceFormatLoaderSQLite> sqlite_loader;
-const char * DEFAULT_DB_NAME = "filesystem/import/sqlite/default_extension";
+const char *DEFAULT_DB_NAME = "filesystem/import/sqlite/default_extension";
 
 void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -29,9 +29,9 @@ void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 	ResourceLoader::get_singleton()->add_resource_format_loader(sqlite_loader);
 	PackedStringArray array;
 	array.push_back("db");
-	
+
 	ProjectSettings *project_settings = ProjectSettings::get_singleton();
-	
+
 	if (!project_settings->has_setting(DEFAULT_DB_NAME)) {
 		project_settings->set(DEFAULT_DB_NAME, "");
 	}
