@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ master ]
+    branches: [ master, feature/windows-double-precision ]
     tags:
       - "v*"
 
