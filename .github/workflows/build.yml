@@ -69,7 +69,7 @@ jobs:
 
       - name: Web dependencies
         if: ${{ matrix.platform == 'web' }}
-        uses: mymindstorm/setup-emsdk@v13
+        uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EM_VERSION }}
           actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}-${{ matrix.target }}
@@ -92,8 +92,18 @@ jobs:
           cd ${{ env.PROJECT_FOLDER }}
           scons platform=windows target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
 
-      - name: Not Windows Compilation
-        if: runner.os != 'Windows'
+      - name: iOS Compilation
+        if: matrix.platform == 'ios'
+        run: |
+          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          cd ${{ env.PROJECT_FOLDER }}
+          scons arch=universal ios_simulator=yes platform=ios target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6
+          scons arch=arm64 ios_simulator=no platform=ios target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6
+          xcodebuild -create-xcframework -library ${{ env.TARGET_PATH }}/${{ env.TARGET_NAME }}.ios.${{ matrix.target }}.a -library ${{ env.TARGET_PATH }}/${{ env.TARGET_NAME }}.ios.${{ matrix.target }}.simulator.a -output ${{ env.TARGET_PATH }}/${{ env.TARGET_NAME }}.ios.${{ matrix.target }}.xcframework
+          xcodebuild -create-xcframework -library godot-cpp/bin/libgodot-cpp.ios.${{ matrix.target }}.arm64.a -library godot-cpp/bin/libgodot-cpp.ios.${{ matrix.target }}.universal.simulator.a  -output ${{ env.TARGET_PATH }}/libgodot-cpp.ios.${{ matrix.target }}.xcframework
+
+      - name: Not Windows or iOS Compilation
+        if: runner.os != 'Windows' && matrix.platform != 'ios'
         run: |
           mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
           cd ${{ env.PROJECT_FOLDER }}

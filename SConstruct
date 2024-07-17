@@ -30,27 +30,49 @@ if env["target"] in ["editor", "template_debug"]:
     doc_data = env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=Glob("doc_classes/*.xml"))
     sources.append(doc_data)
 
-if env["platform"] == "macos":
-    target = "{}.{}.{}.framework/{}.{}.{}".format(
-        target,
-        env["platform"], 
-        env["target"],
-        target_name,
-        env["platform"],
-        env["target"]
-    )
-else:
-    target = "{}{}{}".format(
-        target,
-        env["suffix"],
-        env["SHLIBSUFFIX"]
-    )
-
 if env["enable_fts5"]:
     print("FTS5 is enabled.")
     env.Append(CPPDEFINES=['SQLITE_ENABLE_FTS5'])
 else:
     print("FTS5 is disabled.")
 
-library = env.SharedLibrary(target=target, source=sources)
+if env["platform"] == "macos":
+    library = env.SharedLibrary(
+        "{}.{}.{}.framework/{}.{}.{}".format(
+            target,
+            env["platform"],
+            env["target"],
+            env["platform"],
+            target_name,
+            env["target"]
+        ),
+        source=sources,
+    )
+elif env["platform"] == "ios":
+    if env["ios_simulator"]:
+        library = env.StaticLibrary(
+            "{}.{}.{}.simulator.a".format(
+                target,
+                env["platform"],
+                env["target"]),
+            source=sources,
+        )
+    else:
+        library = env.StaticLibrary(
+            "{}.{}.{}.a".format(
+                target,
+                env["platform"],
+                env["target"]),
+            source=sources,
+        )
+else:
+    library = env.SharedLibrary(
+        "{}{}{}".format(
+            target,
+            env["suffix"],
+            env["SHLIBSUFFIX"]
+        ),
+        source=sources,
+    )
+
 Default(library)

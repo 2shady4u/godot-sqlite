@@ -66,8 +66,7 @@
             "name": "iOS (arm64)",
             "os": "macos-latest",
             "platform": "ios",
-            "artifact-extension": "dylib",
-            "flags": "arch=arm64",
+            "artifact-extension": "xcframework",
             "cache-name": "ios-arm64"
         },
         {
