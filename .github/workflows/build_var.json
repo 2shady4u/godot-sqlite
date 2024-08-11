@@ -22,6 +22,15 @@
             "cache-name": "win-x86_64-mingw"
         },
         {
+            "name": "Windows (x86_64, MinGW, Double Precision)",
+            "os": "windows-latest",
+            "platform": "windows",
+            "artifact-extension": "dll",
+            "flags": "use_mingw=yes precision=double",
+            "cache-name": "win-x86_64-mingw-f64",
+            "skip": true
+        },
+        {
             "name": "Ubuntu (GCC)",
             "os": "ubuntu-20.04",
             "platform": "linux",
