@@ -213,6 +213,17 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Check if the given database connection is or is not in autocommit mode, see [here](https://sqlite.org/c3ref/get_autocommit.html).
 
+- int compileoption_used = **compileoption_used(** String option_name **)**
+
+    Check if the binary was compiled using the specified option, see [here](https://sqlite.org/c3ref/compileoption_get.html).
+
+    Mostly relevant for checking if the [SQLite FTS5 Extension](https://sqlite.org/fts5.html) is enabled, in which case the following lines can be used:
+
+    ```gdscript
+    db.compileoption_used("SQLITE_ENABLE_FTS5") # Returns '1' if enabled or '0' if disabled
+    db.compileoption_used("ENABLE_FTS5") # The "SQLITE_"-prefix may be omitted.
+    ```
+
 - Boolean success = **backup_to(** String destination_path **)**
 - Boolean success = **restore_from(** String source_path **)**
 
@@ -296,6 +307,43 @@ Follow the steps described in the Godot documentation as found [here](https://do
 ```
 ldd --version
 ```
+
+### 5. Does this plugin support the FTS5 Extension?
+
+Yes, the [SQLite FTS5 Extension](https://sqlite.org/fts5.html) is supported by this plugin, although it requires the user to re-compile the plugin.
+
+To re-compile the plugin with FTS5 enabled, follow the instructions as defined in the 'How to contribute?'-section below.  
+Depending on your choice, following modifications have to be made:
+
+#### A. Using your own device
+
+Add the `enable_fts5`-flag to the compilation command:
+
+```
+scons platform=<platform> target_path=<target_path> target_name=libgdsqlite enable_fts5=yes
+```
+
+#### B. Using Github Actions
+
+Update the `common_flags`-field of the `.github/workflows/build_var.json`-file, as follows:
+
+```json
+"common_flags": "enable_fts5=no"
+```
+
+```json
+"common_flags": "enable_fts5=yes"
+```
+
+Afterwards, push a new commit (containing this change) to the `master`-branch of your forked remote. This commit triggers a new workflow that re-compiles the plugin's binaries with FTS5 enabled.
+
+### 6. Does this plugin support some kind of encryption?
+
+Database encryption of any kind is **not** supported in this plugin. Nor are there any plans to support this feature in an upcoming or future release.
+
+The addition of database encryption might be up for reconsideration if, and only if, a future release of SQLite introduces native support of this feature without requiring the purchase of a license.
+
+***NOTE**: The natively supported [SQLite Encryption Extension (SEE)](https://sqlite.org/com/see.html) is not applicable as it requires the purchase of a license for the one-time fee of 2000$*
 
 # How to export?
 

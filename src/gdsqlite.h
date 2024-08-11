@@ -37,6 +37,7 @@ private:
 	bool validate_json(const Array &import_json, std::vector<object_struct> &tables_to_import);
 	bool validate_table_dict(const Dictionary &p_table_dict);
 	int backup_database(sqlite3 *source_db, sqlite3 *destination_db);
+	void remove_shadow_tables(Array &p_array);
 
 	sqlite3 *db;
 	std::vector<std::unique_ptr<Callable>> function_registry;
@@ -89,6 +90,7 @@ public:
 	bool export_to_json(String export_path);
 
 	int get_autocommit() const;
+	int compileoption_used(const String &option_name) const;
 
 	// Properties.
 	void set_last_insert_rowid(const int64_t &p_last_insert_rowid);

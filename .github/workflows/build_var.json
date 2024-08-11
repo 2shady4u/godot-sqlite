@@ -3,6 +3,7 @@
         "template_debug",
         "template_release"
     ],
+    "common_flags": "enable_fts5=yes",
     "jobs": [
         {
             "name": "Windows (x86_64, MSVC)",

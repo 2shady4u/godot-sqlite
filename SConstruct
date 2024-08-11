@@ -7,6 +7,11 @@ target_name = ARGUMENTS.pop("target_name", "libgdsqlite")
 
 env = SConscript("godot-cpp/SConstruct")
 
+env_vars = Variables()
+env_vars.Add(BoolVariable("enable_fts5", "Enable SQLite's FTS5 extension which provides full-test search functionality to database applications", False))
+env_vars.Update(env)
+Help(env_vars.GenerateHelpText(env))
+
 target = "{}{}".format(
     target_path, target_name
 )
@@ -38,6 +43,12 @@ else:
         env["suffix"],
         env["SHLIBSUFFIX"]
     )
+
+if env["enable_fts5"]:
+    print("FTS5 is enabled.")
+    env.Append(CPPDEFINES=['SQLITE_ENABLE_FTS5'])
+else:
+    print("FTS5 is disabled.")
 
 library = env.SharedLibrary(target=target, source=sources)
 Default(library)

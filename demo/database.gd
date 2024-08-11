@@ -39,6 +39,7 @@ func _ready():
 	example_of_blob_io()
 	example_of_read_only_database()
 	example_of_database_persistency()
+	example_of_fts5_usage()
 
 func cprint(text : String) -> void:
 	print(text)
@@ -432,6 +433,40 @@ func example_of_database_persistency():
 
 	# Increment the value for the next time!
 	db.update_rows(table_name, "id = 1", {"count": count + 1 })
+
+	# Close the current database
+	db.close_db()
+
+var fts5_table_name := "posts"
+
+# Basic example that showcases seaching functionalities of FTS5...
+func example_of_fts5_usage():
+	db = SQLite.new()
+	if not db.compileoption_used("ENABLE_FTS5"):
+		cprint("No support for FTS5 available in binaries (re-compile with compile option `enable_fts5=yes`)")
+		return
+
+	db.path = db_name
+	db.verbosity_level = verbosity_level
+	# Open the database using the db_name found in the path variable
+	db.open_db()
+	db.drop_table(fts5_table_name)
+
+	db.query("CREATE VIRTUAL TABLE " + fts5_table_name + " USING FTS5(title, body);")
+
+	var row_array := [
+		{"title":'Learn SQlite FTS5', "body":'This tutorial teaches you how to perform full-text search in SQLite using FTS5'},
+		{"title":'Advanced SQlite Full-text Search', "body":'Show you some advanced techniques in SQLite full-text searching'},
+		{"title":'SQLite Tutorial', "body":'Help you learn SQLite quickly and effectively'},
+	]
+
+	db.insert_rows(fts5_table_name, row_array)
+
+	db.query("SELECT * FROM " + fts5_table_name + " WHERE posts MATCH 'fts5';")
+	cprint("result: {0}".format([str(db.query_result)]))
+
+	db.query("SELECT * FROM " + fts5_table_name + " WHERE posts MATCH 'learn SQLite';")
+	cprint("result: {0}".format([str(db.query_result)]))
 
 	# Close the current database
 	db.close_db()
