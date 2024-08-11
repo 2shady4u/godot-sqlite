@@ -30,7 +30,7 @@
         },
         {
             "name": "MacOS (universal)",
-            "os": "macos-11",
+            "os": "macos-latest",
             "platform": "macos",
             "artifact-extension": "framework",
             "flags": "arch=universal",
@@ -54,7 +54,7 @@
         },
         {
             "name": "iOS (arm64)",
-            "os": "macos-11",
+            "os": "macos-latest",
             "platform": "ios",
             "artifact-extension": "dylib",
             "flags": "arch=arm64",
