@@ -2,26 +2,54 @@
 
 #include <gdextension_interface.h>
 
+#include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
 #include "gdsqlite.h"
+#include "resource/resource_loader_sqlite.h"
+#include "resource/resource_sqlite.h"
 
 using namespace godot;
+
+static Ref<ResourceFormatLoaderSQLite> sqlite_loader;
+const char *DEFAULT_DB_NAME = "filesystem/import/sqlite/default_extension";
 
 void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
 
-	ClassDB::register_class<SQLite>();
+	GDREGISTER_CLASS(SQLite);
+	GDREGISTER_CLASS(ResourceFormatLoaderSQLite);
+	GDREGISTER_CLASS(SQLiteResource);
+
+	sqlite_loader.instantiate();
+	ResourceLoader::get_singleton()->add_resource_format_loader(sqlite_loader);
+	PackedStringArray array;
+	array.push_back("db");
+
+	ProjectSettings *project_settings = ProjectSettings::get_singleton();
+
+	if (!project_settings->has_setting(DEFAULT_DB_NAME)) {
+		project_settings->set(DEFAULT_DB_NAME, "");
+	}
+
+	Dictionary property_info;
+	property_info["name"] = DEFAULT_DB_NAME;
+	property_info["type"] = godot::Variant::Type::STRING;
+
+	project_settings->add_property_info(property_info);
+	project_settings->set_initial_value(DEFAULT_DB_NAME, "db");
 }
 
 void uninitialize_sqlite_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+	ResourceLoader::get_singleton()->remove_resource_format_loader(sqlite_loader);
+	sqlite_loader.unref();
 }
 
 extern "C" {

@@ -4,7 +4,7 @@ var db : SQLite = null
 
 const verbosity_level : int = SQLite.VERBOSE
 
-var db_name := "res://data/test"
+@export var db_resource : SQLiteResource
 var packaged_db_name := "res://data_to_be_packaged"
 var peristent_db_name := "user://my_database"
 var json_name := "res://data/test_backup"
@@ -29,7 +29,6 @@ signal texture_received(texture)
 func _ready():
 	if OS.get_name() in ["Android", "iOS", "Web"]:
 		copy_data_to_user()
-		db_name = "user://data/test"
 		json_name = "user://data/test_backup"
 
 	# Enable/disable examples here:
@@ -77,7 +76,7 @@ func example_of_basic_database_querying():
 	table_dict["salary"] = {"data_type":"real"}
 
 	db = SQLite.new()
-	db.path = db_name
+	db.path = db_resource.resource_path
 	db.verbosity_level = verbosity_level
 	# Open the database using the db_name found in the path variable
 	db.open_db()
@@ -249,7 +248,7 @@ func example_of_call_external_functions():
 	table_dict["salary"] = {"data_type":"real"}
 
 	db = SQLite.new()
-	db.path = db_name
+	db.path = db_resource.resource_path
 	db.verbosity_level = verbosity_level
 	# Open the database using the db_name found in the path variable
 	db.open_db()
@@ -298,7 +297,7 @@ func example_of_blob_io():
 	var tex_data : PackedByteArray = texture.get_image().save_png_to_buffer()
 
 	db = SQLite.new()
-	db.path = db_name
+	db.path = db_resource.resource_path
 	db.verbosity_level = verbosity_level
 	# Open the database using the db_name found in the path variable
 	db.open_db()
