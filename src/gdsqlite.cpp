@@ -28,6 +28,7 @@ void SQLite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("export_to_json", "export_path"), &SQLite::export_to_json);
 
 	ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLite::get_autocommit);
+	ClassDB::bind_method(D_METHOD("compileoption_used"), &SQLite::compileoption_used);
 
 	// Properties.
 	ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLite::set_last_insert_rowid);
@@ -787,7 +788,12 @@ bool SQLite::import_from_json(String import_path) {
 	/* We don't care about triggers here since they get dropped automatically when their table is dropped */
 	query(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
 	TypedArray<Dictionary> old_database_array = query_result.duplicate(true);
-	int64_t old_number_of_tables = query_result.size();
+#ifdef SQLITE_ENABLE_FTS5
+	/* FTS5 creates a bunch of shadow tables that cannot be dropped manually! */
+	/* The virtual table is responsible for dropping these tables itself */
+	remove_shadow_tables(old_database_array);
+#endif
+	int64_t old_number_of_tables = old_database_array.size();
 	/* Drop all old tables present in the database */
 	for (int64_t i = 0; i <= old_number_of_tables - 1; i++) {
 		Dictionary table_dict = old_database_array[i];
@@ -853,8 +859,12 @@ bool SQLite::import_from_json(String import_path) {
 bool SQLite::export_to_json(String export_path) {
 	/* Get all names and sql templates for all tables present in the database */
 	query(String("SELECT name,sql,type FROM sqlite_master WHERE type = 'table' OR type = 'trigger';"));
-	int64_t number_of_objects = query_result.size();
 	TypedArray<Dictionary> database_array = query_result.duplicate(true);
+#ifdef SQLITE_ENABLE_FTS5
+	/* FTS5 creates a bunch of shadow tables that should NOT be exported! */
+	remove_shadow_tables(database_array);
+#endif
+	int64_t number_of_objects = database_array.size();
 	/* Construct a Dictionary for each table, convert it to JSON and write it to file */
 	for (int64_t i = 0; i <= number_of_objects - 1; i++) {
 		Dictionary object_dict = database_array[i];
@@ -986,6 +996,44 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 	return true;
 }
 
+void SQLite::remove_shadow_tables(Array &p_array) {
+	/* The rootpage of virtual tables is always zero!*/
+	query(String("SELECT name FROM sqlite_master WHERE type = 'table' AND rootpage = 0;"));
+	int number_of_objects = query_result.size();
+	Array database_array = query_result.duplicate(true);
+
+	/* Make an array of all the expected shadow table names */
+	Array shadow_table_names = Array();
+	for (int i = 0; i <= number_of_objects - 1; i++) {
+		Dictionary object_dict = database_array[i];
+		String virtual_table_name = object_dict["name"];
+
+		/* These are the shadow tables created by FTS5, as discussed here: */
+		/* https://www.sqlite.org/fts5.html */
+		shadow_table_names.append(virtual_table_name + "_config");
+		shadow_table_names.append(virtual_table_name + "_content");
+		shadow_table_names.append(virtual_table_name + "_data");
+		shadow_table_names.append(virtual_table_name + "_docsize");
+		shadow_table_names.append(virtual_table_name + "_idx");
+	}
+
+	/* Get rid of all the shadow tables */
+	Array clean_array = Array();
+	for (int i = 0; i <= p_array.size() - 1; i++) {
+		Dictionary object_dict = p_array[i];
+		if (object_dict["type"] == String("table")) {
+			String table_name = object_dict["name"];
+			if (!shadow_table_names.has(table_name)) {
+				clean_array.append(object_dict);
+			}
+		} else if (object_dict["type"] == String("trigger")) {
+			clean_array.append(object_dict);
+		}
+	}
+
+	p_array = clean_array;
+}
+
 // Properties.
 void SQLite::set_last_insert_rowid(const int64_t &p_last_insert_rowid) {
 	if (db) {
@@ -1067,4 +1115,10 @@ int SQLite::get_autocommit() const {
 	}
 	/* Return the default value */
 	return 1; // A non-zero value indicates the autocommit is on!
+}
+
+int SQLite::compileoption_used(const String &option_name) const {
+	const CharString dummy_name = option_name.utf8();
+	const char *char_name = dummy_name.get_data();
+	return sqlite3_compileoption_used(char_name);
 }
