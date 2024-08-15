@@ -343,6 +343,8 @@ Database encryption of any kind is **not** supported in this plugin. Nor are the
 
 The addition of database encryption might be up for reconsideration if, and only if, a future release of SQLite introduces native support of this feature without requiring the purchase of a license.
 
+A modification of this plugin, which allows encryption, was done by [abcjjy](https://github.com/abcjjy) by swapping out SQLite with [SQLCipher](https://www.zetetic.net/sqlcipher/) and can be found [here](https://github.com/abcjjy/godot-sqlcipher/tree/gd-extension). Direct all issues and feature requests regarding this implementation to its own dedicated repository.
+
 ***NOTE**: The natively supported [SQLite Encryption Extension (SEE)](https://sqlite.org/com/see.html) is not applicable as it requires the purchase of a license for the one-time fee of 2000$*
 
 # How to export?
