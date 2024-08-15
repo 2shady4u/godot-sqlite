@@ -45,8 +45,8 @@ jobs:
           lfs: true
           submodules: recursive
 
-      - name: Setup Godot build cache
-        uses: ./godot-cpp/.github/actions/godot-cache
+      - name: Restore Godot build cache
+        uses: ./godot-cpp/.github/actions/godot-cache-restore
         with:
           cache-name: ${{ matrix.cache-name }}-${{ matrix.target }}
         continue-on-error: true
@@ -98,6 +98,12 @@ jobs:
           mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
           cd ${{ env.PROJECT_FOLDER }}
           scons platform=${{ matrix.platform }} target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
+
+      - name: Save Godot build cache
+        uses: ./godot-cpp/.github/actions/godot-cache-save
+        with:
+          cache-name: ${{ matrix.cache-name }}-${{ matrix.target }}
+        continue-on-error: true
 
       - name: Upload Artifact
         env:

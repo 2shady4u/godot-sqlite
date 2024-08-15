@@ -15,7 +15,7 @@ void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 		return;
 	}
 
-	ClassDB::register_class<SQLite>();
+	GDREGISTER_CLASS(SQLite);
 }
 
 void uninitialize_sqlite_module(ModuleInitializationLevel p_level) {
