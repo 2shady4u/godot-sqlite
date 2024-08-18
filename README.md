@@ -71,8 +71,6 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API.
 
-    ***NOTE**: Godot opens files in a mode that is not shareable i.e. the database file cannot be open in any other program. Attempting to open a read-only database that is locked by another program fails and returns `ERR_FILE_CANT_OPEN` (`12`). However, multiple simultaneous read-only database connections are allowed.*
-
 - **query_result** (Array, default=[])
 
     Contains the results from the latest query **by value**; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.
@@ -103,7 +101,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - Boolean success = **open_db()**
 
-    Open a new database connection. Multiple concurrently open connections to the same database are possible, but **only one can have read-write access**, the rest should be opened in read-only mode as defined by the `read_only`-property.
+    Open a new database connection. Multiple concurrently open connections to the same database are possible.
 
 - Boolean success = **close_db()**
 
@@ -372,8 +370,6 @@ To enable this behaviour following conditions need to be met:
 - The connection has to be opened in read-only mode by setting the `read_only` variable to True.
 
 You can also open databases in read-only mode that are not packaged, albeit under some restrictions such as the fact that the database files have to copied manually to `user://`-folder on mobile platforms (Android & iOS) and for web builds.
-
-One important additional constraint for read-only databases is that Godot's implementation of file handling does not allow files to opened in a shareable manner. Basically this means that opening a database connection fails whenever other programs have a read lock on the database file e.g. having the file open in [SQLiteStudio](https://sqlitestudio.pl/) for editing purposes. However, multiple simultaneous read-only database connections are allowed.
 
 ***NOTE**: The contents of your PCK file can be verified by using externally available tools as found [here](https://github.com/hhyyrylainen/GodotPckTool).*
 

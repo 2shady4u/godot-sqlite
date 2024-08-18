@@ -50,7 +50,7 @@
 		<method name="open_db">
 			<return type="bool" />
 			<description>
-				Open a new database connection. Multiple concurrently open connections to the same database are possible, but [b]only one can have read-write access[/b], the rest should be opened in read-only mode as defined by the [code]read_only[/code]-property.
+				Open a new database connection. Multiple concurrently open connections to the same database are possible.
 			</description>
 		</method>
 		<method name="close_db">
@@ -202,7 +202,6 @@
 		</member>
 		<member name="read_only" type="bool" default="false">
 			Enabling this property opens the database in read-only modus &amp; allows databases to be packaged inside of the PCK. To make this possible, a custom [url=https://www.sqlite.org/vfs.html]VFS[/url] is employed which internally takes care of all the file handling using the Godot API.
-			[i][b]NOTE:[/b] Godot opens files in a mode that is not shareable i.e. the database file cannot be open in any other program. Attempting to open a read-only database that is locked by another program fails and returns [code]ERR_FILE_CANT_OPEN[/code] ([code]12[/code]). However, multiple simultaneous read-only database connections are allowed.[/i]
 		</member>
 		<member name="query_result" type="Array" default="[]">
 			Contains the results from the latest query [b]by value[/b]; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.
