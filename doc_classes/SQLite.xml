@@ -185,6 +185,17 @@
 				Restore the current database from a path, see [url=https://www.sqlite.org/backup.html]here[/url]. This feature is useful if you are using a database as your save file and you want to easily implement a loading mechanic. Be warned that the original database will be overwritten entirely when restoring.
 			</description>
 		</method>
+		<method name="compileoption_used">
+			<return type="bool" />
+			<description>
+				Check if the binary was compiled using the specified option, see [url=https://sqlite.org/c3ref/compileoption_get.html]here[/url].
+				Mostly relevant for checking if the [url=https://sqlite.org/fts5.html]SQLite FTS5 Extension[/url] is enabled, in which case the following lines can be used:
+				[codeblock]
+				db.compileoption_used("SQLITE_ENABLE_FTS5") # Returns '1' if enabled or '0' if disabled
+				db.compileoption_used("ENABLE_FTS5") # The "SQLITE_"-prefix may be omitted.
+				[/codeblock]
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="path" type="String" default="default">
