@@ -28,7 +28,7 @@ void SQLite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("export_to_json", "export_path"), &SQLite::export_to_json);
 
 	ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLite::get_autocommit);
-	ClassDB::bind_method(D_METHOD("compileoption_used"), &SQLite::compileoption_used);
+	ClassDB::bind_method(D_METHOD("compileoption_used", "option_name"), &SQLite::compileoption_used);
 
 	// Properties.
 	ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLite::set_last_insert_rowid);

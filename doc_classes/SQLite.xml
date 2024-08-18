@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class name="SQLite" inherits="RefCounted"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		A SQLite wrapper class implemented in GDExtension.
+	</brief_description>
+	<description>
+		[b]Example usage[/b]:
+		[codeblock]
+		extends Node
+
+		var db = SQLite.new()
+
+		func _ready():
+		    var table_name: String = "players"
+		    var table_dict: Dictionary = {
+		        "id": {"data_type":"int", "primary_key": true, "not_null": true, "auto_increment": true},
+		        "name": {"data_type":"text", "not_null": true},
+		        "portrait": {"data_type":"blob", "not_null": true}
+		    }
+
+		    db.path = "res://my_database"
+		    db.verbosity_level = SQLite.VerbosityLevel.NORMAL
+		    db.open_db()
+
+		    # Check if the table already exists or not.
+		    db.query_with_bindings("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", [table_name])
+		    if not db.query_result.is_empty():
+		        db.drop_table(table_name)
+		    db.create_table(table_name, table_dict)
+
+		    var texture := preload("res://icon.png")
+		    var tex_data: PackedByteArray = texture.get_image().save_png_to_buffer()
+		    var row_dict: Dictionary = {
+		        "name": "Doomguy",
+		        "portrait": tex_data
+		    }
+		    db.insert_row(table_name, row_dict)
+
+		    db.select_rows(table_name, "name = 'Doomguy'", ["id", "name"])
+		    print(db.query_result)
+		[/codeblock]
+	</description>
+	<tutorials>
+		<link title="Repository's README.md">https://github.com/2shady4u/godot-sqlite/blob/master/README.md</link>
+		<link title="Script containing multiple usage examples">https://github.com/2shady4u/godot-sqlite/blob/master/demo/database.gd</link>
+	</tutorials>
+	<methods>
+		<method name="open_db">
+			<return type="bool" />
+			<description>
+				Open a new database connection. Multiple concurrently open connections to the same database are possible.
+			</description>
+		</method>
+		<method name="close_db">
+			<return type="bool" />
+			<description>
+				Close the current database connection.
+			</description>
+		</method>
+		<method name="query">
+			<return type="bool" />
+			<description>
+				Query the database using the raw SQL statement defined in [code]query_string[/code].
+			</description>
+		</method>
+		<method name="query_with_bindings">
+			<return type="bool" />
+			<description>
+				Binds the parameters contained in the [code]param_bindings[/code]-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [url=https://www.sqlite.org/c3ref/bind_blob.html]here[/url].
+				[b]Example usage[/b]:
+				[codeblock]
+				var query_string : String = "SELECT ? FROM company WHERE age &lt; ?;"
+				var param_bindings : Array = ["name", 24]
+				var success = db.query_with_bindings(query_string, param_bindings)
+				# Executes following query: 
+				# SELECT name FROM company WHERE age &lt; 24;
+				[/codeblock]
+				Using bindings is optional, except for PackedByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+				[i][b]NOTE:[/b] Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the [code]query_string[/code]-variable itself (see [url=https://github.com/2shady4u/godot-sqlite/issues/41]https://github.com/2shady4u/godot-sqlite/issues/41[/url]).[/i]
+			</description>
+		</method>
+		<method name="create_table">
+			<return type="bool" />
+			<description>
+				Each key/value pair of the [code]table_dictionary[/code]-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.
+				[b]Required fields[/b]:
+				- [b]"data_type"[/b]: type of the column variable, following values are valid*:
+				    - "int" (SQLite: INTEGER, GODOT: [constant TYPE_INT])[br]    - "real" (SQLite: REAL, GODOT: [constant TYPE_REAL])[br]    - "text" (SQLite: TEXT, GODOT: [constant TYPE_STRING])[br]    - "char(?)"** (SQLite: CHAR(?)**, GODOT: [constant TYPE_STRING])[br]    - "blob" (SQLite: BLOB, GODOT: [constant TYPE_PACKED_BYTE_ARRAY])
+				    * [i]Data types not found in this list throw an error and end up finalizing the current SQLite statement.[/i][br]    ** [i]with the question mark being replaced by the maximum amount of characters[/i]
+				[b]Optional fields[/b]:
+				- [b]"not_null"[/b] [i](default = false)[/i]: Is the NULL value an invalid value for this column?[br]- [b]"unique"[/b] [i](default = false)[/i]: Does the column have a unique constraint?[br]- [b]"default"[/b]: The default value of the column if not explicitly given.[br]- [b]"primary_key"[/b] [i](default = false)[/i]: Is this the primary key of this table?
+				    Evidently, only a single column can be set as the primary key.
+				- [b]"auto_increment"[/b] [i](default = false)[/i]: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
+				    [i][b]NOTE[/b]: Auto-incrementing a column only works when this column is the primary key![/i]
+				- [b]"foreign_key"[/b]: Enforce an "exist" relationship between tables by setting this variable to [code]foreign_table.foreign_column[/code]. In other words, when adding an additional row, the column value should be an existing value as found in the column with name [code]foreign_column[/code] of the table with name [code]foreign_table[/code].
+				    [i][b]NOTE[/b]: Availability of foreign keys has to be enabled by setting the [code]foreign_keys[/code]-variable to true BEFORE opening the database.[/i]
+				[b]Example usage[/b]:
+				[codeblock]
+				# Add the row "id" to the table, which is an auto-incremented primary key.
+				# When adding additional rows, this value can either by explicitely given or be unfilled.
+				table_dictionary["id"] = {
+				    "data_type": "int", 
+				    "primary_key": true, 
+				    "auto_increment": true
+				}
+				[/codeblock]
+				For more concrete usage examples see the [code]database.gd[/code]-file as found [url=https://github.com/2shady4u/godot-sqlite/blob/master/demo/database.gd]here[url].
+			</description>
+		</method>
+		<method name="drop_table">
+			<return type="bool" />
+			<description>
+				Drop the table with name [code]table_name[/code]. This method is equivalent to the following query:
+				[codeblock]
+				db.query("DROP TABLE "+ table_name + ";")
+				[/codeblock]
+			</description>
+		</method>
+		<method name="insert_row">
+			<return type="bool" />
+			<description>
+				Each key/value pair of the [code]row_dictionary[/code]-variable defines the column values of a single row.
+				Columns should adhere to the table schema as instantiated using the [code]table_dictionary[/code]-variable and are required if their corresponding [b]"not_null"[/b]-column value is set to [code]True[/code].
+			</description>
+		</method>
+		<method name="insert_rows">
+			<return type="bool" />
+			<description>
+				Insert multiple rows into the given table. The [code]row_array[/code] input argument should be an array of dictionaries where each element is defined as in [method insert_row].
+			</description>
+		</method>
+		<method name="select_rows">
+			<return type="Array" />
+			<description>
+				Returns the results from the latest query [b]by value[/b]; meaning that this property does not get overwritten by any successive queries.
+			</description>
+		</method>
+		<method name="update_rows">
+			<return type="bool" />
+			<description>
+				With the [code]updated_row_dictionary[/code]-variable adhering to the same table schema &amp; conditions as the [code]row_dictionary[/code]-variable defined previously.
+			</description>
+		</method>
+		<method name="delete_rows">
+			<return type="bool" />
+			<description>
+				Delete all rows of the table that match the given conditions.
+			</description>
+		</method>
+		<method name="import_from_json">
+			<return type="bool" />
+			<description>
+				Drops all database tables and imports the database structure and content present inside of [code]import_path.json[/code].
+			</description>
+		</method>
+		<method name="export_to_json">
+			<return type="bool" />
+			<description>
+				Exports the database structure and content to [code]export_path.json[/code] as a backup or for ease of editing.
+			</description>
+		</method>
+		<method name="create_function">
+			<return type="bool" />
+			<description>
+				Bind a [url=https://www.sqlite.org/appfunc.html]scalar SQL function[/url] to the database that can then be used in subsequent queries.
+			</description>
+		</method>
+		<method name="get_autocommit">
+			<return type="int" />
+			<description>
+				Check if the given database connection is or is not in autocommit mode, see [url=https://sqlite.org/c3ref/get_autocommit.html]here[/url].
+			</description>
+		</method>
+		<method name="backup_to">
+			<return type="bool" />
+			<description>
+				Backup the current database to a path, see [url=https://www.sqlite.org/backup.html]here[/url]. This feature is useful if you are using a database as your save file and you want to easily implement a saving mechanic.
+			</description>
+		</method>
+		<method name="restore_from">
+			<return type="bool" />
+			<description>
+				Restore the current database from a path, see [url=https://www.sqlite.org/backup.html]here[/url]. This feature is useful if you are using a database as your save file and you want to easily implement a loading mechanic. Be warned that the original database will be overwritten entirely when restoring.
+			</description>
+		</method>
+		<method name="compileoption_used">
+			<return type="bool" />
+			<description>
+				Check if the binary was compiled using the specified option, see [url=https://sqlite.org/c3ref/compileoption_get.html]here[/url].
+				Mostly relevant for checking if the [url=https://sqlite.org/fts5.html]SQLite FTS5 Extension[/url] is enabled, in which case the following lines can be used:
+				[codeblock]
+				db.compileoption_used("SQLITE_ENABLE_FTS5") # Returns '1' if enabled or '0' if disabled
+				db.compileoption_used("ENABLE_FTS5") # The "SQLITE_"-prefix may be omitted.
+				[/codeblock]
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="path" type="String" default="default">
+			Path to the database, should be set before opening the database with [code]open_db()[/code]. If no database with this name exists, a new one at the supplied path will be created. Both [code]res://[/code] and [code]user://[/code] keywords can be used to define the path.
+		</member>
+		<member name="error_message" type="String" default="&quot;&quot;">
+			Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
+		</member>
+		<member name="default_extension" type="String" default="db">
+			Default extension that is automatically appended to the [code]path[/code]-variable whenever [b]no[/b] extension is detected/given.
+			[i][b]NOTE:[/b] If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.[/i]
+		</member>
+		<member name="foreign_keys" type="bool" default="false">
+			Enables or disables the availability of [url=https://www.sqlite.org/foreignkeys.html]foreign keys[/url] in the SQLite database.
+		</member>
+		<member name="read_only" type="bool" default="false">
+			Enabling this property opens the database in read-only modus &amp; allows databases to be packaged inside of the PCK. To make this possible, a custom [url=https://www.sqlite.org/vfs.html]VFS[/url] is employed which internally takes care of all the file handling using the Godot API.
+		</member>
+		<member name="query_result" type="Array" default="[]">
+			Contains the results from the latest query [b]by value[/b]; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.
+		</member>
+		<member name="query_result_by_reference" type="Array" default="[]">
+			Contains the results from the latest query [b]by reference[/b] and is, as a direct result, cleared and repopulated after every new query.
+		</member>
+		<member name="last_insert_rowid" type="int" default="0">
+			Exposes the [code]sqlite3_last_insert_rowid()[/code]-method to Godot as described [url=https://www.sqlite.org/c3ref/last_insert_rowid.html]here[/url].
+			Attempting to modify this variable directly is forbidden and throws an error.
+		</member>
+		<member name="verbosity_level" type="int" default="1">
+			The verbosity_level determines the amount of logging to the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
+			[i][b]NOTE:[/b] [constant VERBOSE] and higher levels might considerably slow down your queries due to excessive logging.[/i]
+		</member>
+	</members>
+	<signals>
+	</signals>
+	<constants>
+		<constant name="QUIET" value="0">
+			Don't print anything to the console.
+		</constant>
+		<constant name="NORMAL" value="1">
+			Print essential information to the console.
+		</constant>
+		<constant name="VERBOSE" value="2">
+			Print additional information to the console.
+		</constant>
+		<constant name="VERY_VERBOSE" value="3">
+			Same as [constant VERBOSE].
+		</constant>
+	</constants>
+</class>

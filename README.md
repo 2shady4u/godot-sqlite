@@ -61,7 +61,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Default extension that is automatically appended to the `path`-variable whenever **no** extension is detected/given.
 
-    ***NOTE:** If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.*
+    ***NOTE**: If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.*
 
 - **foreign_keys** (Boolean, default=false)
 
@@ -70,8 +70,6 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 - **read_only** (Boolean, default=false)
 
     Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API.
-
-    ***NOTE:** Godot opens files in a mode that is not shareable i.e. the database file cannot be open in any other program. Attempting to open a read-only database that is locked by another program fails and returns `ERR_FILE_CANT_OPEN` (`12`). However, multiple simultaneous read-only database connections are allowed.*
 
 - **query_result** (Array, default=[])
 
@@ -97,15 +95,21 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     | VERBOSE (2)      | Print additional information to the console |
     | VERY_VERBOSE (3) | Same as VERBOSE                             |
 
-    ***NOTE:** VERBOSE and higher levels might considerably slow down your queries due to excessive logging.*
+    ***NOTE**: VERBOSE and higher levels might considerably slow down your queries due to excessive logging.*
 
-## Functions
+## Methods
 
 - Boolean success = **open_db()**
 
+    Open a new database connection. Multiple concurrently open connections to the same database are possible.
+
 - Boolean success = **close_db()**
 
+    Close the current database connection.
+
 - Boolean success = **query(** String query_string **)**
+
+    Query the database using the raw SQL statement defined in `query_string`.
 
 - Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
 
@@ -169,15 +173,20 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     # Add the row "id" to the table, which is an auto-incremented primary key.
     # When adding additional rows, this value can either by explicitely given or be unfilled.
     table_dictionary["id"] = {
-        "data_type":"int", 
+        "data_type": "int", 
         "primary_key": true, 
-        "auto_increment":true
+        "auto_increment": true
     }
     ```
 
     For more concrete usage examples see the `database.gd`-file as found in this repository's demo project.
 
 - Boolean success = **drop_table(** String table_name **)**
+
+    Drop the table with name `table_name`. This method is equivalent to the following query:
+    ```
+    db.query("DROP TABLE "+ table_name + ";")
+    ```
 
 - Boolean success = **insert_row(** String table_name, Dictionary row_dictionary **)**
 
@@ -361,8 +370,6 @@ To enable this behaviour following conditions need to be met:
 - The connection has to be opened in read-only mode by setting the `read_only` variable to True.
 
 You can also open databases in read-only mode that are not packaged, albeit under some restrictions such as the fact that the database files have to copied manually to `user://`-folder on mobile platforms (Android & iOS) and for web builds.
-
-One important additional constraint for read-only databases is that Godot's implementation of file handling does not allow files to opened in a shareable manner. Basically this means that opening a database connection fails whenever other programs have a read lock on the database file e.g. having the file open in [SQLiteStudio](https://sqlitestudio.pl/) for editing purposes. However, multiple simultaneous read-only database connections are allowed.
 
 ***NOTE**: The contents of your PCK file can be verified by using externally available tools as found [here](https://github.com/hhyyrylainen/GodotPckTool).*
 
