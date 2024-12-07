@@ -157,11 +157,11 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     - **"default"**: The default value of the column if not explicitly given.
 
     - **"primary_key"** *(default = false)*: Is this the primary key of this table?  
-    Evidently, only a single column can be set as the primary key.
+    Multiple columns can be set as a primary key.
 
     - **"auto_increment"** *(default = false)*: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
 
-        ***NOTE**: Auto-incrementing a column only works when this column is the primary key!*
+        ***NOTE**: Auto-incrementing a column only works when this column is the primary key and no other columns are primary keys!*
 
     - **"foreign_key"**: Enforce an "exist" relationship between tables by setting this variable to `foreign_table.foreign_column`. In other words, when adding an additional row, the column value should be an existing value as found in the column with name `foreign_column` of the table with name `foreign_table`.
 
