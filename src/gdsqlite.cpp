@@ -335,15 +335,23 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) 
 		return false;
 	}
 
-	String query_string, type_string, key_string;
+	String query_string, type_string, key_string, primary_string;
 	String integer_datatype = "int";
 	/* Create SQL statement */
 	query_string = "CREATE TABLE IF NOT EXISTS " + p_name + " (";
 	key_string = "";
+	primary_string = "";
 
 	Dictionary column_dict;
 	Array columns = p_table_dict.keys();
 	int64_t number_of_columns = columns.size();
+	int primary_key_columns = 0;
+	for (int64_t i = 0; i <= number_of_columns - 1; i++) {
+		column_dict = p_table_dict[columns[i]];
+		if (column_dict.get("primary_key", false)) {
+			primary_key_columns++;
+		}
+	}
 	for (int64_t i = 0; i <= number_of_columns - 1; i++) {
 		column_dict = p_table_dict[columns[i]];
 		query_string += (const String &)columns[i] + String(" ");
@@ -356,10 +364,18 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) 
 
 		/* Primary key check */
 		if (column_dict.get("primary_key", false)) {
-			query_string += String(" PRIMARY KEY");
-			/* Autoincrement check */
-			if (column_dict.get("auto_increment", false)) {
-				query_string += String(" AUTOINCREMENT");
+			if (primary_key_columns == 1) {
+				query_string += String(" PRIMARY KEY");
+				/* Autoincrement check */
+				if (column_dict.get("auto_increment", false)) {
+					query_string += String(" AUTOINCREMENT");
+				}
+			} else {
+				if (primary_string.is_empty()) {
+					primary_string = (const String &)columns[i];
+				} else {
+					primary_string += String(", ") + (const String &)columns[i];
+				}
 			}
 		}
 		/* Not null check */
@@ -391,6 +407,10 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) 
 		if (i != number_of_columns - 1) {
 			query_string += ",";
 		}
+	}
+
+	if (primary_key_columns > 1) {
+		query_string += String(", PRIMARY KEY (") + primary_string + String(")");
 	}
 
 	query_string += key_string + ");";

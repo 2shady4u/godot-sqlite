@@ -91,9 +91,9 @@
 				    * [i]Data types not found in this list throw an error and end up finalizing the current SQLite statement.[/i][br]    ** [i]with the question mark being replaced by the maximum amount of characters[/i]
 				[b]Optional fields[/b]:
 				- [b]"not_null"[/b] [i](default = false)[/i]: Is the NULL value an invalid value for this column?[br]- [b]"unique"[/b] [i](default = false)[/i]: Does the column have a unique constraint?[br]- [b]"default"[/b]: The default value of the column if not explicitly given.[br]- [b]"primary_key"[/b] [i](default = false)[/i]: Is this the primary key of this table?
-				    Evidently, only a single column can be set as the primary key.
+				    Multiple columns can be set as a primary key.
 				- [b]"auto_increment"[/b] [i](default = false)[/i]: Automatically increment this column when no explicit value is given. This auto-generated value will be one more (+1) than the largest value currently in use.
-				    [i][b]NOTE[/b]: Auto-incrementing a column only works when this column is the primary key![/i]
+				    [i][b]NOTE[/b]: Auto-incrementing a column only works when this column is the primary key and no other columns are primary keys![/i]
 				- [b]"foreign_key"[/b]: Enforce an "exist" relationship between tables by setting this variable to [code]foreign_table.foreign_column[/code]. In other words, when adding an additional row, the column value should be an existing value as found in the column with name [code]foreign_column[/code] of the table with name [code]foreign_table[/code].
 				    [i][b]NOTE[/b]: Availability of foreign keys has to be enabled by setting the [code]foreign_keys[/code]-variable to true BEFORE opening the database.[/i]
 				[b]Example usage[/b]:
