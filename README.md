@@ -118,8 +118,9 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     **Example usage**:
 
     ```gdscript
-    var query_string : String = "SELECT ? FROM company WHERE age < ?;"
-    var param_bindings : Array = ["name", 24]
+    var column_name : String = "name";
+    var query_string : String = "SELECT %s FROM company WHERE age < ?;" % [column_name]
+    var param_bindings : Array = [24]
     var success = db.query_with_bindings(query_string, param_bindings)
     # Executes following query: 
     # SELECT name FROM company WHERE age < 24;

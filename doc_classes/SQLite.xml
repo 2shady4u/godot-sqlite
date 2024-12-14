@@ -71,8 +71,9 @@
 				Binds the parameters contained in the [code]param_bindings[/code]-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [url=https://www.sqlite.org/c3ref/bind_blob.html]here[/url].
 				[b]Example usage[/b]:
 				[codeblock]
-				var query_string : String = "SELECT ? FROM company WHERE age &lt; ?;"
-				var param_bindings : Array = ["name", 24]
+				var column_name : String = "name"
+				var query_string : String = "SELECT %s FROM company WHERE age &lt; ?;" % [column_name]
+				var param_bindings : Array = [24]
 				var success = db.query_with_bindings(query_string, param_bindings)
 				# Executes following query: 
 				# SELECT name FROM company WHERE age &lt; 24;
