@@ -43,7 +43,7 @@ func _ready():
 
 func cprint(text : String) -> void:
 	print(text)
-	emit_signal("output_received", text)
+	output_received.emit(text)
 
 func copy_data_to_user() -> void:
 	var data_path := "res://data"
@@ -295,7 +295,7 @@ func example_of_blob_io():
 	table_dict["data"] = {"data_type":"blob", "not_null": true}
 
 	var texture := preload("res://icon.png")
-	emit_signal("texture_received", texture)
+	texture_received.emit(texture)
 	var tex_data : PackedByteArray = texture.get_image().save_png_to_buffer()
 
 	db = SQLite.new()
@@ -318,7 +318,7 @@ func example_of_blob_io():
 		var image := Image.new()
 		var _error : int = image.load_png_from_buffer(selected_data)
 		var loaded_texture := ImageTexture.create_from_image(image)
-		emit_signal("texture_received", loaded_texture)
+		texture_received.emit(loaded_texture)
 
 	# Export the table to a json-file and automatically encode BLOB data to base64.
 	db.export_to_json(json_name + "_base64_new")
@@ -334,7 +334,7 @@ func example_of_blob_io():
 		var image := Image.new()
 		var _error : int = image.load_png_from_buffer(selected_data)
 		var loaded_texture := ImageTexture.create_from_image(image)
-		emit_signal("texture_received", loaded_texture)
+		texture_received.emit(loaded_texture)
 
 	# Close the current database
 	db.close_db()

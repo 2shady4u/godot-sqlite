@@ -17,3 +17,4 @@ In chronological order based on the first contribution.
 - [Chris Ridenour (cridenour)](https://github.com/cridenour)
 - [filkata](https://github.com/filkata)
 - [abcjjy](https://github.com/abcjjy)
+- [Markus Sauermann (Sauermann)](https://github.com/Sauermann)
