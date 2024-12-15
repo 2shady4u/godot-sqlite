@@ -74,6 +74,8 @@ public:
 	bool create_table(const String &p_name, const Dictionary &p_table_dict);
 	bool drop_table(const String &p_name);
 
+	bool drop_view(const String &p_name);
+
 	bool backup_to(String destination_path);
 	bool restore_from(String source_path);
 
