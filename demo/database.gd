@@ -144,6 +144,31 @@ func example_of_basic_database_querying():
 	db.query("PRAGMA encoding;")
 	cprint("Current database encoding is: {0}".format([db.query_result[0]["encoding"]]))
 
+	# Create a TRIGGER and trigger it!
+	db.query("CREATE TRIGGER increase_salary_after_employee_termination AFTER DELETE ON " + table_name + " BEGIN UPDATE " + table_name + " SET salary = salary + 100;END;")
+
+	db.select_rows(table_name, "", ["name", "salary"])
+	cprint("employees: {0}".format([str(db.query_result_by_reference)]))
+
+	cprint("Firing that slacker Paul!")
+	db.delete_rows(table_name, "name = 'Paul'")
+
+	db.select_rows(table_name, "", ["name", "salary"])
+	cprint("employees: {0}".format([str(db.query_result_by_reference)]))
+
+	# Create a VIEW and use it!
+	db.query("CREATE VIEW cheapest_employee AS SELECT id, name FROM " + table_name + " WHERE salary = (SELECT MIN(salary) FROM company) LIMIT 1;")
+
+	# Fire the cheapest employee!
+	cprint("Firing the cheapest employee!")
+	db.delete_rows(table_name, "id = (SELECT id FROM cheapest_employee)")
+
+	db.select_rows(table_name, "", ["name", "salary"])
+	cprint("employees: {0}".format([str(db.query_result_by_reference)]))
+
+	# Create an INDEX!
+	db.query("CREATE INDEX idx_name ON " + table_name + "(name);")
+
 	# Export the table to a json-file with a specified name
 	db.export_to_json(json_name + "_new")
 
@@ -168,6 +193,9 @@ func example_of_basic_database_querying():
 	# Import the data (in a destructive manner) from the new backup json-file
 	cprint("Overwriting database content again with latest backup...")
 	db.import_from_json(json_name + "_new")
+
+	db.query("SELECT * FROM sqlite_master;")
+	cprint(str(db.query_result_by_reference))
 
 	# Try to delete a non-existant table from the database.
 	if not db.delete_rows(other_table_name, "*"):

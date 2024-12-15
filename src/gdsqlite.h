@@ -22,6 +22,8 @@
 namespace godot {
 enum OBJECT_TYPE {
 	TABLE,
+	INDEX,
+	VIEW,
 	TRIGGER
 };
 struct object_struct {
