@@ -805,7 +805,7 @@ bool SQLite::import_from_json(String import_path) {
 	}
 
 	/* Find all tables that are present in this database */
-	/* We don't care about triggers here since they get dropped automatically when their table is dropped */
+	/* We don't care about indexes or triggers here since they get dropped automatically when their table is dropped */
 	query(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
 	TypedArray<Dictionary> old_database_array = query_result.duplicate(true);
 #ifdef SQLITE_ENABLE_FTS5
@@ -838,7 +838,7 @@ bool SQLite::import_from_json(String import_path) {
 
 	for (auto object : objects_to_import) {
 		if (object.type != TABLE) {
-			/* The object is a trigger and doesn't have any rows! */
+			/* The object is an index or trigger and doesn't have any rows! */
 			continue;
 		}
 
@@ -878,7 +878,7 @@ bool SQLite::import_from_json(String import_path) {
 
 bool SQLite::export_to_json(String export_path) {
 	/* Get all names and sql templates for all tables present in the database */
-	query(String("SELECT name,sql,type FROM sqlite_master WHERE type = 'table' OR type = 'trigger';"));
+	query(String("SELECT name,sql,type FROM sqlite_master WHERE type = 'table' OR type = 'index' OR type = 'trigger';"));
 	TypedArray<Dictionary> database_array = query_result.duplicate(true);
 #ifdef SQLITE_ENABLE_FTS5
 	/* FTS5 creates a bunch of shadow tables that should NOT be exported! */
@@ -1002,11 +1002,13 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 				return false;
 			}
 			new_object.row_array = temp_dict["row_array"];
+		} else if (temp_dict["type"] == String("index")) {
+			new_object.type = INDEX;
 		} else if (temp_dict["type"] == String("trigger")) {
 			new_object.type = TRIGGER;
 		} else {
 			/* Did not find the necessary key! */
-			UtilityFunctions::printerr(2, "GDSQlite Error: The value of key \"type\" is restricted to either \"table\" or \"trigger\"");
+			UtilityFunctions::printerr(2, "GDSQlite Error: The value of key \"type\" is restricted to \"table\", \"index\" or \"trigger\"");
 			return false;
 		}
 
