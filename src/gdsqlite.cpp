@@ -769,7 +769,7 @@ bool SQLite::import_from_json(String import_path) {
 	/* Open the json-file and stream its content into a stringstream */
 	std::ifstream ifs(char_path);
 	if (ifs.fail()) {
-		UtilityFunctions::printerr("GDSQLite Error: Failed to open specified json-file (" + import_path + ")");
+		UtilityFunctions::printerr("GDSQLite Error: " + String(std::strerror(errno)) + " (" + import_path + ")");
 		return false;
 	}
 	std::stringstream buffer;
@@ -804,19 +804,32 @@ bool SQLite::import_from_json(String import_path) {
 		}
 	}
 
+	/* Find all views that are present in this database */
+	query(String("SELECT name FROM sqlite_master WHERE type = 'view';"));
+	TypedArray<Dictionary> old_view_array = query_result.duplicate(true);
+	int64_t old_number_of_views = old_view_array.size();
+	/* Drop all old views present in the database */
+	for (int64_t i = 0; i <= old_number_of_views - 1; i++) {
+		Dictionary view_dict = old_view_array[i];
+		String view_name = view_dict["name"];
+		String query_string = "DROP VIEW " + view_name + ";";
+
+		query(query_string);
+	}
+
 	/* Find all tables that are present in this database */
 	/* We don't care about indexes or triggers here since they get dropped automatically when their table is dropped */
 	query(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
-	TypedArray<Dictionary> old_database_array = query_result.duplicate(true);
+	TypedArray<Dictionary> old_table_array = query_result.duplicate(true);
 #ifdef SQLITE_ENABLE_FTS5
 	/* FTS5 creates a bunch of shadow tables that cannot be dropped manually! */
 	/* The virtual table is responsible for dropping these tables itself */
-	remove_shadow_tables(old_database_array);
+	remove_shadow_tables(old_table_array);
 #endif
-	int64_t old_number_of_tables = old_database_array.size();
+	int64_t old_number_of_tables = old_table_array.size();
 	/* Drop all old tables present in the database */
 	for (int64_t i = 0; i <= old_number_of_tables - 1; i++) {
-		Dictionary table_dict = old_database_array[i];
+		Dictionary table_dict = old_table_array[i];
 		String table_name = table_dict["name"];
 
 		drop_table(table_name);
@@ -878,7 +891,7 @@ bool SQLite::import_from_json(String import_path) {
 
 bool SQLite::export_to_json(String export_path) {
 	/* Get all names and sql templates for all tables present in the database */
-	query(String("SELECT name,sql,type FROM sqlite_master WHERE type = 'table' OR type = 'index' OR type = 'trigger';"));
+	query(String("SELECT name,sql,type FROM sqlite_master;"));
 	TypedArray<Dictionary> database_array = query_result.duplicate(true);
 #ifdef SQLITE_ENABLE_FTS5
 	/* FTS5 creates a bunch of shadow tables that should NOT be exported! */
@@ -944,7 +957,7 @@ bool SQLite::export_to_json(String export_path) {
 
 	std::ofstream ofs(char_path, std::ios::trunc);
 	if (ofs.fail()) {
-		UtilityFunctions::printerr("GDSQLite Error: Can't open specified json-file, file does not exist or is locked");
+		UtilityFunctions::printerr("GDSQLite Error: " + String(std::strerror(errno)) + " (" + export_path + ")");
 		return false;
 	}
 	Ref<JSON> json;
@@ -1004,11 +1017,13 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 			new_object.row_array = temp_dict["row_array"];
 		} else if (temp_dict["type"] == String("index")) {
 			new_object.type = INDEX;
+		} else if (temp_dict["type"] == String("view")) {
+			new_object.type = TRIGGER;
 		} else if (temp_dict["type"] == String("trigger")) {
 			new_object.type = TRIGGER;
 		} else {
 			/* Did not find the necessary key! */
-			UtilityFunctions::printerr(2, "GDSQlite Error: The value of key \"type\" is restricted to \"table\", \"index\" or \"trigger\"");
+			UtilityFunctions::printerr(2, "GDSQlite Error: The value of key \"type\" is restricted to \"table\", \"index\", \"view\" or \"trigger\"");
 			return false;
 		}
 
