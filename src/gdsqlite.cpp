@@ -400,6 +400,16 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) 
 					const String foreign_key_table_name = (const String &)(foreign_key_elements[0]);
 					const String foreign_key_column_name = (const String &)(foreign_key_elements[1]);
 					key_string += String(", FOREIGN KEY (" + column_name + ") REFERENCES " + foreign_key_table_name + "(" + foreign_key_column_name + ")");
+
+					if (column_dict.has("on_delete")) {
+						const String foreign_key_on_delete_action = (const String &)(column_dict["on_delete"]);
+						key_string += String(" ON DELETE " + foreign_key_on_delete_action);
+					}
+
+					if (column_dict.has("on_update")) {
+						const String foreign_key_on_update_action = (const String &)(column_dict["on_update"]);
+						key_string += String(" ON UPDATE " + foreign_key_on_update_action);
+					}
 				}
 			}
 		}
