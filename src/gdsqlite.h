@@ -92,6 +92,9 @@ public:
 	int get_autocommit() const;
 	int compileoption_used(const String &option_name) const;
 
+	int load_extension(const String &p_path, const String &p_init_func_name);
+	int enable_load_extension(const bool &p_onoff);
+
 	// Properties.
 	void set_last_insert_rowid(const int64_t &p_last_insert_rowid);
 	int64_t get_last_insert_rowid() const;
