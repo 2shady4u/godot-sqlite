@@ -197,6 +197,36 @@
 				[/codeblock]
 			</description>
 		</method>
+		<method name="enable_load_extension">
+			<return type="int" />
+			<description>
+				[url=https://www.sqlite.org/c3ref/load_extension.html]Extension loading[/url] is disabled by default for security reasons. There are two ways to load an extension: C-API and SQL function. This method turns on both options.
+				SQL function [code]load_extension()[/code] can only be used after enabling extension loading with this method. Preferably should be disabled after loading the extension to prevent SQL injections. Returns the SQLite return code.
+				
+				[codeblock]
+				var module_path = ProjectSettings.globalize_path("res://addons/godot-sqlite/extensions/spellfix.dll")
+				db.enable_load_extension(true)
+				db.query_with_bindings(
+				    "select load_extension(?, ?);", [
+				        module_path,
+				        "sqlite3_spellfix_init"
+				    ])
+				db.enable_load_extension(false)
+                [/codeblock]
+			</description>
+		</method>
+		<method name="load_extension">
+			<return type="int" />
+			<description>
+				Loads the extension in the given path. Does not require [method SQLite.enable_load_extension], as it only enables C-API during the call and disables it right after, utilizing the recommended extension loading method declared by the SQLite documentation ([url=https://www.sqlite.org/c3ref/load_extension.html]see[/url]). Returns the SQLite return code.
+				- [b]extension_path:[/b] the path to the compiled binary of the extension
+				- [b]entrypoint:[/b] the extension's entrypoint method (init function). It is defined in the .c file of the extension. 
+				Example for loading the spellfix module:
+				[codeblock]
+				db.load_extension("res://addons/godot-sqlite/extensions/spellfix.dll", "sqlite3_spellfix_init")
+				[/codeblock]
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="path" type="String" default="default">

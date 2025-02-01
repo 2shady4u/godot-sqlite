@@ -239,6 +239,34 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Backup or restore the current database to/from a path, see [here](https://www.sqlite.org/backup.html). This feature is useful if you are using a database as your save file and you want to easily implement a saving/loading mechanic. Be warned that the original database will be overwritten entirely when restoring.
 
+- int enable_load_extension = **enable_load_extension(** Boolean onoff **)**
+
+    [Extension loading](https://www.sqlite.org/c3ref/load_extension.html) is disabled by default for security reasons. There are two ways to load an extension: C-API and SQL function. This method turns on both options.
+    SQL function `load_extension()` can only be used after enabling extension loading with this method. Preferably should be disabled after loading the extension to prevent SQL injections. Returns the SQLite return code.
+
+    ```gdscript
+    var module_path = ProjectSettings.globalize_path("res://addons/godot-sqlite/extensions/spellfix.dll")
+    db.enable_load_extension(true)
+    db.query_with_bindings(
+        "select load_extension(?, ?);", [
+            module_path,
+            "sqlite3_spellfix_init"
+        ])
+    db.enable_load_extension(false)
+    ```
+
+- int load_extension = **load_extension(** String extension_path, String extension_entry_point **)**
+
+    Loads the extension in the given path. Does not require `enable_load_extension()`, as it only enables C-API during the call and disables it right after, utilizing the recommended extension loading method declared by the SQLite documentation ([see](https://www.sqlite.org/c3ref/load_extension.html)). Returns the SQLite return code.
+    - **extension_path:** the path to the compiled binary of the extension
+    - **entrypoint:** the extension's entrypoint method (init function). It is defined in the .c file of the extension.
+
+   Example for loading the spellfix module:
+
+    ```gdscript
+    db.load_extension("res://addons/godot-sqlite/extensions/spellfix.dll", "sqlite3_spellfix_init")
+    ```
+
 ## Frequently Asked Questions (FAQ)
 
 ### 1. My query fails and returns syntax errors, what should I do?
