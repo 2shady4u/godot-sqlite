@@ -13,7 +13,7 @@ env:
 jobs:
   macos-compilation:
     name: MacOS Compilation
-    runs-on: "macos-11"
+    runs-on: "macos-latest"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
           scons platform=osx target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: osx
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}

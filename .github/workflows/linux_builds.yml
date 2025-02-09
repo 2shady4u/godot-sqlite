@@ -55,7 +55,7 @@ jobs:
           scons platform=linux target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: x11
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
@@ -105,7 +105,7 @@ jobs:
           scons platform=linux target=${{env.TARGET}} target_path=${{env.TARGET_PATH}} target_name=${{env.TARGET_NAME}}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: x11-legacy
           path: ${{env.PROJECT_FOLDER}}/${{env.TARGET_PATH}}
