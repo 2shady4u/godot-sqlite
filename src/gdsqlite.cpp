@@ -30,6 +30,9 @@ void SQLite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLite::get_autocommit);
 	ClassDB::bind_method(D_METHOD("compileoption_used", "option_name"), &SQLite::compileoption_used);
 
+	ClassDB::bind_method(D_METHOD("enable_load_extension", "onoff"), &SQLite::enable_load_extension);
+	ClassDB::bind_method(D_METHOD("load_extension", "extension_path", "entrypoint"), &SQLite::load_extension, DEFVAL("sqlite3_extension_init"));
+
 	// Properties.
 	ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLite::set_last_insert_rowid);
 	ClassDB::bind_method(D_METHOD("get_last_insert_rowid"), &SQLite::get_last_insert_rowid);
@@ -1151,4 +1154,47 @@ int SQLite::compileoption_used(const String &option_name) const {
 	const CharString dummy_name = option_name.utf8();
 	const char *char_name = dummy_name.get_data();
 	return sqlite3_compileoption_used(char_name);
+}
+
+int SQLite::enable_load_extension(const bool &p_onoff) {
+	int rc;
+	if (p_onoff == true) {
+		rc = sqlite3_enable_load_extension(db, 1);
+	} else {
+		rc = sqlite3_enable_load_extension(db, 0);
+	}
+	if (rc != SQLITE_OK) {
+		UtilityFunctions::printerr("GDSQLite Error: Extension loading cannot be enabled/disabled.");
+	}
+	return rc;
+}
+
+int SQLite::load_extension(const String &p_path, const String &entrypoint) {
+	int rc;
+
+	char *zErrMsg = 0;
+	String globalized_path = ProjectSettings::get_singleton()->globalize_path(p_path.strip_edges());
+	const CharString dummy_path = globalized_path.utf8();
+	const char *char_path = dummy_path.get_data();
+
+	const CharString dummy_func_name = entrypoint.utf8();
+	const char *func_name = dummy_func_name.get_data();
+
+	// Enable C-API only
+	sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 1, NULL);
+	// load extension
+	rc = sqlite3_load_extension(db, char_path, func_name, &zErrMsg);
+	// Disable C-API
+	sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 0, NULL);
+
+	if (rc != SQLITE_OK) {
+		UtilityFunctions::printerr("GDSQLite Error: Unable to load extension: " + String::utf8(zErrMsg));
+		sqlite3_free(zErrMsg);
+		return rc;
+	}
+	if (verbosity_level > VerbosityLevel::QUIET) {
+		UtilityFunctions::print("Loaded extension successfully (" + globalized_path + ")");
+	}
+
+	return rc;
 }
