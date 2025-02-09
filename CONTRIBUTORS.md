@@ -19,3 +19,4 @@ In chronological order based on the first contribution.
 - [abcjjy](https://github.com/abcjjy)
 - [Markus Sauermann (Sauermann)](https://github.com/Sauermann)
 - [Bernardo Rodriguez (Soleyu)](https://github.com/Soleyu)
+- [ugursoy](https://github.com/ugursoy)
