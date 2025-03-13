@@ -20,3 +20,4 @@ In chronological order based on the first contribution.
 - [Markus Sauermann (Sauermann)](https://github.com/Sauermann)
 - [Bernardo Rodriguez (Soleyu)](https://github.com/Soleyu)
 - [ugursoy](https://github.com/ugursoy)
+- [youngminz](https://github.com/youngminz)

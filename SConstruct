@@ -42,8 +42,8 @@ if env["platform"] == "macos":
             target,
             env["platform"],
             env["target"],
-            env["platform"],
             target_name,
+            env["platform"],
             env["target"]
         ),
         source=sources,
