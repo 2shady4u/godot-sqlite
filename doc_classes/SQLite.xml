@@ -119,6 +119,15 @@
 				[/codeblock]
 			</description>
 		</method>
+		<method name="get_table_info">
+			<return type="bool" />
+			<description>
+				Gets the the info (specified using [method create_table]) of the table with name [code]table_name[/code]. This method is equivalent to the following query:
+				[codeblock]
+				db.query("PRAGMA table_info("+ table_name + ");")
+				[/codeblock]
+			</description>
+		</method>
 		<method name="insert_row">
 			<return type="bool" />
 			<description>
