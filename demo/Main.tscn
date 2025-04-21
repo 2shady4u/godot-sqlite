@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://dsba4ukrk2ymt"]
 
-[ext_resource type="Script" path="res://database.gd" id="1"]
-[ext_resource type="Script" path="res://Main.gd" id="2"]
+[ext_resource type="Script" uid="uid://c2ckll61v16xo" path="res://database.gd" id="1"]
+[ext_resource type="Script" uid="uid://d1u6lbep66lom" path="res://Main.gd" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45gfi"]
 content_margin_left = 24.0
