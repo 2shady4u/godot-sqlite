@@ -339,7 +339,7 @@ If there is a better solution, one that does not involve copying the database to
 
 Follow the steps described in the Godot documentation as found [here](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_dedicated_servers.html).
 
-***NOTE**: If you are using an older version of Linux on your server machine (with glibc version < 2.31), the plugin crashes due to the compiled version of glibc being too recent. In that case you will have to recompile the Linux plugin binary yourself as Github Actions does not support Ubuntu versions lower than Ubuntu 20.04 LTS.*
+***NOTE**: If you are using an older version of Linux on your server machine (with glibc version < 2.35), the plugin crashes due to the compiled version of glibc being too recent. In that case you will have to recompile the Linux plugin binary yourself as Github Actions does not support Ubuntu versions lower than Ubuntu 22.04 LTS.*
 
 ***NOTE**: The currently installed version of glibc can be obtained with following command:*
 ```
