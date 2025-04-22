@@ -355,7 +355,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	}
 
 	/* Figure out if there's a subsequent statement which needs execution */
-	String sTail = String(pzTail).strip_edges();
+	String sTail = String::utf8(pzTail).strip_edges();
 	if (!sTail.is_empty()) {
 		return query_with_bindings(sTail, param_bindings);
 	}
