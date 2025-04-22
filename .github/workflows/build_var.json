@@ -39,6 +39,15 @@
             "cache-name": "linux-x86_64"
         },
         {
+            "name": "Ubuntu (GCC, Double Precision)",
+            "os": "ubuntu-22.04",
+            "platform": "linux",
+            "artifact-extension": "so",
+            "flags": "precision=double",
+            "cache-name": "linux-x86_64-f64",
+            "skip": true
+        },
+        {
             "name": "MacOS (universal)",
             "os": "macos-latest",
             "platform": "macos",
