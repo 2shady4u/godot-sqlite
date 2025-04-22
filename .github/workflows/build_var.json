@@ -75,6 +75,14 @@
             "platform": "web",
             "artifact-extension": "wasm",
             "cache-name": "web-wasm32"
+        },
+        {
+            "name": "Web (wasm32, No Threads)",
+            "os": "ubuntu-22.04",
+            "platform": "web",
+            "artifact-extension": "nothreads.wasm",
+            "flags": "threads=no",
+            "cache-name": "web-wasm32-nothreads"
         }
     ]
 }
