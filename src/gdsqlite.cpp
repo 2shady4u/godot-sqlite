@@ -831,9 +831,7 @@ bool SQLite::import_from_json(String import_path) {
 	Error error = json->parse(json_string);
 	if (error != Error::OK) {
 		/* Throw a parsing error */
-		// TODO: Figure out how to cast a int32_t to a Godot String using the new API
-		UtilityFunctions::printerr("GDSQLite Error: parsing failed! reason: " + json->get_error_message() + ", at line: ???");
-		//GODOT_LOG(2, "GDSQLite Error: parsing failed! reason: " + result->get_error_string() + ", at line: " + String::num_int64(result->get_error_line()))
+		UtilityFunctions::printerr("GDSQLite Error: parsing failed! reason: " + json->get_error_message() + ", at line: " + String::num_int64(json->get_error_line()));
 		return false;
 	}
 	Array database_array = json->get_data();
@@ -1053,7 +1051,7 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 			new_object.type = TRIGGER;
 		} else {
 			/* Did not find the necessary key! */
-			UtilityFunctions::printerr(2, "GDSQlite Error: The value of key \"type\" is restricted to either \"table\" or \"trigger\"");
+			UtilityFunctions::printerr("GDSQlite Error: The value of key \"type\" is restricted to either \"table\" or \"trigger\"");
 			return false;
 		}
 
