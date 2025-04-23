@@ -127,7 +127,7 @@ SQLite::~SQLite() {
 
 bool SQLite::open_db() {
 	if (db) {
-		UtilityFunctions::printerr("GDSQLite Error: Can't open database if connection is already open!");
+		ERR_PRINT("GDSQLite Error: Can't open database if connection is already open!");
 		return false;
 	}
 
@@ -157,7 +157,7 @@ bool SQLite::open_db() {
 			sqlite3_vfs_register(gdsqlite_vfs(), 0);
 			rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
 		} else {
-			UtilityFunctions::printerr("GDSQLite Error: Opening in-memory databases in read-only mode is currently not supported!");
+			ERR_PRINT("GDSQLite Error: Opening in-memory databases in read-only mode is currently not supported!");
 			return false;
 		}
 	} else {
@@ -168,7 +168,7 @@ bool SQLite::open_db() {
 	}
 
 	if (rc != SQLITE_OK) {
-		UtilityFunctions::printerr("GDSQLite Error: Can't open database: " + String::utf8(sqlite3_errmsg(db)));
+		ERR_PRINT("GDSQLite Error: Can't open database: " + String::utf8(sqlite3_errmsg(db)));
 		return false;
 	} else if (verbosity_level > VerbosityLevel::QUIET) {
 		UtilityFunctions::print("Opened database successfully (" + path + ")");
@@ -178,7 +178,7 @@ bool SQLite::open_db() {
 	if (foreign_keys) {
 		rc = sqlite3_exec(db, "PRAGMA foreign_keys=on;", NULL, NULL, &zErrMsg);
 		if (rc != SQLITE_OK) {
-			UtilityFunctions::printerr("GDSQLite Error: Can't enable foreign keys: " + String::utf8(zErrMsg));
+			ERR_PRINT("GDSQLite Error: Can't enable foreign keys: " + String::utf8(zErrMsg));
 			sqlite3_free(zErrMsg);
 			return false;
 		}
@@ -191,7 +191,7 @@ bool SQLite::close_db() {
 	if (db) {
 		// Cannot close database!
 		if (sqlite3_close_v2(db) != SQLITE_OK) {
-			UtilityFunctions::printerr("GDSQLite Error: Can't close database!");
+			ERR_PRINT("GDSQLite Error: Can't close database!");
 			return false;
 		} else {
 			db = nullptr;
@@ -202,7 +202,7 @@ bool SQLite::close_db() {
 		}
 	}
 
-	UtilityFunctions::printerr("GDSQLite Error: Can't close database if connection is not open!");
+	ERR_PRINT("GDSQLite Error: Can't close database if connection is not open!");
 	return false;
 }
 
@@ -231,7 +231,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	zErrMsg = sqlite3_errmsg(db);
 	error_message = String::utf8(zErrMsg);
 	if (rc != SQLITE_OK) {
-		UtilityFunctions::printerr(" --> SQL error: " + error_message);
+		ERR_PRINT(" --> SQL error: " + error_message);
 		sqlite3_finalize(stmt);
 		return false;
 	}
@@ -239,7 +239,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	/* Check if the param_bindings size exceeds the required parameter count */
 	int parameter_count = sqlite3_bind_parameter_count(stmt);
 	if (param_bindings.size() < parameter_count) {
-		UtilityFunctions::printerr("GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement!");
+		ERR_PRINT("GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement!");
 		sqlite3_finalize(stmt);
 		return false;
 	}
@@ -284,7 +284,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 			}
 
 			default:
-				UtilityFunctions::printerr("GDSQLite Error: Binding a parameter of type " + String(std::to_string(binding_value.get_type()).c_str()) + " (TYPE_*) is not supported!");
+				ERR_PRINT("GDSQLite Error: Binding a parameter of type " + String(std::to_string(binding_value.get_type()).c_str()) + " (TYPE_*) is not supported!");
 				sqlite3_finalize(stmt);
 				return false;
 		}
@@ -348,7 +348,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	zErrMsg = sqlite3_errmsg(db);
 	error_message = String::utf8(zErrMsg);
 	if (rc != SQLITE_OK) {
-		UtilityFunctions::printerr(" --> SQL error: " + error_message);
+		ERR_PRINT(" --> SQL error: " + error_message);
 		return false;
 	} else if (verbosity_level > VerbosityLevel::NORMAL) {
 		UtilityFunctions::print(" --> Query succeeded");
@@ -361,7 +361,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	}
 
 	if (!param_bindings.is_empty()) {
-		UtilityFunctions::push_warning("GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))");
+		WARN_PRINT("GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))");
 	}
 
 	return true;
@@ -471,18 +471,18 @@ bool SQLite::validate_table_dict(const Dictionary &p_table_dict) {
 	int64_t number_of_columns = columns.size();
 	for (int64_t i = 0; i <= number_of_columns - 1; i++) {
 		if (p_table_dict[columns[i]].get_type() != Variant::DICTIONARY) {
-			UtilityFunctions::printerr("GDSQLite Error: All values of the table dictionary should be of type Dictionary");
+			ERR_PRINT("GDSQLite Error: All values of the table dictionary should be of type Dictionary");
 			return false;
 		}
 
 		column_dict = p_table_dict[columns[i]];
 		if (!column_dict.has("data_type")) {
-			UtilityFunctions::printerr("GDSQLite Error: The field \"data_type\" is a required part of the table dictionary");
+			ERR_PRINT("GDSQLite Error: The field \"data_type\" is a required part of the table dictionary");
 			return false;
 		}
 
 		if (column_dict["data_type"].get_type() != Variant::STRING) {
-			UtilityFunctions::printerr("GDSQLite Error: The field \"data_type\" should be of type String");
+			ERR_PRINT("GDSQLite Error: The field \"data_type\" should be of type String");
 			return false;
 		}
 
@@ -504,7 +504,7 @@ bool SQLite::validate_table_dict(const Dictionary &p_table_dict) {
 			}
 
 			if (data_type_type != default_type) {
-				UtilityFunctions::printerr("GDSQLite Error: The type of the field \"default\" ( " + String(std::to_string(default_type).c_str()) + " ) should be the same type as the \"datatype\"-field ( " + String(std::to_string(data_type_type).c_str()) + " )");
+				ERR_PRINT("GDSQLite Error: The type of the field \"default\" ( " + String(std::to_string(default_type).c_str()) + " ) should be the same type as the \"datatype\"-field ( " + String(std::to_string(data_type_type).c_str()) + " )");
 				return false;
 			}
 		}
@@ -588,7 +588,7 @@ bool SQLite::insert_rows(const String &p_name, const Array &p_row_array) {
 	int64_t number_of_rows = p_row_array.size();
 	for (int64_t i = 0; i <= number_of_rows - 1; i++) {
 		if (p_row_array[i].get_type() != Variant::DICTIONARY) {
-			UtilityFunctions::printerr("GDSQLite Error: All elements of the Array should be of type Dictionary");
+			ERR_PRINT("GDSQLite Error: All elements of the Array should be of type Dictionary");
 			/* Don't forget to close the transaction! */
 			/* Maybe we should do a rollback instead? */
 			query("END TRANSACTION;");
@@ -615,7 +615,7 @@ Array SQLite::select_rows(const String &p_name, const String &p_conditions, cons
 	int64_t number_of_columns = p_columns_array.size();
 	for (int64_t i = 0; i <= number_of_columns - 1; i++) {
 		if (p_columns_array[i].get_type() != Variant::STRING) {
-			UtilityFunctions::printerr("GDSQLite Error: All elements of the Array should be of type String");
+			ERR_PRINT("GDSQLite Error: All elements of the Array should be of type String");
 			return query_result;
 		}
 		query_string += (const String &)p_columns_array[i];
@@ -692,7 +692,7 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 
 	/* Check if the callable is valid */
 	if (!callable.is_valid()) {
-		UtilityFunctions::printerr("GDSQLite Error: Supplied function reference is invalid! Aborting callback...");
+		ERR_PRINT("GDSQLite Error: Supplied function reference is invalid! Aborting callback...");
 		return;
 	}
 
@@ -793,7 +793,7 @@ bool SQLite::create_function(const String &p_name, const Callable &p_callable, i
 	/* Create the actual function */
 	rc = sqlite3_create_function(db, zFunctionName, nArg, eTextRep, pApp, xFunc, xStep, xFinal);
 	if (rc) {
-		UtilityFunctions::printerr("GDSQLite Error: " + String(sqlite3_errmsg(db)));
+		ERR_PRINT("GDSQLite Error: " + String(sqlite3_errmsg(db)));
 		return false;
 	} else if (verbosity_level > VerbosityLevel::NORMAL) {
 		UtilityFunctions::print("Succesfully added function \"" + p_name + "\" to function registry");
@@ -816,7 +816,7 @@ bool SQLite::import_from_json(String import_path) {
 	/* Open the json-file and stream its content into a stringstream */
 	std::ifstream ifs(char_path);
 	if (ifs.fail()) {
-		UtilityFunctions::printerr("GDSQLite Error: " + String(std::strerror(errno)) + " (" + import_path + ")");
+		ERR_PRINT("GDSQLite Error: " + String(std::strerror(errno)) + " (" + import_path + ")");
 		return false;
 	}
 	std::stringstream buffer;
@@ -831,7 +831,7 @@ bool SQLite::import_from_json(String import_path) {
 	Error error = json->parse(json_string);
 	if (error != Error::OK) {
 		/* Throw a parsing error */
-		UtilityFunctions::printerr("GDSQLite Error: parsing failed! reason: " + json->get_error_message() + ", at line: " + String::num_int64(json->get_error_line()));
+		ERR_PRINT("GDSQLite Error: parsing failed! reason: " + json->get_error_message() + ", at line: " + String::num_int64(json->get_error_line()));
 		return false;
 	}
 	Array database_array = json->get_data();
@@ -917,7 +917,7 @@ bool SQLite::import_from_json(String import_path) {
 		int64_t number_of_rows = object.row_array.size();
 		for (int64_t i = 0; i <= number_of_rows - 1; i++) {
 			if (object.row_array[i].get_type() != Variant::DICTIONARY) {
-				UtilityFunctions::printerr("GDSQLite Error: All elements of the Array should be of type Dictionary");
+				ERR_PRINT("GDSQLite Error: All elements of the Array should be of type Dictionary");
 				return false;
 			}
 			if (!insert_row(object.name, object.row_array[i])) {
@@ -1002,7 +1002,7 @@ bool SQLite::export_to_json(String export_path) {
 
 	std::ofstream ofs(char_path, std::ios::trunc);
 	if (ofs.fail()) {
-		UtilityFunctions::printerr("GDSQLite Error: " + String(std::strerror(errno)) + " (" + export_path + ")");
+		ERR_PRINT("GDSQLite Error: " + String(std::strerror(errno)) + " (" + export_path + ")");
 		return false;
 	}
 	Ref<JSON> json;
@@ -1027,7 +1027,7 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 		/* Get the name of the object */
 		if (!temp_dict.has("name")) {
 			/* Did not find the necessary key! */
-			UtilityFunctions::printerr("GDSQlite Error: Did not find required key \"name\" in the supplied json-file");
+			ERR_PRINT("GDSQlite Error: Did not find required key \"name\" in the supplied json-file");
 			return false;
 		}
 		new_object.name = temp_dict["name"];
@@ -1035,14 +1035,14 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 		/* Extract the sql template for generating the object */
 		if (!temp_dict.has("sql")) {
 			/* Did not find the necessary key! */
-			UtilityFunctions::printerr("GDSQlite Error: Did not find required key \"sql\" in the supplied json-file");
+			ERR_PRINT("GDSQlite Error: Did not find required key \"sql\" in the supplied json-file");
 			return false;
 		}
 		new_object.sql = temp_dict["sql"];
 
 		if (!temp_dict.has("type")) {
 			/* Did not find the necessary key! */
-			UtilityFunctions::printerr("GDSQlite Error: Did not find required key \"type\" in the supplied json-file");
+			ERR_PRINT("GDSQlite Error: Did not find required key \"type\" in the supplied json-file");
 			return false;
 		}
 		if (temp_dict["type"] == String("table")) {
@@ -1053,10 +1053,10 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 
 			if (!temp_dict.has("row_array")) {
 				/* Did not find the necessary key! */
-				UtilityFunctions::printerr("GDSQlite Error: Did not find required key \"row_array\" in the supplied json-file");
+				ERR_PRINT("GDSQlite Error: Did not find required key \"row_array\" in the supplied json-file");
 				return false;
 			} else if (Variant(temp_dict["row_array"]).get_type() != Variant::ARRAY) {
-				UtilityFunctions::printerr("GDSQlite Error: The value of the key \"row_array\" should consist of an array of rows");
+				ERR_PRINT("GDSQlite Error: The value of the key \"row_array\" should consist of an array of rows");
 				return false;
 			}
 			new_object.row_array = temp_dict["row_array"];
@@ -1068,7 +1068,7 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 			new_object.type = TRIGGER;
 		} else {
 			/* Did not find the necessary key! */
-			UtilityFunctions::printerr("GDSQlite Error: The value of key \"type\" is restricted to \"table\", \"index\", \"view\" or \"trigger\"");
+			ERR_PRINT("GDSQlite Error: The value of key \"type\" is restricted to \"table\", \"index\", \"view\" or \"trigger\"");
 			return false;
 		}
 
@@ -1213,7 +1213,7 @@ int SQLite::enable_load_extension(const bool &p_onoff) {
 		rc = sqlite3_enable_load_extension(db, 0);
 	}
 	if (rc != SQLITE_OK) {
-		UtilityFunctions::printerr("GDSQLite Error: Extension loading cannot be enabled/disabled.");
+		ERR_PRINT("GDSQLite Error: Extension loading cannot be enabled/disabled.");
 	}
 	return rc;
 }
@@ -1237,7 +1237,7 @@ int SQLite::load_extension(const String &p_path, const String &entrypoint) {
 	sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 0, NULL);
 
 	if (rc != SQLITE_OK) {
-		UtilityFunctions::printerr("GDSQLite Error: Unable to load extension: " + String::utf8(zErrMsg));
+		ERR_PRINT("GDSQLite Error: Unable to load extension: " + String::utf8(zErrMsg));
 		sqlite3_free(zErrMsg);
 		return rc;
 	}
