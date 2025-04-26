@@ -14,7 +14,8 @@
 using namespace godot;
 
 static Ref<ResourceFormatLoaderSQLite> sqlite_loader;
-const char *DEFAULT_DB_NAME = "filesystem/import/sqlite/default_extension";
+const char *DEFAULT_EXTENSION_SETTING = "filesystem/import/sqlite/default_extension";
+const char *DEFAULT_EXTENSION_VALUE = "db";
 
 void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -27,27 +28,25 @@ void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 
 	sqlite_loader.instantiate();
 	ResourceLoader::get_singleton()->add_resource_format_loader(sqlite_loader);
-	PackedStringArray array;
-	array.push_back("db");
 
 	ProjectSettings *project_settings = ProjectSettings::get_singleton();
-
-	if (!project_settings->has_setting(DEFAULT_DB_NAME)) {
-		project_settings->set(DEFAULT_DB_NAME, "");
+	if (!project_settings->has_setting(DEFAULT_EXTENSION_SETTING)) {
+		project_settings->set_setting(DEFAULT_EXTENSION_SETTING, DEFAULT_EXTENSION_VALUE);
 	}
 
 	Dictionary property_info;
-	property_info["name"] = DEFAULT_DB_NAME;
+	property_info["name"] = DEFAULT_EXTENSION_SETTING;
 	property_info["type"] = godot::Variant::Type::STRING;
 
 	project_settings->add_property_info(property_info);
-	project_settings->set_initial_value(DEFAULT_DB_NAME, "db");
+	project_settings->set_initial_value(DEFAULT_EXTENSION_SETTING, DEFAULT_EXTENSION_VALUE);
 }
 
 void uninitialize_sqlite_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+
 	ResourceLoader::get_singleton()->remove_resource_format_loader(sqlite_loader);
 	sqlite_loader.unref();
 }

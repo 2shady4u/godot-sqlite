@@ -1,5 +1,5 @@
-#ifndef SQLITE_LOADER_SQLITE_H
-#define SQLITE_LOADER_SQLITE_H
+#ifndef RESOURCE_LOADER_SQLITE_H
+#define RESOURCE_LOADER_SQLITE_H
 
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
@@ -18,4 +18,4 @@ public:
 	virtual bool _handles_type(const StringName &type) const override;
 	virtual String _get_resource_type(const String &p_path) const override;
 };
-#endif // SQLITE_LOADER_SQLITE_H
+#endif // RESOURCE_LOADER_SQLITE_H

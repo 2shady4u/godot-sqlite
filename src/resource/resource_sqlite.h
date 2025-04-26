@@ -1,5 +1,5 @@
-#ifndef SQLITE_RESOURCE_H
-#define SQLITE_RESOURCE_H
+#ifndef RESOURCE_SQLITE_H
+#define RESOURCE_SQLITE_H
 
 #include <godot_cpp/classes/resource.hpp>
 
@@ -16,4 +16,4 @@ public:
 	void set_file(const String &p_file);
 	String get_file();
 };
-#endif // SQLITE_RESOURCE_H
+#endif // RESOURCE_SQLITE_H
