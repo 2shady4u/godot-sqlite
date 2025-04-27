@@ -1,7 +1,6 @@
 #include "resource_sqlite.h"
-#include <iostream>
 
-#include <godot_cpp/classes/file_access.hpp>
+using namespace godot;
 
 void SQLiteResource::set_file(const String &p_file) {
 	file = p_file;

@@ -1,6 +1,9 @@
 #include "resource_loader_sqlite.h"
-#include "resource_sqlite.h"
+
 #include <godot_cpp/classes/project_settings.hpp>
+
+#include "constants.h"
+#include "resource_sqlite.h"
 
 using namespace godot;
 
@@ -12,7 +15,7 @@ Variant ResourceFormatLoaderSQLite::_load(const String &p_path, const String &or
 
 PackedStringArray ResourceFormatLoaderSQLite::_get_recognized_extensions() const {
 	PackedStringArray extensions = PackedStringArray();
-	extensions.append(ProjectSettings::get_singleton()->get("filesystem/import/sqlite/default_extension"));
+	extensions.append(ProjectSettings::get_singleton()->get_setting(DEFAULT_EXTENSION_SETTING.c_str()));
 	return extensions;
 }
 
@@ -22,10 +25,9 @@ bool ResourceFormatLoaderSQLite::_handles_type(const StringName &type) const {
 
 String ResourceFormatLoaderSQLite::_get_resource_type(const String &p_path) const {
 	String el = p_path.get_extension().to_lower();
-	for (String element : (PackedStringArray)ProjectSettings::get_singleton()->get("filesystem/import/sqlite/default_extension")) {
-		if (el == element) {
-			return "SQLiteResource";
-		}
+	String default_extension = ProjectSettings::get_singleton()->get_setting(DEFAULT_EXTENSION_SETTING.c_str());
+	if (el == default_extension) {
+		return "SQLiteResource";
 	}
 	return "";
 }
