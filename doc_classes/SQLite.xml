@@ -162,6 +162,20 @@
 				Exports the database structure and content to [code]export_path.json[/code] as a backup or for ease of editing.
 			</description>
 		</method>
+		<method name="import_from_json_string">
+			<return type="bool" />
+			<description>
+				Drops all database tables and imports the database structure and content encoded in JSON-formatted input string.
+				Can be used together with [method SQLite.export_to_json_string] to implement database encryption.
+			</description>
+		</method>
+		<method name="export_to_json_string">
+			<return type="String" />
+			<description>
+				Returns the database structure and content as JSON-formatted string.
+				Can be used together with [method SQLite.import_from_json_string] to implement database encryption.
+			</description>
+		</method>
 		<method name="create_function">
 			<return type="bool" />
 			<description>
