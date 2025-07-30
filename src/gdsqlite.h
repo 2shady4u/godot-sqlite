@@ -91,8 +91,8 @@ public:
 	bool import_from_json(String import_path);
 	bool export_to_json(String export_path);
 
-	bool import_from_json_string(String json_string);
-	String export_to_json_string();
+	bool import_from_buffer(PackedByteArray json_buffer);
+	PackedByteArray export_to_buffer();
 
 	int get_autocommit() const;
 	int compileoption_used(const String &option_name) const;

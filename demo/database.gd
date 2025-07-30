@@ -512,7 +512,6 @@ func example_of_encrypted_database():
 	db.path = "file::memory:?cache=shared"
 	db.verbosity_level = verbosity_level
 	db.open_db()
-	db.drop_table("agents")
 	db.create_table("agents", table_dict)
 
 	var row_array : Array = []
@@ -529,39 +528,36 @@ func example_of_encrypted_database():
 	var names_pre = agents_pre.map(func(agent): return agent["name"])
 	cprint("Agent names pre encryption: " + str(names_pre))
 
-	# Export database as JSON-formatted string
-	var json_string: String = db.export_to_json_string()
+	# Export database as JSON-formatted buffer
+	var unencrypted: PackedByteArray = db.export_to_buffer()
 	db.drop_table("agents")
 
 	# Add padding
-	var json_packed: PackedByteArray = json_string.to_utf8_buffer()
-	var packed_size = json_packed.size()
-	var padding_size = 16-posmod(json_packed.size(), 16)
+	var buffer_size = unencrypted.size()
+	var padding_size = 16-posmod(buffer_size, 16)
 	var padding := PackedByteArray()
 	padding.resize(padding_size)
 	padding.fill(padding_size)
-	json_packed.append_array(padding)
+	unencrypted.append_array(padding)
 
 	var aes = AESContext.new()
 	aes.start(AESContext.MODE_ECB_ENCRYPT, key.to_utf8_buffer())
-	packed_size = json_packed.size()
-	var encrypted = aes.update(json_packed)
+	var encrypted: PackedByteArray = aes.update(unencrypted)
 	aes.finish()
 	# encrypted now contains the padded AES-encrypted database and can be stored using FileAccess
 
 	aes.start(AESContext.MODE_ECB_DECRYPT, key.to_utf8_buffer())
-	var decrypted = aes.update(encrypted)
+	var decrypted: PackedByteArray = aes.update(encrypted)
 	aes.finish()
 	# decrypted now contains the padded AES-encrypted database
 
 	# Remove padding
-	var size = decrypted.size()
-	padding_size = decrypted.get(size-1)
-	decrypted = decrypted.slice(0, size-padding_size)
-	json_string = decrypted.get_string_from_utf8()
+	buffer_size = decrypted.size()
+	padding_size = decrypted.get(buffer_size-1)
+	decrypted = decrypted.slice(0, buffer_size-padding_size)
 
-	# Import database from JSON-formatted string
-	db.import_from_json_string(json_string)
+	# Import database from JSON-formatted buffer
+	db.import_from_buffer(decrypted)
 
 	# Output database after encryption and decryption
 	var agents_post: Array = db.select_rows("agents", "", ["name"])
