@@ -346,16 +346,22 @@ Follow the steps described in the Godot documentation as found [here](https://do
 ldd --version
 ```
 
-### 5. Does this plugin support the FTS5 Extension?
+### 5. Does this plugin support the XYZ Extension of SQLite?
 
-Yes, the [SQLite FTS5 Extension](https://sqlite.org/fts5.html) is supported by this plugin, although it requires the user to re-compile the plugin.
+Following SQLite extensions are supported by this plugin, although they require the user to re-compile the plugin:
 
-To re-compile the plugin with FTS5 enabled, follow the instructions as defined in the 'How to contribute?'-section below.  
+| Extension                                                                    | flag                  | default |
+|------------------------------------------------------------------------------|-----------------------|---------|
+| [SQLite FTS5 Extension](https://sqlite.org/fts5.html)                        | enable_fts5           | no      |
+| [Built-In Mathematical SQL Functions](https://sqlite.org/lang_mathfunc.html) | enable_math_functions | no      |
+
+To re-compile the plugin with XYZ enabled, follow the instructions as defined in the 'How to contribute?'-section below.  
 Depending on your choice, following modifications have to be made:
 
 #### A. Using your own device
 
-Add the `enable_fts5`-flag to the compilation command:
+Add the relevant flag(s), as defined in table above, to the compilation command.  
+For example, if you want to enable the FTS5 Extension, use following command:
 
 ```
 scons platform=<platform> target_path=<target_path> target_name=libgdsqlite enable_fts5=yes
