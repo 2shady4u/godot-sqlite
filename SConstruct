@@ -7,22 +7,21 @@ options: list = [
         name="FTS5",
         help="Enable SQLite's FTS5 extension which provides full-test search functionality to database applications",
         define="SQLITE_ENABLE_FTS5",
-        default=False,
     ),
     CompileTimeOption(
         key="enable_math_functions",
         name="MATH_FUNCTIONS",
         help="Enable SQLite's Built-in Mathematical SQL Functions",
         define="SQLITE_ENABLE_MATH_FUNCTIONS",
-        default=False,
     ),
 ]
 
 target_path = ARGUMENTS.pop("target_path", "demo/addons/godot-sqlite/bin/")
 target_name = ARGUMENTS.pop("target_name", "libgdsqlite")
-parsed_options = {x.key: ARGUMENTS.pop(x.key, x.default) for x in options}
 
+parsed_options = {x.key: ARGUMENTS.pop(x.key) for x in options if x.key in ARGUMENTS}
 env = SConscript("godot-cpp/SConstruct")
+ARGUMENTS.update(parsed_options)
 
 env_vars = Variables()
 option: CompileTimeOption
@@ -52,7 +51,7 @@ if env["target"] in ["editor", "template_debug"]:
 
 option: CompileTimeOption
 for option in options:
-    if parsed_options[option.key]:
+    if env[option.key]:
         print(f"{option.name} is enabled.")
         env.Append(CPPDEFINES=[option.define])
     else:
