@@ -1,12 +1,32 @@
 #!/usr/bin/env python
+from misc.utility.classes import CompileTimeOption
+
+options: list = [
+    CompileTimeOption(
+        key="enable_fts5",
+        name="FTS5",
+        help="Enable SQLite's FTS5 extension which provides full-test search functionality to database applications",
+        define="SQLITE_ENABLE_FTS5",
+        default=False,
+    ),
+    CompileTimeOption(
+        key="enable_math_functions",
+        name="MATH_FUNCTIONS",
+        help="Enable SQLite's Built-in Mathematical SQL Functions",
+        define="SQLITE_ENABLE_MATH_FUNCTIONS",
+        default=False,
+    ),
+]
 
 target_path = ARGUMENTS.pop("target_path", "demo/addons/godot-sqlite/bin/")
 target_name = ARGUMENTS.pop("target_name", "libgdsqlite")
+parsed_options = {x.key: ARGUMENTS.pop(x.key, x.default) for x in options}
 
 env = SConscript("godot-cpp/SConstruct")
 
 env_vars = Variables()
-env_vars.Add(BoolVariable("enable_fts5", "Enable SQLite's FTS5 extension which provides full-test search functionality to database applications", False))
+option: CompileTimeOption
+[env_vars.Add(BoolVariable(x.key, x.help, False)) for x in options]
 env_vars.Update(env)
 Help(env_vars.GenerateHelpText(env))
 
@@ -24,17 +44,19 @@ target = "{}{}".format(
 
 # tweak this if you want to use different folders, or more folders, to store your source code in.
 env.Append(CPPPATH=["src/"])
-sources = [Glob('src/*.cpp'), Glob('src/vfs/*.cpp'), 'src/sqlite/sqlite3.c']
+sources = [Glob("src/*.cpp"), Glob("src/vfs/*.cpp"), "src/sqlite/sqlite3.c"]
 
 if env["target"] in ["editor", "template_debug"]:
     doc_data = env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=Glob("doc_classes/*.xml"))
     sources.append(doc_data)
 
-if env["enable_fts5"]:
-    print("FTS5 is enabled.")
-    env.Append(CPPDEFINES=['SQLITE_ENABLE_FTS5'])
-else:
-    print("FTS5 is disabled.")
+option: CompileTimeOption
+for option in options:
+    if parsed_options[option.key]:
+        print(f"{option.name} is enabled.")
+        env.Append(CPPDEFINES=[option.define])
+    else:
+        print(f"{option.name} is disabled.")
 
 if env["platform"] == "macos":
     library = env.SharedLibrary(
