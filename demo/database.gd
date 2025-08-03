@@ -40,6 +40,7 @@ func _ready():
 	example_of_read_only_database()
 	example_of_database_persistency()
 	example_of_fts5_usage()
+	example_of_encrypted_database()
 
 func cprint(text : String) -> void:
 	print(text)
@@ -174,7 +175,7 @@ func example_of_basic_database_querying():
 
 	# Close the current database
 	db.close_db()
-	
+
 	# Import (and, consequently, open) a database from an old backup json-file
 	cprint("Overwriting database content with old backup...")
 	db.import_from_json(json_name + "_old")
@@ -494,3 +495,71 @@ func example_of_fts5_usage():
 
 	# Close the current database
 	db.close_db()
+
+
+# Example of "secure" database storage using AES encryption
+# Mind that this is still vulnerable to various attacks like memory dumps during runtime
+func example_of_encrypted_database():
+	# Unlike in this example, the key should never be stored persistently inside the project
+	var key = "secret_key123456" # Key must be either 16 or 32 bytes
+
+	# Create a table containing "sensitive" data
+	var table_dict : Dictionary = Dictionary()
+	table_dict["name"] = {"data_type":"text", "not_null": true}
+
+	db = SQLite.new()
+	# Use in-memory shared database to avoid storing database on disk
+	db.path = "file::memory:?cache=shared"
+	db.verbosity_level = verbosity_level
+	db.open_db()
+	db.create_table("agents", table_dict)
+
+	var row_array : Array = []
+	var row_dict : Dictionary = Dictionary()
+	for i in range(0,names.size()):
+		row_dict["name"] = names[i]
+		row_array.append(row_dict.duplicate())
+
+		db.insert_row("agents", row_dict)
+		row_dict.clear()
+
+	# Output original database
+	var agents_pre: Array = db.select_rows("agents", "", ["name"])
+	var names_pre = agents_pre.map(func(agent): return agent["name"])
+	cprint("Agent names pre encryption: " + str(names_pre))
+
+	# Export database as JSON-formatted buffer
+	var unencrypted: PackedByteArray = db.export_to_buffer()
+	db.drop_table("agents")
+
+	# Add padding
+	var buffer_size = unencrypted.size()
+	var padding_size = 16-posmod(buffer_size, 16)
+	var padding := PackedByteArray()
+	padding.resize(padding_size)
+	padding.fill(padding_size)
+	unencrypted.append_array(padding)
+
+	var aes = AESContext.new()
+	aes.start(AESContext.MODE_ECB_ENCRYPT, key.to_utf8_buffer())
+	var encrypted: PackedByteArray = aes.update(unencrypted)
+	aes.finish()
+	# encrypted now contains the padded AES-encrypted database and can be stored using FileAccess
+
+	aes.start(AESContext.MODE_ECB_DECRYPT, key.to_utf8_buffer())
+	var decrypted: PackedByteArray = aes.update(encrypted)
+	aes.finish()
+	# decrypted now contains the padded AES-encrypted database
+
+	# Remove padding
+	buffer_size = decrypted.size()
+	padding_size = decrypted.get(buffer_size-1)
+	decrypted = decrypted.slice(0, buffer_size-padding_size)
+
+	# Import database from JSON-formatted buffer
+	db.import_from_buffer(decrypted)
+
+	# Output database after encryption and decryption
+	var agents_post: Array = db.select_rows("agents", "", ["name"])
+	var names_post = agents_post.map(func(agent): return agent["name"])
+	cprint("Agent names post decryption: " + str(names_post))

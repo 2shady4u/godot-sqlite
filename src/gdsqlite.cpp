@@ -26,6 +26,8 @@ void SQLite::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("import_from_json", "import_path"), &SQLite::import_from_json);
 	ClassDB::bind_method(D_METHOD("export_to_json", "export_path"), &SQLite::export_to_json);
+	ClassDB::bind_method(D_METHOD("import_from_buffer", "json_buffer"), &SQLite::import_from_buffer);
+	ClassDB::bind_method(D_METHOD("export_to_buffer"), &SQLite::export_to_buffer);
 
 	ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLite::get_autocommit);
 	ClassDB::bind_method(D_METHOD("compileoption_used", "option_name"), &SQLite::compileoption_used);
@@ -819,15 +821,53 @@ bool SQLite::import_from_json(String import_path) {
 		ERR_PRINT("GDSQLite Error: " + String(std::strerror(errno)) + " (" + import_path + ")");
 		return false;
 	}
+
 	std::stringstream buffer;
 	buffer << ifs.rdbuf();
 	std::string str = buffer.str();
-	String json_string = String::utf8(str.c_str());
 	ifs.close();
 
-	/* Attempt to parse the result and, if unsuccessful, throw a parse error specifying the erroneous line */
+	String json_string = String::utf8(str.c_str());
+	PackedByteArray json_buffer = json_string.to_utf8_buffer();
+
+	return import_from_buffer(json_buffer);
+}
+
+bool SQLite::export_to_json(String export_path) {
+	PackedByteArray json_buffer = export_to_buffer();
+	String json_string = json_buffer.get_string_from_utf8();
+
+	/* Add .json to the import_path String if not present */
+	String ending = String(".json");
+	if (!export_path.ends_with(ending)) {
+		export_path += ending;
+	}
+	/* Find the real path */
+	export_path = ProjectSettings::get_singleton()->globalize_path(export_path.strip_edges());
+	CharString dummy_path = export_path.utf8();
+	const char *char_path = dummy_path.get_data();
+	//const char *char_path = export_path.alloc_c_string();
+
+	std::ofstream ofs(char_path, std::ios::trunc);
+	if (ofs.fail()) {
+		ERR_PRINT("GDSQLite Error: " + String(std::strerror(errno)) + " (" + export_path + ")");
+		return false;
+	}
+
+	CharString dummy_string = json_string.utf8();
+	ofs << dummy_string.get_data();
+	//ofs << json_string.alloc_c_string();
+	ofs.close();
+
+	return true;
+}
+
+bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
+	/* Attempt to parse the input json_string and, if unsuccessful, throw a parse error specifying the erroneous line */
+
 	Ref<JSON> json;
 	json.instantiate();
+	String json_string = json_buffer.get_string_from_utf8();
 	Error error = json->parse(json_string);
 	if (error != Error::OK) {
 		/* Throw a parsing error */
@@ -934,7 +974,7 @@ bool SQLite::import_from_json(String import_path) {
 	return true;
 }
 
-bool SQLite::export_to_json(String export_path) {
+PackedByteArray SQLite::export_to_buffer() {
 	/* Get all names and sql templates for all tables present in the database */
 	query(String("SELECT name,sql,type FROM sqlite_master;"));
 	TypedArray<Dictionary> database_array = query_result.duplicate(true);
@@ -943,7 +983,7 @@ bool SQLite::export_to_json(String export_path) {
 	remove_shadow_tables(database_array);
 #endif
 	int64_t number_of_objects = database_array.size();
-	/* Construct a Dictionary for each table, convert it to JSON and write it to file */
+	/* Construct a Dictionary for each table, convert it to JSON and write it to String */
 	for (int64_t i = 0; i <= number_of_objects - 1; i++) {
 		Dictionary object_dict = database_array[i];
 
@@ -989,31 +1029,11 @@ bool SQLite::export_to_json(String export_path) {
 		}
 	}
 
-	/* Add .json to the import_path String if not present */
-	String ending = String(".json");
-	if (!export_path.ends_with(ending)) {
-		export_path += ending;
-	}
-	/* Find the real path */
-	export_path = ProjectSettings::get_singleton()->globalize_path(export_path.strip_edges());
-	CharString dummy_path = export_path.utf8();
-	const char *char_path = dummy_path.get_data();
-	//const char *char_path = export_path.alloc_c_string();
-
-	std::ofstream ofs(char_path, std::ios::trunc);
-	if (ofs.fail()) {
-		ERR_PRINT("GDSQLite Error: " + String(std::strerror(errno)) + " (" + export_path + ")");
-		return false;
-	}
 	Ref<JSON> json;
 	json.instantiate();
 	String json_string = json->stringify(database_array, "\t");
-	CharString dummy_string = json_string.utf8();
-	ofs << dummy_string.get_data();
-	//ofs << json_string.alloc_c_string();
-	ofs.close();
-
-	return true;
+	PackedByteArray json_buffer = json_string.to_utf8_buffer();
+	return json_buffer;
 }
 
 bool SQLite::validate_json(const Array &database_array, std::vector<object_struct> &objects_to_import) {
