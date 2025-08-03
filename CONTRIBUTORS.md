@@ -21,3 +21,4 @@ In chronological order based on the first contribution.
 - [Bernardo Rodriguez (Soleyu)](https://github.com/Soleyu)
 - [ugursoy](https://github.com/ugursoy)
 - [youngminz](https://github.com/youngminz)
+- [versjon (Jon)](https://github.com/versjon)
