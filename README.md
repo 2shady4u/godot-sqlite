@@ -215,6 +215,18 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Exports the database structure and content to `export_path.json` as a backup or for ease of editing.
 
+- Boolean success = **import_from_buffer(** PackedByteArray input_buffer **)**
+
+    Drops all database tables and imports the database structure and content encoded in JSON-formatted input_buffer.
+
+    Can be used together with `export_to_buffer()` to implement database encryption.
+
+- PackedByteArray output_buffer = **export_to_buffer()**
+
+    Returns the database structure and content as JSON-formatted buffer. 
+
+    Can be used together with `import_from_buffer()` to implement database encryption.
+
 - Boolean success = **create_function(** String function_name, FuncRef function_reference, int number_of_arguments **)**
 
     Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
