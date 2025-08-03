@@ -826,7 +826,7 @@ bool SQLite::import_from_json(String import_path) {
 	buffer << ifs.rdbuf();
 	std::string str = buffer.str();
 	ifs.close();
-	
+
 	String json_string = String::utf8(str.c_str());
 	PackedByteArray json_buffer = json_string.to_utf8_buffer();
 
@@ -864,7 +864,7 @@ bool SQLite::export_to_json(String export_path) {
 
 bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 	/* Attempt to parse the input json_string and, if unsuccessful, throw a parse error specifying the erroneous line */
-	
+
 	Ref<JSON> json;
 	json.instantiate();
 	String json_string = json_buffer.get_string_from_utf8();
