@@ -248,7 +248,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 
 	/* Bind any given parameters to the prepared statement */
 	for (int i = 0; i < parameter_count; i++) {
-		Variant binding_value = param_bindings.pop_front();
+		Variant binding_value = param_bindings.get(i);
 		switch (binding_value.get_type()) {
 			case Variant::NIL:
 				sqlite3_bind_null(stmt, i + 1);
@@ -291,6 +291,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 				return false;
 		}
 	}
+	param_bindings = param_bindings.slice(parameter_count, param_bindings.size());
 
 	if (verbosity_level > VerbosityLevel::NORMAL) {
 		char *expanded_sql = sqlite3_expanded_sql(stmt);
