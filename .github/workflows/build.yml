@@ -12,8 +12,8 @@ env:
   TARGET_NAME: libgdsqlite
   VAR_PATH: .github/workflows/build_var.json
   SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
-  EM_VERSION: 3.1.64
-  GODOT_VERSION: 4.4
+  EM_VERSION: 4.0.11
+  GODOT_VERSION: 4.5
   EXPORT_NAME: ./demo/
 
 jobs:
@@ -65,7 +65,7 @@ jobs:
         if: ${{ matrix.platform == 'android' }}
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r23c
+          ndk-version: r28b
           link-to-sdk: true
 
       - name: Web dependencies
@@ -131,7 +131,7 @@ jobs:
     needs: [build]
     if: github.ref == 'refs/heads/master'
     container:
-      image: barichello/godot-ci:4.4 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
+      image: barichello/godot-ci:4.5 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
 
     steps:
       - name: Checkout
