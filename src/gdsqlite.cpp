@@ -11,6 +11,7 @@ void SQLite::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("create_table", "table_name", "table_data"), &SQLite::create_table);
 	ClassDB::bind_method(D_METHOD("drop_table", "table_name"), &SQLite::drop_table);
+	ClassDB::bind_method(D_METHOD("get_table_info", "table_name"), &SQLite::get_table_info);
 
 	ClassDB::bind_method(D_METHOD("backup_to", "destination"), &SQLite::backup_to);
 	ClassDB::bind_method(D_METHOD("restore_from", "source"), &SQLite::restore_from);
@@ -520,6 +521,14 @@ bool SQLite::drop_table(const String &p_name) {
 	String query_string;
 	/* Create SQL statement */
 	query_string = "DROP TABLE " + p_name + ";";
+
+	return query(query_string);
+}
+
+bool SQLite::get_table_info(const String &p_name) {
+	String query_string;
+	/* Create SQL statement */
+	query_string = "PRAGMA table_info(" + p_name + ");";
 
 	return query(query_string);
 }
