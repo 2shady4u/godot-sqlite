@@ -22,3 +22,4 @@ In chronological order based on the first contribution.
 - [ugursoy](https://github.com/ugursoy)
 - [youngminz](https://github.com/youngminz)
 - [versjon (Jon)](https://github.com/versjon)
+- [AdminCrystal](https://github.com/AdminCrystal)
