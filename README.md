@@ -99,19 +99,19 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 ## Methods
 
-- Boolean success = **open_db()**
+- ResultCode rc = **open_db()**
 
     Open a new database connection. Multiple concurrently open connections to the same database are possible.
 
-- Boolean success = **close_db()**
+- ResultCode rc = **close_db()**
 
     Close the current database connection.
 
-- Boolean success = **query(** String query_string **)**
+- ResultCode rc = **query(** String query_string **)**
 
     Query the database using the raw SQL statement defined in `query_string`.
 
-- Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
+- ResultCode rc = **query_with_bindings(** String query_string, Array param_bindings **)**
 
     Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
 
@@ -121,7 +121,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     var column_name : String = "name";
     var query_string : String = "SELECT %s FROM company WHERE age < ?;" % [column_name]
     var param_bindings : Array = [24]
-    var success = db.query_with_bindings(query_string, param_bindings)
+    var rc = db.query_with_bindings(query_string, param_bindings)
     # Executes following query: 
     # SELECT name FROM company WHERE age < 24;
     ```
@@ -130,7 +130,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     ***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
 
-- Boolean success = **create_table(** String table_name, Dictionary table_dictionary **)**
+- ResultCode rc = **create_table(** String table_name, Dictionary table_dictionary **)**
 
     Each key/value pair of the `table_dictionary`-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.
 
@@ -182,40 +182,40 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     For more concrete usage examples see the `database.gd`-file as found in this repository's demo project.
 
-- Boolean success = **drop_table(** String table_name **)**
+- ResultCode rc = **drop_table(** String table_name **)**
 
     Drop the table with name `table_name`. This method is equivalent to the following query:
     ```
     db.query("DROP TABLE "+ table_name + ";")
     ```
 
-- Boolean success = **insert_row(** String table_name, Dictionary row_dictionary **)**
+- ResultCode rc = **insert_row(** String table_name, Dictionary row_dictionary **)**
 
     Each key/value pair of the `row_dictionary`-variable defines the column values of a single row.  
 
     Columns should adhere to the table schema as instantiated using the `table_dictionary`-variable and are required if their corresponding **"not_null"**-column value is set to `True`.
 
-- Boolean success = **insert_rows(** String table_name, Array row_array **)**
+- ResultCode rc = **insert_rows(** String table_name, Array row_array **)**
 
 - Array selected_rows = **select_rows(** String table_name, String query_conditions, Array selected_columns **)**
 
     Returns the results from the latest query **by value**; meaning that this property does not get overwritten by any successive queries.
 
-- Boolean success = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary **)**
+- ResultCode rc = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary **)**
 
     With the `updated_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
 
-- Boolean success = **delete_rows(** String table_name, String query_conditions **)**
+- ResultCode rc = **delete_rows(** String table_name, String query_conditions **)**
 
-- Boolean success = **import_from_json(** String import_path **)**
+- ResultCode rc = **import_from_json(** String import_path **)**
 
     Drops all database tables and imports the database structure and content present inside of `import_path.json`.
 
-- Boolean success = **export_to_json(** String export_path **)**
+- ResultCode rc = **export_to_json(** String export_path **)**
 
     Exports the database structure and content to `export_path.json` as a backup or for ease of editing.
 
-- Boolean success = **import_from_buffer(** PackedByteArray input_buffer **)**
+- ResultCode rc = **import_from_buffer(** PackedByteArray input_buffer **)**
 
     Drops all database tables and imports the database structure and content encoded in JSON-formatted input_buffer.
 
@@ -227,7 +227,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Can be used together with `import_from_buffer()` to implement database encryption.
 
-- Boolean success = **create_function(** String function_name, FuncRef function_reference, int number_of_arguments **)**
+- ResultCode rc = **create_function(** String function_name, FuncRef function_reference, int number_of_arguments **)**
 
     Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
 
@@ -246,8 +246,8 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     db.compileoption_used("ENABLE_FTS5") # The "SQLITE_"-prefix may be omitted.
     ```
 
-- Boolean success = **backup_to(** String destination_path **)**
-- Boolean success = **restore_from(** String source_path **)**
+- ResultCode rc = **backup_to(** String destination_path **)**
+- ResultCode rc = **restore_from(** String source_path **)**
 
     Backup or restore the current database to/from a path, see [here](https://www.sqlite.org/backup.html). This feature is useful if you are using a database as your save file and you want to easily implement a saving/loading mechanic. Be warned that the original database will be overwritten entirely when restoring.
 

@@ -1,209 +1,133 @@
-#include "gdsqlite.hpp"
+#include "sqlite_connection.hpp"
 
 using namespace godot;
 
-void SQLite::_bind_methods() {
+SQLiteEnums::ResultCode SQLiteConnection::open_error = SQLiteEnums::RC_SQLITE_OK;
+
+void SQLiteConnection::_bind_methods() {
+	ClassDB::bind_static_method("SQLiteConnection", D_METHOD("get_open_error"), &SQLiteConnection::get_open_error);
+
 	// Methods.
-	ClassDB::bind_method(D_METHOD("open_db"), &SQLite::open_db);
-	ClassDB::bind_method(D_METHOD("close_db"), &SQLite::close_db);
-	ClassDB::bind_method(D_METHOD("query", "query_string"), &SQLite::query);
-	ClassDB::bind_method(D_METHOD("query_with_bindings", "query_string", "param_bindings"), &SQLite::query_with_bindings);
+	ClassDB::bind_static_method("SQLiteConnection", D_METHOD("open", "connection_params"), &SQLiteConnection::open);
 
-	ClassDB::bind_method(D_METHOD("create_table", "table_name", "table_data"), &SQLite::create_table);
-	ClassDB::bind_method(D_METHOD("drop_table", "table_name"), &SQLite::drop_table);
+	ClassDB::bind_method(D_METHOD("query", "query_string", "query_result"), &SQLiteConnection::query, DEFVAL(Array()));
+	ClassDB::bind_method(D_METHOD("query_with_bindings", "query_string", "param_bindings", "query_result"), &SQLiteConnection::query_with_bindings, DEFVAL(Array()));
 
-	ClassDB::bind_method(D_METHOD("backup_to", "destination"), &SQLite::backup_to);
-	ClassDB::bind_method(D_METHOD("restore_from", "source"), &SQLite::restore_from);
+	ClassDB::bind_method(D_METHOD("create_table", "table_name", "table_data"), &SQLiteConnection::create_table);
+	ClassDB::bind_method(D_METHOD("drop_table", "table_name"), &SQLiteConnection::drop_table);
 
-	ClassDB::bind_method(D_METHOD("insert_row", "table_name", "row_data"), &SQLite::insert_row);
-	ClassDB::bind_method(D_METHOD("insert_rows", "table_name", "row_array"), &SQLite::insert_rows);
+	ClassDB::bind_method(D_METHOD("backup_to", "destination"), &SQLiteConnection::backup_to);
+	ClassDB::bind_method(D_METHOD("restore_from", "source"), &SQLiteConnection::restore_from);
 
-	ClassDB::bind_method(D_METHOD("select_rows", "table_name", "conditions", "columns"), &SQLite::select_rows);
-	ClassDB::bind_method(D_METHOD("update_rows", "table_name", "conditions", "row_data"), &SQLite::update_rows);
-	ClassDB::bind_method(D_METHOD("delete_rows", "table_name", "conditions"), &SQLite::delete_rows);
+	ClassDB::bind_method(D_METHOD("insert_row", "table_name", "row_data", "query_result"), &SQLiteConnection::insert_row, DEFVAL(Array()));
+	ClassDB::bind_method(D_METHOD("insert_rows", "table_name", "row_array", "query_result"), &SQLiteConnection::insert_rows, DEFVAL(Array()));
 
-	ClassDB::bind_method(D_METHOD("create_function", "function_name", "callable", "arguments"), &SQLite::create_function);
+	ClassDB::bind_method(D_METHOD("select_rows", "table_name", "conditions", "columns", "query_result"), &SQLiteConnection::select_rows, DEFVAL(Array()));
+	ClassDB::bind_method(D_METHOD("update_rows", "table_name", "conditions", "row_data", "query_result"), &SQLiteConnection::update_rows, DEFVAL(Array()));
+	ClassDB::bind_method(D_METHOD("delete_rows", "table_name", "conditions", "query_result"), &SQLiteConnection::delete_rows, DEFVAL(Array()));
 
-	ClassDB::bind_method(D_METHOD("import_from_json", "import_path"), &SQLite::import_from_json);
-	ClassDB::bind_method(D_METHOD("export_to_json", "export_path"), &SQLite::export_to_json);
-	ClassDB::bind_method(D_METHOD("import_from_buffer", "json_buffer"), &SQLite::import_from_buffer);
-	ClassDB::bind_method(D_METHOD("export_to_buffer"), &SQLite::export_to_buffer);
+	ClassDB::bind_method(D_METHOD("create_function", "function_name", "callable", "arguments"), &SQLiteConnection::create_function);
 
-	ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLite::get_autocommit);
-	ClassDB::bind_method(D_METHOD("compileoption_used", "option_name"), &SQLite::compileoption_used);
+	ClassDB::bind_method(D_METHOD("import_from_json", "import_path"), &SQLiteConnection::import_from_json);
+	ClassDB::bind_method(D_METHOD("export_to_json", "export_path"), &SQLiteConnection::export_to_json);
+	ClassDB::bind_method(D_METHOD("import_from_buffer", "json_buffer"), &SQLiteConnection::import_from_buffer);
+	ClassDB::bind_method(D_METHOD("export_to_buffer"), &SQLiteConnection::export_to_buffer);
 
-	ClassDB::bind_method(D_METHOD("enable_load_extension", "onoff"), &SQLite::enable_load_extension);
-	ClassDB::bind_method(D_METHOD("load_extension", "extension_path", "entrypoint"), &SQLite::load_extension, DEFVAL("sqlite3_extension_init"));
+	ClassDB::bind_method(D_METHOD("get_autocommit"), &SQLiteConnection::get_autocommit);
+	ClassDB::bind_method(D_METHOD("compileoption_used", "option_name"), &SQLiteConnection::compileoption_used);
+
+	ClassDB::bind_method(D_METHOD("enable_load_extension", "onoff"), &SQLiteConnection::enable_load_extension);
+	ClassDB::bind_method(D_METHOD("load_extension", "extension_path", "entrypoint"), &SQLiteConnection::load_extension, DEFVAL("sqlite3_extension_init"));
 
 	// Properties.
-	ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLite::set_last_insert_rowid);
-	ClassDB::bind_method(D_METHOD("get_last_insert_rowid"), &SQLite::get_last_insert_rowid);
+	ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLiteConnection::set_last_insert_rowid);
+	ClassDB::bind_method(D_METHOD("get_last_insert_rowid"), &SQLiteConnection::get_last_insert_rowid);
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "last_insert_rowid"), "set_last_insert_rowid", "get_last_insert_rowid");
 
-	ClassDB::bind_method(D_METHOD("set_verbosity_level", "verbosity_level"), &SQLite::set_verbosity_level);
-	ClassDB::bind_method(D_METHOD("get_verbosity_level"), &SQLite::get_verbosity_level);
+	ClassDB::bind_method(D_METHOD("set_verbosity_level", "verbosity_level"), &SQLiteConnection::set_verbosity_level);
+	ClassDB::bind_method(D_METHOD("get_verbosity_level"), &SQLiteConnection::get_verbosity_level);
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "verbosity_level"), "set_verbosity_level", "get_verbosity_level");
 
-	ClassDB::bind_method(D_METHOD("set_foreign_keys", "foreign_keys"), &SQLite::set_foreign_keys);
-	ClassDB::bind_method(D_METHOD("get_foreign_keys"), &SQLite::get_foreign_keys);
+	ClassDB::bind_method(D_METHOD("set_foreign_keys", "foreign_keys"), &SQLiteConnection::set_foreign_keys);
+	ClassDB::bind_method(D_METHOD("get_foreign_keys"), &SQLiteConnection::get_foreign_keys);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "foreign_keys"), "set_foreign_keys", "get_foreign_keys");
 
-	ClassDB::bind_method(D_METHOD("set_read_only", "read_only"), &SQLite::set_read_only);
-	ClassDB::bind_method(D_METHOD("get_read_only"), &SQLite::get_read_only);
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "read_only"), "set_read_only", "get_read_only");
+	ClassDB::bind_method(D_METHOD("get_read_only"), &SQLiteConnection::get_read_only);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "read_only"), "", "get_read_only");
 
-	ClassDB::bind_method(D_METHOD("set_path", "path"), &SQLite::set_path);
-	ClassDB::bind_method(D_METHOD("get_path"), &SQLite::get_path);
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "path"), "set_path", "get_path");
+	ClassDB::bind_method(D_METHOD("get_path"), &SQLiteConnection::get_path);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "path"), "", "get_path");
 
-	ClassDB::bind_method(D_METHOD("set_error_message", "error_message"), &SQLite::set_error_message);
-	ClassDB::bind_method(D_METHOD("get_error_message"), &SQLite::get_error_message);
+	ClassDB::bind_method(D_METHOD("set_error_message", "error_message"), &SQLiteConnection::set_error_message);
+	ClassDB::bind_method(D_METHOD("get_error_message"), &SQLiteConnection::get_error_message);
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "error_message"), "set_error_message", "get_error_message");
-
-	ClassDB::bind_method(D_METHOD("set_default_extension", "default_extension"), &SQLite::set_default_extension);
-	ClassDB::bind_method(D_METHOD("get_default_extension"), &SQLite::get_default_extension);
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "default_extension"), "set_default_extension", "get_default_extension");
-
-	ClassDB::bind_method(D_METHOD("set_query_result", "query_result"), &SQLite::set_query_result);
-	ClassDB::bind_method(D_METHOD("get_query_result"), &SQLite::get_query_result);
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "query_result", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "set_query_result", "get_query_result");
-
-	ClassDB::bind_method(D_METHOD("get_query_result_by_reference"), &SQLite::get_query_result_by_reference);
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "query_result_by_reference", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "set_query_result", "get_query_result_by_reference");
-
-	// Constants.
-	BIND_ENUM_CONSTANT(QUIET);
-	BIND_ENUM_CONSTANT(NORMAL);
-	BIND_ENUM_CONSTANT(VERBOSE);
-	BIND_ENUM_CONSTANT(VERY_VERBOSE);
-
-	BIND_CONSTANT(SQLITE_OK); /* Successful result */
-	/* beginning-of-error-codes */
-	BIND_CONSTANT(SQLITE_ERROR);
-	BIND_CONSTANT(SQLITE_INTERNAL);
-	BIND_CONSTANT(SQLITE_PERM);
-	BIND_CONSTANT(SQLITE_ABORT);
-	BIND_CONSTANT(SQLITE_BUSY);
-	BIND_CONSTANT(SQLITE_LOCKED);
-	BIND_CONSTANT(SQLITE_NOMEM);
-	BIND_CONSTANT(SQLITE_READONLY);
-	BIND_CONSTANT(SQLITE_INTERRUPT);
-	BIND_CONSTANT(SQLITE_IOERR);
-	BIND_CONSTANT(SQLITE_CORRUPT);
-	BIND_CONSTANT(SQLITE_NOTFOUND);
-	BIND_CONSTANT(SQLITE_FULL);
-	BIND_CONSTANT(SQLITE_CANTOPEN);
-	BIND_CONSTANT(SQLITE_PROTOCOL);
-	BIND_CONSTANT(SQLITE_EMPTY);
-	BIND_CONSTANT(SQLITE_SCHEMA);
-	BIND_CONSTANT(SQLITE_TOOBIG);
-	BIND_CONSTANT(SQLITE_CONSTRAINT);
-	BIND_CONSTANT(SQLITE_MISMATCH);
-	BIND_CONSTANT(SQLITE_MISUSE);
-	BIND_CONSTANT(SQLITE_NOLFS);
-	BIND_CONSTANT(SQLITE_AUTH);
-	BIND_CONSTANT(SQLITE_FORMAT);
-	BIND_CONSTANT(SQLITE_RANGE);
-	BIND_CONSTANT(SQLITE_NOTADB);
-	BIND_CONSTANT(SQLITE_NOTICE);
-	BIND_CONSTANT(SQLITE_WARNING);
-	BIND_CONSTANT(SQLITE_ROW);
-	BIND_CONSTANT(SQLITE_DONE);
-	/* end-of-error-codes */
 }
 
-SQLite::SQLite() {
-	db = nullptr;
-	query_result = TypedArray<Dictionary>();
-}
-
-SQLite::~SQLite() {
-	/* Clean up the function_registry */
-	function_registry.clear();
-	function_registry.shrink_to_fit();
-	/* Close the database connection if it is still open */
-	if (db) {
-		close_db();
-	}
-}
-
-bool SQLite::open_db() {
-	if (db) {
-		ERR_PRINT("GDSQLite Error: Can't open database if connection is already open!");
-		return false;
-	}
-
-	if (path.find(":memory:") == -1) {
-		/* Add the default_extension to the database path if no extension is present */
-		/* Skip if the default_extension is an empty string to allow for paths without extension */
-		if (path.get_extension().is_empty() && !default_extension.is_empty()) {
-			String ending = String(".") + default_extension;
-			path += ending;
-		}
-	}
-	path = normalize_path(path, read_only);
+Ref<SQLiteConnection> SQLiteConnection::open(const Ref<SQLiteConnectionParams> &params) {
+	Ref<SQLiteConnection> conn = memnew(SQLiteConnection);
+	conn->path = conn->normalize_path(params->get_path(), params->get_read_only());
+	conn->read_only = params->get_read_only();
+	conn->verbosity_level = params->get_verbosity_level();
 
 	int rc;
-	const CharString utf8_path = path.utf8();
+	const CharString utf8_path = conn->path.utf8();
 	const char *char_path = utf8_path.get_data();
 
 	/* Try to open the database */
-	if (read_only) {
-		if (path.find(":memory:") == -1) {
+	if (conn->read_only) {
+		if (!conn->path.contains(":memory:")) {
 			sqlite3_vfs_register(gdsqlite_vfs(), 0);
-			rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READONLY, "godot");
+			rc = sqlite3_open_v2(char_path, &conn->db, SQLITE_OPEN_READONLY, "godot");
 		} else {
 			ERR_PRINT("GDSQLite Error: Opening in-memory databases in read-only mode is currently not supported!");
-			return false;
+			open_error = SQLiteEnums::RC_GDSQLITE_ERROR;
+			return nullptr;
 		}
 	} else {
 		/* The `SQLITE_OPEN_URI`-flag is solely required for in-memory databases with shared cache, but it is safe to use in most general cases */
 		/* As discussed here: https://www.sqlite.org/uri.html */
-		rc = sqlite3_open_v2(char_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
+		rc = sqlite3_open_v2(char_path, &conn->db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
 		/* Identical to: `rc = sqlite3_open(char_path, &db);`*/
 	}
 
 	if (rc != SQLITE_OK) {
-		ERR_PRINT("GDSQLite Error: Can't open database: " + String::utf8(sqlite3_errmsg(db)));
-		return false;
-	} else if (verbosity_level > VerbosityLevel::QUIET) {
-		UtilityFunctions::print("Opened database successfully (" + path + ")");
+		ERR_PRINT("GDSQLite Error: Can't open database: " + String::utf8(sqlite3_errmsg(conn->db)));
+		/* Freeing the connection is done automatically by the destructor! */
+		open_error = static_cast<SQLiteEnums::ResultCode>(rc);
+		return nullptr;
+	} else if (conn->verbosity_level > SQLiteEnums::VerbosityLevel::QUIET) {
+		UtilityFunctions::print("Opened database successfully (" + conn->path + ")");
 	}
 
-	/* Try to enable foreign keys. */
-	if (foreign_keys) {
-		char *zErrMsg = nullptr;
-		rc = sqlite3_exec(db, "PRAGMA foreign_keys=on;", NULL, NULL, &zErrMsg);
-		if (rc != SQLITE_OK) {
-			ERR_PRINT("GDSQLite Error: Can't enable foreign keys: " + String::utf8(zErrMsg));
-			sqlite3_free(zErrMsg);
-			return false;
-		}
-	}
-
-	return true;
+	/* Don't forget to reset the error! */
+	open_error = SQLiteEnums::RC_SQLITE_OK;
+	return conn;
 }
 
-bool SQLite::close_db() {
-	if (db) {
-		// Cannot close database!
-		if (sqlite3_close_v2(db) != SQLITE_OK) {
-			ERR_PRINT("GDSQLite Error: Can't close database!");
-			return false;
-		} else {
-			db = nullptr;
-			if (verbosity_level > VerbosityLevel::QUIET) {
-				UtilityFunctions::print("Closed database (" + path + ")");
-			}
-			return true;
-		}
-	}
-
-	ERR_PRINT("GDSQLite Error: Can't close database if connection is not open!");
-	return false;
+SQLiteConnection::SQLiteConnection() {
+	db = nullptr;
 }
 
-String SQLite::normalize_path(const String p_path, const bool p_read_only) const {
+SQLiteConnection::~SQLiteConnection() {
+	/* Clean up the function_registry */
+	function_registry.clear();
+	function_registry.shrink_to_fit();
+
+	/* Clean up the database connection */
+	/* Closing with a NULL pointer argument is a harmless no-op */
+	int rc = sqlite3_close_v2(db);
+	if (rc != SQLITE_OK) {
+		const char *err_msg = sqlite3_errmsg(db);
+		ERR_PRINT(vformat("GDSQLite Error: Failed to close database connection! Code: %s, Message: %s", itos(rc), String(err_msg)));
+	} else {
+		db = nullptr;
+		if (verbosity_level > SQLiteEnums::VerbosityLevel::QUIET) {
+			UtilityFunctions::print("Closed database (" + path + ")");
+		}
+	}
+}
+
+String SQLiteConnection::normalize_path(const String p_path, const bool p_read_only) const {
 	if (p_read_only) {
 		return p_path;
 	}
@@ -215,22 +139,22 @@ String SQLite::normalize_path(const String p_path, const bool p_read_only) const
 	return ProjectSettings::get_singleton()->globalize_path(p_path.strip_edges());
 }
 
-bool SQLite::query(const String &p_query) {
-	return query_with_bindings(p_query, Array());
+SQLiteEnums::ResultCode SQLiteConnection::query(const String &p_query, Array p_query_result) {
+	return query_with_bindings(p_query, Array(), p_query_result);
 }
 
-bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
+SQLiteEnums::ResultCode SQLiteConnection::query_with_bindings(const String &p_query, Array param_bindings, Array p_query_result) {
 	const char *zErrMsg, *sql, *pzTail;
 	int rc;
 
-	if (verbosity_level > VerbosityLevel::NORMAL) {
+	if (verbosity_level > SQLiteEnums::VerbosityLevel::NORMAL) {
 		UtilityFunctions::print(p_query);
 	}
 	const CharString dummy_query = p_query.utf8();
 	sql = dummy_query.get_data();
 
 	/* Clear the previous query results */
-	query_result.clear();
+	p_query_result.clear(); // -> Does it make sense to clear it?
 
 	sqlite3_stmt *stmt;
 	/* Prepare an SQL statement */
@@ -240,7 +164,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	if (rc != SQLITE_OK) {
 		ERR_PRINT(" --> SQL error: " + error_message);
 		sqlite3_finalize(stmt);
-		return false;
+		return static_cast<SQLiteEnums::ResultCode>(rc);
 	}
 
 	/* Check if the param_bindings size exceeds the required parameter count */
@@ -248,7 +172,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	if (param_bindings.size() < parameter_count) {
 		ERR_PRINT("GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement!");
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLiteEnums::RC_GDSQLITE_ERROR;
 	}
 
 	/* Bind any given parameters to the prepared statement */
@@ -291,12 +215,12 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 			default:
 				ERR_PRINT("GDSQLite Error: Binding a parameter of type " + String(std::to_string(binding_value.get_type()).c_str()) + " (TYPE_*) is not supported!");
 				sqlite3_finalize(stmt);
-				return false;
+				return SQLiteEnums::RC_GDSQLITE_ERROR;
 		}
 	}
 	param_bindings = param_bindings.slice(parameter_count, param_bindings.size());
 
-	if (verbosity_level > VerbosityLevel::NORMAL) {
+	if (verbosity_level > SQLiteEnums::VerbosityLevel::NORMAL) {
 		char *expanded_sql = sqlite3_expanded_sql(stmt);
 		UtilityFunctions::print(String::utf8(expanded_sql));
 		sqlite3_free(expanded_sql);
@@ -344,7 +268,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 			column_dict[String::utf8(azColName)] = column_value;
 		}
 		/* Add result to query_result Array */
-		query_result.append(column_dict);
+		p_query_result.append(column_dict);
 	}
 
 	/* Clean up and delete the resources used by the prepared statement */
@@ -355,8 +279,8 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	error_message = String::utf8(zErrMsg);
 	if (rc != SQLITE_OK) {
 		ERR_PRINT(" --> SQL error: " + error_message);
-		return false;
-	} else if (verbosity_level > VerbosityLevel::NORMAL) {
+		return static_cast<SQLiteEnums::ResultCode>(rc);
+	} else if (verbosity_level > SQLiteEnums::VerbosityLevel::NORMAL) {
 		UtilityFunctions::print(" --> Query succeeded");
 	}
 
@@ -370,18 +294,18 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 		WARN_PRINT("GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))");
 	}
 
-	return true;
+	return SQLiteEnums::RC_SQLITE_OK;
 }
 
-bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) {
+SQLiteEnums::ResultCode SQLiteConnection::create_table(const StringName &p_table_name, const Dictionary &p_table_dict) {
 	if (!validate_table_dict(p_table_dict)) {
-		return false;
+		return SQLiteEnums::RC_GDSQLITE_ERROR;
 	}
 
 	String query_string, type_string, key_string, primary_string;
 	String integer_datatype = "int";
 	/* Create SQL statement */
-	query_string = "CREATE TABLE IF NOT EXISTS " + p_name + " (";
+	query_string = "CREATE TABLE IF NOT EXISTS " + p_table_name + " (";
 	key_string = "";
 	primary_string = "";
 
@@ -471,7 +395,7 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) 
 	return query(query_string);
 }
 
-bool SQLite::validate_table_dict(const Dictionary &p_table_dict) {
+bool SQLiteConnection::validate_table_dict(const Dictionary &p_table_dict) {
 	Dictionary column_dict;
 	Array columns = p_table_dict.keys();
 	int64_t number_of_columns = columns.size();
@@ -519,43 +443,43 @@ bool SQLite::validate_table_dict(const Dictionary &p_table_dict) {
 	return true;
 }
 
-bool SQLite::drop_table(const String &p_name) {
+SQLiteEnums::ResultCode SQLiteConnection::drop_table(const StringName &p_table_name) {
 	String query_string;
 	/* Create SQL statement */
-	query_string = "DROP TABLE " + p_name + ";";
+	query_string = "DROP TABLE " + p_table_name + ";";
 
 	return query(query_string);
 }
 
-bool SQLite::backup_to(String destination_path) {
+SQLiteEnums::ResultCode SQLiteConnection::backup_to(String destination_path) {
 	destination_path = ProjectSettings::get_singleton()->globalize_path(destination_path.strip_edges());
 	CharString dummy_path = destination_path.utf8();
 	const char *char_path = dummy_path.get_data();
 
 	sqlite3 *destination_db;
-	int result = sqlite3_open_v2(char_path, &destination_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
-	if (result == SQLITE_OK) {
-		result = backup_database(db, destination_db);
+	int rc = sqlite3_open_v2(char_path, &destination_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
+	if (rc == SQLITE_OK) {
+		rc = backup_database(db, destination_db);
 	}
 	(void)sqlite3_close_v2(destination_db);
-	return result == SQLITE_OK;
+	return static_cast<SQLiteEnums::ResultCode>(rc);
 }
 
-bool SQLite::restore_from(String source_path) {
+SQLiteEnums::ResultCode SQLiteConnection::restore_from(String source_path) {
 	source_path = ProjectSettings::get_singleton()->globalize_path(source_path.strip_edges());
 	CharString dummy_path = source_path.utf8();
 	const char *char_path = dummy_path.get_data();
 
 	sqlite3 *source_db;
-	int result = sqlite3_open_v2(char_path, &source_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
-	if (result == SQLITE_OK) {
-		result = backup_database(source_db, db);
+	int rc = sqlite3_open_v2(char_path, &source_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
+	if (rc == SQLITE_OK) {
+		rc = backup_database(source_db, db);
 	}
 	(void)sqlite3_close_v2(source_db);
-	return result == SQLITE_OK;
+	return static_cast<SQLiteEnums::ResultCode>(rc);
 }
 
-int SQLite::backup_database(sqlite3 *source_db, sqlite3 *destination_db) {
+int SQLiteConnection::backup_database(sqlite3 *source_db, sqlite3 *destination_db) {
 	int rc;
 	sqlite3_backup *backup = sqlite3_backup_init(destination_db, "main", source_db, "main");
 	if (backup) {
@@ -567,13 +491,13 @@ int SQLite::backup_database(sqlite3 *source_db, sqlite3 *destination_db) {
 	return rc;
 }
 
-bool SQLite::insert_row(const String &p_name, const Dictionary &p_row_dict) {
+SQLiteEnums::ResultCode SQLiteConnection::insert_row(const StringName &p_table_name, const Dictionary &p_row_dict, Array p_query_result) {
 	String query_string, key_string, value_string = "";
 	Array keys = p_row_dict.keys();
 	Array param_bindings = p_row_dict.values();
 
 	/* Create SQL statement */
-	query_string = "INSERT INTO " + p_name;
+	query_string = "INSERT INTO " + p_table_name;
 
 	int64_t number_of_keys = p_row_dict.size();
 	for (int64_t i = 0; i <= number_of_keys - 1; i++) {
@@ -586,10 +510,10 @@ bool SQLite::insert_row(const String &p_name, const Dictionary &p_row_dict) {
 	}
 	query_string += " (" + key_string + ") VALUES (" + value_string + ");";
 
-	return query_with_bindings(query_string, param_bindings);
+	return query_with_bindings(query_string, param_bindings, p_query_result);
 }
 
-bool SQLite::insert_rows(const String &p_name, const Array &p_row_array) {
+SQLiteEnums::ResultCode SQLiteConnection::insert_rows(const StringName &p_table_name, const Array &p_row_array, Array p_query_result) {
 	query("BEGIN TRANSACTION;");
 	int64_t number_of_rows = p_row_array.size();
 	for (int64_t i = 0; i <= number_of_rows - 1; i++) {
@@ -598,22 +522,23 @@ bool SQLite::insert_rows(const String &p_name, const Array &p_row_array) {
 			/* Don't forget to close the transaction! */
 			/* Maybe we should do a rollback instead? */
 			query("END TRANSACTION;");
-			return false;
+			return SQLiteEnums::RC_GDSQLITE_ERROR;
 		}
-		if (!insert_row(p_name, p_row_array[i])) {
+		SQLiteEnums::ResultCode rc = insert_row(p_table_name, p_row_array[i], p_query_result);
+		if (rc != SQLiteEnums::RC_SQLITE_OK) {
 			/* Don't forget to close the transaction! */
 			/* Stop the error_message from being overwritten! */
 			String previous_error_message = error_message;
 			query("END TRANSACTION;");
 			error_message = previous_error_message;
-			return false;
+			return rc;
 		}
 	}
 	query("END TRANSACTION;");
-	return true;
+	return SQLiteEnums::RC_SQLITE_OK;
 }
 
-Array SQLite::select_rows(const String &p_name, const String &p_conditions, const Array &p_columns_array) {
+SQLiteEnums::ResultCode SQLiteConnection::select_rows(const StringName &p_table_name, const String &p_conditions, const Array &p_columns_array, Array p_query_result) {
 	String query_string;
 	/* Create SQL statement */
 	query_string = "SELECT ";
@@ -622,7 +547,7 @@ Array SQLite::select_rows(const String &p_name, const String &p_conditions, cons
 	for (int64_t i = 0; i <= number_of_columns - 1; i++) {
 		if (p_columns_array[i].get_type() != Variant::STRING) {
 			ERR_PRINT("GDSQLite Error: All elements of the Array should be of type String");
-			return query_result;
+			return SQLiteEnums::RC_GDSQLITE_ERROR;
 		}
 		query_string += (const String &)p_columns_array[i];
 
@@ -630,21 +555,19 @@ Array SQLite::select_rows(const String &p_name, const String &p_conditions, cons
 			query_string += ", ";
 		}
 	}
-	query_string += " FROM " + p_name;
+	query_string += " FROM " + p_table_name;
 	if (!p_conditions.is_empty()) {
 		query_string += " WHERE " + p_conditions;
 	}
 	query_string += ";";
 
-	query(query_string);
-	/* Return the duplicated result */
-	return get_query_result();
+	return query(query_string, p_query_result);
 }
 
-bool SQLite::update_rows(const String &p_name, const String &p_conditions, const Dictionary &p_updated_row_dict) {
+SQLiteEnums::ResultCode SQLiteConnection::update_rows(const StringName &p_table_name, const String &p_conditions, const Dictionary &p_updated_row_dict, Array p_query_result) {
 	String query_string;
 	Array param_bindings;
-	bool success;
+	SQLiteEnums::ResultCode rc;
 
 	int64_t number_of_keys = p_updated_row_dict.size();
 	Array keys = p_updated_row_dict.keys();
@@ -652,7 +575,7 @@ bool SQLite::update_rows(const String &p_name, const String &p_conditions, const
 
 	query("BEGIN TRANSACTION;");
 	/* Create SQL statement */
-	query_string += "UPDATE " + p_name + " SET ";
+	query_string += "UPDATE " + p_table_name + " SET ";
 
 	for (int64_t i = 0; i <= number_of_keys - 1; i++) {
 		query_string += (const String &)keys[i] + String("=?");
@@ -663,33 +586,33 @@ bool SQLite::update_rows(const String &p_name, const String &p_conditions, const
 	}
 	query_string += " WHERE " + p_conditions + ";";
 
-	success = query_with_bindings(query_string, param_bindings);
+	rc = query_with_bindings(query_string, param_bindings, p_query_result);
 	/* Stop the error_message from being overwritten! */
 	String previous_error_message = error_message;
 	query("END TRANSACTION;");
 	error_message = previous_error_message;
-	return success;
+	return rc;
 }
 
-bool SQLite::delete_rows(const String &p_name, const String &p_conditions) {
+SQLiteEnums::ResultCode SQLiteConnection::delete_rows(const StringName &p_table_name, const String &p_conditions, Array p_query_result) {
 	String query_string;
-	bool success;
+	SQLiteEnums::ResultCode rc;
 
 	query("BEGIN TRANSACTION;");
 	/* Create SQL statement */
-	query_string = "DELETE FROM " + p_name;
+	query_string = "DELETE FROM " + p_table_name;
 	/* If it's empty or * everything is to be deleted */
 	if (!p_conditions.is_empty() && (p_conditions != (const String &)"*")) {
 		query_string += " WHERE " + p_conditions;
 	}
 	query_string += ";";
 
-	success = query(query_string);
+	rc = query(query_string, p_query_result);
 	/* Stop the error_message from being overwritten! */
 	String previous_error_message = error_message;
 	query("END TRANSACTION;");
 	error_message = previous_error_message;
-	return success;
+	return rc;
 }
 
 static void function_callback(sqlite3_context *context, int argc, sqlite3_value **argv) {
@@ -775,7 +698,7 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 	}
 }
 
-bool SQLite::create_function(const String &p_name, const Callable &p_callable, int p_argc) {
+SQLiteEnums::ResultCode SQLiteConnection::create_function(const String &p_name, const Callable &p_callable, int p_argc) {
 	/* The exact memory position of the std::vector's elements changes during memory reallocation (= when adding additional elements) */
 	/* Luckily, the pointer to the managed object (of the std::unique_ptr) won't change during execution! (= consistent) */
 	/* The std::unique_ptr is stored in a std::vector and is thus allocated on the heap */
@@ -797,14 +720,14 @@ bool SQLite::create_function(const String &p_name, const Callable &p_callable, i
 	rc = sqlite3_create_function(db, zFunctionName, nArg, eTextRep, pApp, xFunc, xStep, xFinal);
 	if (rc) {
 		ERR_PRINT("GDSQLite Error: " + String(sqlite3_errmsg(db)));
-		return false;
-	} else if (verbosity_level > VerbosityLevel::NORMAL) {
+		return static_cast<SQLiteEnums::ResultCode>(rc);
+	} else if (verbosity_level > SQLiteEnums::VerbosityLevel::NORMAL) {
 		UtilityFunctions::print("Succesfully added function \"" + p_name + "\" to function registry");
 	}
-	return true;
+	return SQLiteEnums::RC_SQLITE_OK;
 }
 
-bool SQLite::import_from_json(String import_path) {
+SQLiteEnums::ResultCode SQLiteConnection::import_from_json(String import_path) {
 	/* Add .json to the import_path String if not present */
 	String ending = String(".json");
 	if (!import_path.ends_with(ending)) {
@@ -819,7 +742,7 @@ bool SQLite::import_from_json(String import_path) {
 	std::ifstream ifs(char_path);
 	if (ifs.fail()) {
 		ERR_PRINT("GDSQLite Error: " + String(std::strerror(errno)) + " (" + import_path + ")");
-		return false;
+		return SQLiteEnums::RC_GDSQLITE_ERROR;
 	}
 
 	std::stringstream buffer;
@@ -833,7 +756,7 @@ bool SQLite::import_from_json(String import_path) {
 	return import_from_buffer(json_buffer);
 }
 
-bool SQLite::export_to_json(String export_path) {
+SQLiteEnums::ResultCode SQLiteConnection::export_to_json(String export_path) {
 	PackedByteArray json_buffer = export_to_buffer();
 	String json_string = json_buffer.get_string_from_utf8();
 
@@ -850,17 +773,17 @@ bool SQLite::export_to_json(String export_path) {
 	std::ofstream ofs(char_path, std::ios::trunc);
 	if (ofs.fail()) {
 		ERR_PRINT("GDSQLite Error: " + String(std::strerror(errno)) + " (" + export_path + ")");
-		return false;
+		return SQLiteEnums::RC_GDSQLITE_ERROR;
 	}
 
 	CharString dummy_string = json_string.utf8();
 	ofs << dummy_string.get_data();
 	ofs.close();
 
-	return true;
+	return SQLiteEnums::RC_SQLITE_OK;
 }
 
-bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
+SQLiteEnums::ResultCode SQLiteConnection::import_from_buffer(PackedByteArray json_buffer) {
 	/* Attempt to parse the input json_string and, if unsuccessful, throw a parse error specifying the erroneous line */
 
 	Ref<JSON> json;
@@ -870,26 +793,18 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 	if (error != Error::OK) {
 		/* Throw a parsing error */
 		ERR_PRINT("GDSQLite Error: parsing failed! reason: " + json->get_error_message() + ", at line: " + String::num_int64(json->get_error_line()));
-		return false;
+		return SQLiteEnums::RC_GDSQLITE_ERROR;
 	}
 	Array database_array = json->get_data();
-	std::vector<object_struct> objects_to_import;
+	std::vector<ObjectStruct> objects_to_import;
 	/* Validate the json structure and populate the tables_to_import vector */
 	if (!validate_json(database_array, objects_to_import)) {
-		return false;
-	}
-
-	/* Check if the database is open and, if not, attempt to open it */
-	if (db == nullptr) {
-		/* Open the database using the open_db method */
-		if (!open_db()) {
-			return false;
-		}
+		return SQLiteEnums::RC_GDSQLITE_ERROR;
 	}
 
 	/* Find all views that are present in this database */
-	query(String("SELECT name FROM sqlite_master WHERE type = 'view';"));
-	TypedArray<Dictionary> old_view_array = query_result.duplicate(true);
+	TypedArray<Dictionary> old_view_array = TypedArray<Dictionary>();
+	query(String("SELECT name FROM sqlite_master WHERE type = 'view';"), old_view_array);
 	int64_t old_number_of_views = old_view_array.size();
 	/* Drop all old views present in the database */
 	for (int64_t i = 0; i <= old_number_of_views - 1; i++) {
@@ -902,8 +817,8 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 
 	/* Find all tables that are present in this database */
 	/* We don't care about indexes or triggers here since they get dropped automatically when their table is dropped */
-	query(String("SELECT name,type FROM sqlite_master WHERE type = 'table';"));
-	TypedArray<Dictionary> old_table_array = query_result.duplicate(true);
+	TypedArray<Dictionary> old_table_array = TypedArray<Dictionary>();
+	query(String("SELECT name,type FROM sqlite_master WHERE type = 'table';"), old_table_array);
 #ifdef SQLITE_ENABLE_FTS5
 	/* FTS5 creates a bunch of shadow tables that cannot be dropped manually! */
 	/* The virtual table is responsible for dropping these tables itself */
@@ -923,12 +838,14 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 	query("PRAGMA defer_foreign_keys=on;");
 	/* Add all new tables and fill them up with all the rows */
 	for (auto table : objects_to_import) {
-		if (!query(table.sql)) {
+		SQLiteEnums::ResultCode rc = query(table.sql);
+		if (rc != SQLiteEnums::RC_SQLITE_OK) {
 			/* Don't forget to close the transaction! */
 			/* Stop the error_message from being overwritten! */
 			String previous_error_message = error_message;
 			query("END TRANSACTION;");
 			error_message = previous_error_message;
+			/* TODO: Figure out why not return here? */
 		}
 	}
 
@@ -956,26 +873,27 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 		for (int64_t i = 0; i <= number_of_rows - 1; i++) {
 			if (object.row_array[i].get_type() != Variant::DICTIONARY) {
 				ERR_PRINT("GDSQLite Error: All elements of the Array should be of type Dictionary");
-				return false;
+				return SQLiteEnums::RC_GDSQLITE_ERROR;
 			}
-			if (!insert_row(object.name, object.row_array[i])) {
+			SQLiteEnums::ResultCode rc = insert_row(object.name, object.row_array[i]);
+			if (rc != SQLiteEnums::RC_SQLITE_OK) {
 				/* Don't forget to close the transaction! */
 				/* Stop the error_message from being overwritten! */
 				String previous_error_message = error_message;
 				query("END TRANSACTION;");
 				error_message = previous_error_message;
-				return false;
+				return rc;
 			}
 		}
 	}
 	query("END TRANSACTION;");
-	return true;
+	return SQLiteEnums::RC_SQLITE_OK;
 }
 
-PackedByteArray SQLite::export_to_buffer() {
+PackedByteArray SQLiteConnection::export_to_buffer() {
 	/* Get all names and sql templates for all tables present in the database */
-	query(String("SELECT name,sql,type FROM sqlite_master;"));
-	TypedArray<Dictionary> database_array = query_result.duplicate(true);
+	TypedArray<Dictionary> database_array = TypedArray<Dictionary>();
+	query(String("SELECT name,sql,type FROM sqlite_master;"), database_array);
 #ifdef SQLITE_ENABLE_FTS5
 	/* FTS5 creates a bunch of shadow tables that should NOT be exported! */
 	remove_shadow_tables(database_array);
@@ -990,7 +908,8 @@ PackedByteArray SQLite::export_to_buffer() {
 			String query_string;
 
 			query_string = "SELECT * FROM " + (const String &)object_name + ";";
-			query(query_string);
+			TypedArray<Dictionary> query_result = TypedArray<Dictionary>();
+			query(query_string, query_result);
 
 			/* Encode all columns of type PoolByteArray to base64 */
 			if (!query_result.is_empty()) {
@@ -1034,12 +953,12 @@ PackedByteArray SQLite::export_to_buffer() {
 	return json_buffer;
 }
 
-bool SQLite::validate_json(const Array &database_array, std::vector<object_struct> &objects_to_import) {
+bool SQLiteConnection::validate_json(const Array &database_array, std::vector<ObjectStruct> &objects_to_import) {
 	/* Start going through all the tables and checking their validity */
 	int64_t number_of_objects = database_array.size();
 	for (int64_t i = 0; i <= number_of_objects - 1; i++) {
-		/* Create a new object_struct */
-		object_struct new_object;
+		/* Create a new ObjectStruct */
+		ObjectStruct new_object;
 
 		Dictionary temp_dict = database_array[i];
 		/* Get the name of the object */
@@ -1096,9 +1015,10 @@ bool SQLite::validate_json(const Array &database_array, std::vector<object_struc
 	return true;
 }
 
-void SQLite::remove_shadow_tables(Array &p_array) {
+void SQLiteConnection::remove_shadow_tables(Array &p_array) {
 	/* The rootpage of virtual tables is always zero!*/
-	query(String("SELECT name FROM sqlite_master WHERE type = 'table' AND rootpage = 0;"));
+	TypedArray<Dictionary> query_result = TypedArray<Dictionary>();
+	query(String("SELECT name FROM sqlite_master WHERE type = 'table' AND rootpage = 0;"), query_result);
 	int number_of_objects = query_result.size();
 	Array database_array = query_result.duplicate(true);
 
@@ -1135,13 +1055,13 @@ void SQLite::remove_shadow_tables(Array &p_array) {
 }
 
 // Properties.
-void SQLite::set_last_insert_rowid(const int64_t &p_last_insert_rowid) {
+void SQLiteConnection::set_last_insert_rowid(const int64_t &p_last_insert_rowid) {
 	if (db) {
 		sqlite3_set_last_insert_rowid(db, p_last_insert_rowid);
 	}
 }
 
-int64_t SQLite::get_last_insert_rowid() const {
+int64_t SQLiteConnection::get_last_insert_rowid() const {
 	if (db) {
 		return sqlite3_last_insert_rowid(db);
 	}
@@ -1149,67 +1069,50 @@ int64_t SQLite::get_last_insert_rowid() const {
 	return 0;
 }
 
-void SQLite::set_verbosity_level(const int64_t &p_verbosity_level) {
+void SQLiteConnection::set_verbosity_level(SQLiteEnums::VerbosityLevel p_verbosity_level) {
 	verbosity_level = p_verbosity_level;
 }
 
-int64_t SQLite::get_verbosity_level() const {
+SQLiteEnums::VerbosityLevel SQLiteConnection::get_verbosity_level() const {
 	return verbosity_level;
 }
 
-void SQLite::set_foreign_keys(const bool &p_foreign_keys) {
+void SQLiteConnection::set_foreign_keys(const bool &p_foreign_keys) {
 	foreign_keys = p_foreign_keys;
+
+	const char* sql = p_foreign_keys ? "PRAGMA foreign_keys=ON;" : "PRAGMA foreign_keys=OFF;";
+	char *zErrMsg = nullptr;
+
+	int rc = sqlite3_exec(db, sql, nullptr, nullptr, &zErrMsg);
+	if (rc != SQLITE_OK) {
+		ERR_PRINT(vformat("GDSQLite Error: Failed to set foreign_keys=%s: %s",
+                          p_foreign_keys ? "ON" : "OFF",
+                          zErrMsg ? zErrMsg : "unknown error"));
+		sqlite3_free(zErrMsg);
+	}
 }
 
-bool SQLite::get_foreign_keys() const {
+bool SQLiteConnection::get_foreign_keys() const {
 	return foreign_keys;
 }
 
-void SQLite::set_read_only(const bool &p_read_only) {
-	read_only = p_read_only;
-}
-
-bool SQLite::get_read_only() const {
+bool SQLiteConnection::get_read_only() const {
 	return read_only;
 }
 
-void SQLite::set_path(const String &p_path) {
-	path = p_path;
-}
-
-String SQLite::get_path() const {
+String SQLiteConnection::get_path() const {
 	return path;
 }
 
-void SQLite::set_error_message(const String &p_error_message) {
+void SQLiteConnection::set_error_message(const String &p_error_message) {
 	error_message = p_error_message;
 }
 
-String SQLite::get_error_message() const {
+String SQLiteConnection::get_error_message() const {
 	return error_message;
 }
 
-void SQLite::set_default_extension(const String &p_default_extension) {
-	default_extension = p_default_extension;
-}
-
-String SQLite::get_default_extension() const {
-	return default_extension;
-}
-
-void SQLite::set_query_result(const TypedArray<Dictionary> &p_query_result) {
-	query_result = p_query_result;
-}
-
-TypedArray<Dictionary> SQLite::get_query_result() const {
-	return query_result.duplicate(true);
-}
-
-TypedArray<Dictionary> SQLite::get_query_result_by_reference() const {
-	return query_result;
-}
-
-int SQLite::get_autocommit() const {
+int SQLiteConnection::get_autocommit() const {
 	if (db) {
 		return sqlite3_get_autocommit(db);
 	}
@@ -1217,13 +1120,13 @@ int SQLite::get_autocommit() const {
 	return 1; // A non-zero value indicates the autocommit is on!
 }
 
-int SQLite::compileoption_used(const String &option_name) const {
+int SQLiteConnection::compileoption_used(const String &option_name) const {
 	const CharString dummy_name = option_name.utf8();
 	const char *char_name = dummy_name.get_data();
 	return sqlite3_compileoption_used(char_name);
 }
 
-int SQLite::enable_load_extension(const bool &p_onoff) {
+int SQLiteConnection::enable_load_extension(const bool &p_onoff) {
 	int rc;
 	if (p_onoff == true) {
 		rc = sqlite3_enable_load_extension(db, 1);
@@ -1236,7 +1139,7 @@ int SQLite::enable_load_extension(const bool &p_onoff) {
 	return rc;
 }
 
-int SQLite::load_extension(const String &p_path, const String &entrypoint) {
+int SQLiteConnection::load_extension(const String &p_path, const String &entrypoint) {
 	int rc;
 
 	char *zErrMsg = nullptr;
@@ -1259,7 +1162,7 @@ int SQLite::load_extension(const String &p_path, const String &entrypoint) {
 		sqlite3_free(zErrMsg);
 		return rc;
 	}
-	if (verbosity_level > VerbosityLevel::QUIET) {
+	if (verbosity_level > SQLiteEnums::VerbosityLevel::QUIET) {
 		UtilityFunctions::print("Loaded extension successfully (" + globalized_path + ")");
 	}
 

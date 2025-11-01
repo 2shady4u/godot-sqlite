@@ -1,17 +1,17 @@
 extends Node
 
-var db : SQLite = null
+var db: SQLiteConnection = null
 
-const verbosity_level : int = SQLite.VERBOSE
+const verbosity_level := SQLiteEnums.VERBOSE
 
-var db_name := "res://data/test"
-var packaged_db_name := "res://data_to_be_packaged"
-var peristent_db_name := "user://my_database"
+var db_name := "res://data/test.db"
+var packaged_db_name := "res://data_to_be_packaged.db"
+var persistent_db_name := "user://my_database.db"
 var json_name := "res://data/test_backup"
 
-var table_name := "company"
-var other_table_name := "expenses"
-var packaged_table_name = "creatures"
+var table_name := &"company"
+var other_table_name := &"expenses"
+var packaged_table_name = &"creatures"
 
 var ids := [1,2,3,4,5,6,7]
 var names := ["Paul","Allen","Teddy","Mark","Robert","Julia","Amanda"]
@@ -78,11 +78,11 @@ func example_of_basic_database_querying():
 	table_dict["address"] = {"data_type":"char(50)"}
 	table_dict["salary"] = {"data_type":"real"}
 
-	db = SQLite.new()
-	db.path = db_name
+	var params = SQLiteConnectionParams.new()
+	params.path = db_name
+
+	db = SQLiteConnection.open(params)
 	db.verbosity_level = verbosity_level
-	# Open the database using the db_name found in the path variable
-	db.open_db()
 	# Throw away any table that was already present
 	db.drop_table(table_name)
 	# Create a table with the structure found in table_dict and add it to the database
@@ -105,32 +105,33 @@ func example_of_basic_database_querying():
 
 	# Select the id and age of the employees that are older than 30
 	var select_condition : String = "age > 30"
-	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "age"])
+	var query_result := Array()
+	db.select_rows(table_name, select_condition, ["id", "age"], query_result)
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([str(selected_array)]))
+	cprint("result: {0}".format([str(query_result)]))
 
 	# Change name of 'Amanda' to 'Olga' and her age to 30
 	db.update_rows(table_name, "name = 'Amanda'", {"AGE":30, "NAME":"Olga"})
 
 	# Select the employee with the name Olga and with age 30
 	select_condition = "name = 'Olga' and age = 30"
-	selected_array = db.select_rows(table_name, select_condition, ["*"])
+	db.select_rows(table_name, select_condition, ["*"], query_result)
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([str(selected_array)]))
+	cprint("result: {0}".format([str(query_result)]))
 
 	# Delete the employee named Olga
 	db.delete_rows(table_name, "name = 'Olga'")
 
 	# Select all employees
 	select_condition = ""
-	selected_array = db.select_rows(table_name, select_condition, ["*"])
+	db.select_rows(table_name, select_condition, ["*"], query_result)
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([str(selected_array)]))
+	cprint("result: {0}".format([str(query_result)]))
 	# Check the types of the values in the dictionary
 	cprint("Types of selected columns:")
-	cprint("salary: {0}".format([typeof(selected_array[0]["salary"])]))
-	cprint("age:    {0}".format([typeof(selected_array[0]["age"])]))
-	cprint("name:   {0}".format([typeof(selected_array[0]["name"])]))
+	cprint("salary: {0}".format([typeof(query_result[0]["salary"])]))
+	cprint("age:    {0}".format([typeof(query_result[0]["age"])]))
+	cprint("name:   {0}".format([typeof(query_result[0]["name"])]))
 
 	# Delete all employees
 	db.delete_rows(table_name, "*")
@@ -139,23 +140,23 @@ func example_of_basic_database_querying():
 	db.insert_rows(table_name, row_array)
 
 	# Do a normal query
-	db.query("SELECT COUNT(*) AS 'number_of_employees' FROM " + table_name + ";")
-	cprint("There are {0} employees in the company".format([db.query_result[0]["number_of_employees"]]))
+	db.query("SELECT COUNT(*) AS 'number_of_employees' FROM " + table_name + ";", query_result)
+	cprint("There are {0} employees in the company".format([query_result[0]["number_of_employees"]]))
 
-	db.query("PRAGMA encoding;")
-	cprint("Current database encoding is: {0}".format([db.query_result[0]["encoding"]]))
+	db.query("PRAGMA encoding;", query_result)
+	cprint("Current database encoding is: {0}".format([query_result[0]["encoding"]]))
 
 	# Create a TRIGGER and trigger it!
 	db.query("CREATE TRIGGER increase_salary_after_employee_termination AFTER DELETE ON " + table_name + " BEGIN UPDATE " + table_name + " SET salary = salary + 100;END;")
 
-	db.select_rows(table_name, "", ["name", "salary"])
-	cprint("employees: {0}".format([str(db.query_result_by_reference)]))
+	db.select_rows(table_name, "", ["name", "salary"], query_result)
+	cprint("employees: {0}".format([str(query_result)]))
 
 	cprint("Firing that slacker Paul!")
 	db.delete_rows(table_name, "name = 'Paul'")
 
-	db.select_rows(table_name, "", ["name", "salary"])
-	cprint("employees: {0}".format([str(db.query_result_by_reference)]))
+	db.select_rows(table_name, "", ["name", "salary"], query_result)
+	cprint("employees: {0}".format([str(query_result)]))
 
 	# Create a VIEW and use it!
 	db.query("CREATE VIEW cheapest_employee AS SELECT id, name FROM " + table_name + " WHERE salary = (SELECT MIN(salary) FROM company) LIMIT 1;")
@@ -164,8 +165,8 @@ func example_of_basic_database_querying():
 	cprint("Firing the cheapest employee!")
 	db.delete_rows(table_name, "id = (SELECT id FROM cheapest_employee)")
 
-	db.select_rows(table_name, "", ["name", "salary"])
-	cprint("employees: {0}".format([str(db.query_result_by_reference)]))
+	db.select_rows(table_name, "", ["name", "salary"], query_result)
+	cprint("employees: {0}".format([str(query_result)]))
 
 	# Create an INDEX!
 	db.query("CREATE INDEX idx_name ON " + table_name + "(name);")
@@ -173,51 +174,44 @@ func example_of_basic_database_querying():
 	# Export the table to a json-file with a specified name
 	db.export_to_json(json_name + "_new")
 
-	# Close the current database
-	db.close_db()
-
 	# Import (and, consequently, open) a database from an old backup json-file
 	cprint("Overwriting database content with old backup...")
 	db.import_from_json(json_name + "_old")
 
 	# Check which employees were present in this old json-file
 	select_condition = ""
-	selected_array = db.select_rows(table_name, select_condition, ["*"])
+	db.select_rows(table_name, select_condition, ["*"], query_result)
 	cprint("condition: " + select_condition)
-	cprint("result: {0}".format([str(selected_array)]))
+	cprint("result: {0}".format([str(query_result)]))
 	# Check the types of the values in the dictionary
 	cprint("Types of selected columns:")
-	cprint("salary: {0}".format([typeof(selected_array[0]["salary"])]))
-	cprint("age:    {0}".format([typeof(selected_array[0]["age"])]))
-	cprint("name:   {0}".format([typeof(selected_array[0]["name"])]))
+	cprint("salary: {0}".format([typeof(query_result[0]["salary"])]))
+	cprint("age:    {0}".format([typeof(query_result[0]["age"])]))
+	cprint("name:   {0}".format([typeof(query_result[0]["name"])]))
 
 	# Import the data (in a destructive manner) from the new backup json-file
 	cprint("Overwriting database content again with latest backup...")
 	db.import_from_json(json_name + "_new")
 
-	db.query("SELECT * FROM sqlite_master;")
-	cprint(str(db.query_result_by_reference))
+	db.query("SELECT * FROM sqlite_master;", query_result)
+	cprint(str(query_result))
 
 	# Try to delete a non-existant table from the database.
 	if not db.delete_rows(other_table_name, "*"):
 		cprint("SQL error: " + db.error_message)
 
-	# Close the imported database
-	db.close_db()
-
 # This example demonstrates the in-memory and foreign key support. It's
 # rather contrived, but it gets the point across.
 func example_of_in_memory_and_foreign_key_support():
-
-	# Create the database as usual.
-	db = SQLite.new()
+	var params = SQLiteConnectionParams.new()
 	# Enable in-memory storage.
-	db.path = ":memory:"
+	params.path = ":memory:"
+
+	# Open the database as usual.
+	db = SQLiteConnection.open(params)
 	db.verbosity_level = verbosity_level
 	# Enable foreign keys.
 	db.foreign_keys = true
-	# Open the database as usual.
-	db.open_db()
 
 	# Create a table for all your friends.
 	db.create_table("friends", {
@@ -254,9 +248,6 @@ func example_of_in_memory_and_foreign_key_support():
 		{"id": 1, "name": "John", "hobby": 23}
 	])
 
-	# Close the database.
-	db.close_db()
-
 func should_employee_be_fired(address : String) -> bool:
 	if address == doomed_city:
 		return true
@@ -278,11 +269,11 @@ func example_of_call_external_functions():
 	table_dict["address"] = {"data_type":"char(50)"}
 	table_dict["salary"] = {"data_type":"real"}
 
-	db = SQLite.new()
-	db.path = db_name
+	var params = SQLiteConnectionParams.new()
+	params.path = db_name
+
+	db = SQLiteConnection.open(params)
 	db.verbosity_level = verbosity_level
-	# Open the database using the db_name found in the path variable
-	db.open_db()
 	# Throw away any table that was already present
 	db.drop_table(table_name)
 	# Create a table with the structure found in table_dict and add it to the database
@@ -312,8 +303,9 @@ func example_of_call_external_functions():
 	db.query("DELETE FROM company WHERE should_employee_be_fired(address);")
 
 	var select_condition := ""
-	var selected_array : Array = db.select_rows(table_name, select_condition, ["id", "salary", "name"])
-	cprint("result: {0}".format([str(selected_array)]))
+	var query_result := Array()
+	db.select_rows(table_name, select_condition, ["id", "salary", "name"])
+	cprint("result: {0}".format([str(query_result)]))
 
 # The BLOB-datatype is useful when lots of raw data has to be stored.
 # For example images fall into this category!
@@ -327,11 +319,11 @@ func example_of_blob_io():
 	texture_received.emit(texture)
 	var tex_data : PackedByteArray = texture.get_image().save_png_to_buffer()
 
-	db = SQLite.new()
-	db.path = db_name
+	var params = SQLiteConnectionParams.new()
+	params.path = db_name
+
+	db = SQLiteConnection.open(params)
 	db.verbosity_level = verbosity_level
-	# Open the database using the db_name found in the path variable
-	db.open_db()
 	# Throw away any table that was already present
 	db.drop_table(table_name)
 	# Create a table with the structure found in table_dict and add it to the database
@@ -340,7 +332,8 @@ func example_of_blob_io():
 	# Insert a new row in the table and bind the texture data to the data column.
 	db.insert_row(table_name, {"id": 1, "data": tex_data})
 
-	var selected_array : Array = db.select_rows(table_name, "", ["data"])
+	var selected_array := Array()
+	db.select_rows(table_name, "", ["data"], selected_array)
 	for selected_row in selected_array:
 		var selected_data = selected_row.get("data", PackedByteArray())
 
@@ -356,7 +349,7 @@ func example_of_blob_io():
 	db.import_from_json(json_name + "_base64_old")
 
 	# Check out the 'old' icon stored in this backup file!
-	selected_array = db.select_rows(table_name, "", ["data"])
+	db.select_rows(table_name, "", ["data"], selected_array)
 	for selected_row in selected_array:
 		var selected_data = selected_row.get("data", PackedByteArray())
 
@@ -364,9 +357,6 @@ func example_of_blob_io():
 		var _error : int = image.load_png_from_buffer(selected_data)
 		var loaded_texture := ImageTexture.create_from_image(image)
 		texture_received.emit(loaded_texture)
-
-	# Close the current database
-	db.close_db()
 
 func regexp(pattern : String, subject : String) -> bool:
 	var regex = RegEx.new()
@@ -382,25 +372,26 @@ func regexp(pattern : String, subject : String) -> bool:
 # Databases used in this way can be added to the project's export filters
 # and will be readable, but not writable, by Godot.
 func example_of_read_only_database():
-	db = SQLite.new()
-	db.path = packaged_db_name
-	db.verbosity_level = verbosity_level
-	db.read_only = true
+	var params = SQLiteConnectionParams.new()
+	params.path = packaged_db_name
+	params.read_only = true
 
-	db.open_db()
+	db = SQLiteConnection.open(params)
+	db.verbosity_level = verbosity_level
 
 	var callable := Callable(self, "regexp")
 	db.create_function("regexp", callable, 2)
 
 	# Select all the creatures
 	var select_condition : String = ""
-	var selected_array : Array = db.select_rows(packaged_table_name, select_condition, ["*"])
+	var selected_array := Array()
+	db.select_rows(packaged_table_name, select_condition, ["*"], selected_array)
 	cprint("condition: " + select_condition)
 	cprint("result: {0}".format([str(selected_array)]))
 
 	# Select all the creatures that start with the letter 'b'
 	select_condition = "name LIKE 'b%'"
-	selected_array = db.select_rows(packaged_table_name, select_condition, ["name"])
+	db.select_rows(packaged_table_name, select_condition, ["name"], selected_array)
 	cprint("condition: " + select_condition)
 	cprint("Following creatures start with the letter 'b':")
 	for row in selected_array:
@@ -410,42 +401,36 @@ func example_of_read_only_database():
 	# This function has to be user-defined as discussed here:
 	# https://www.sqlite.org/lang_expr.html#regexp
 	select_condition = "name REGEXP '^s.*'"
-	selected_array = db.select_rows(packaged_table_name, select_condition, ["name"])
+	db.select_rows(packaged_table_name, select_condition, ["name"], selected_array)
 	cprint("condition: " + select_condition)
 	cprint("Following creatures start with the letter 's':")
 	for row in selected_array:
 		cprint("* " + row["name"])
 
 	# Open another simultanous database connection in read-only mode.
-	var other_db = SQLite.new()
-	other_db.path = packaged_db_name
+	var other_db = SQLiteConnection.open(params)
 	other_db.verbosity_level = verbosity_level
-	other_db.read_only = true
-
-	other_db.open_db()
 
 	# Get the experience you would get by kiling a mimic.
 	select_condition = "name = 'mimic'"
-	selected_array = other_db.select_rows(packaged_table_name, select_condition, ["experience"])
+	other_db.select_rows(packaged_table_name, select_condition, ["experience"], selected_array)
 	cprint("Killing a mimic yields " + str(selected_array[0]["experience"]) + " experience points!")
-
-	# Close the current database
-	db.close_db()
 
 func example_of_database_persistency():
 	var table_dict : Dictionary = Dictionary()
 	table_dict["id"] = {"data_type":"int", "primary_key": true, "not_null": true}
 	table_dict["count"] = {"data_type":"int", "not_null": true, "default": 0}
 
-	db = SQLite.new()
-	db.path = peristent_db_name
+	var params = SQLiteConnectionParams.new()
+	params.path = persistent_db_name
+
+	db = SQLiteConnection.open(params)
 	db.verbosity_level = verbosity_level
-	db.open_db()
 	db.create_table(table_name, table_dict)
 
 	# Does the row already exist?
-	db.select_rows(table_name, "id = 1", ["count"])
-	var query_result : Array = db.query_result
+	var query_result := Array()
+	db.select_rows(table_name, "id = 1", ["count"], query_result)
 	var count : int = 0
 	if query_result.is_empty():
 		# It doesn't exist yet! Add it!
@@ -459,22 +444,19 @@ func example_of_database_persistency():
 	# Increment the value for the next time!
 	db.update_rows(table_name, "id = 1", {"count": count + 1 })
 
-	# Close the current database
-	db.close_db()
-
 var fts5_table_name := "posts"
 
 # Basic example that showcases seaching functionalities of FTS5...
 func example_of_fts5_usage():
-	db = SQLite.new()
+	var params = SQLiteConnectionParams.new()
+	params.path = packaged_db_name
+
+	db = SQLiteConnection.open(params)
 	if not db.compileoption_used("ENABLE_FTS5"):
 		cprint("No support for FTS5 available in binaries (re-compile with compile option `enable_fts5=yes`)")
 		return
 
-	db.path = db_name
 	db.verbosity_level = verbosity_level
-	# Open the database using the db_name found in the path variable
-	db.open_db()
 	db.drop_table(fts5_table_name)
 
 	db.query("CREATE VIRTUAL TABLE " + fts5_table_name + " USING FTS5(title, body);")
@@ -487,14 +469,12 @@ func example_of_fts5_usage():
 
 	db.insert_rows(fts5_table_name, row_array)
 
-	db.query("SELECT * FROM " + fts5_table_name + " WHERE posts MATCH 'fts5';")
-	cprint("result: {0}".format([str(db.query_result)]))
+	var query_result := Array()
+	db.query("SELECT * FROM " + fts5_table_name + " WHERE posts MATCH 'fts5';", query_result)
+	cprint("result: {0}".format([str(query_result)]))
 
-	db.query("SELECT * FROM " + fts5_table_name + " WHERE posts MATCH 'learn SQLite';")
-	cprint("result: {0}".format([str(db.query_result)]))
-
-	# Close the current database
-	db.close_db()
+	db.query("SELECT * FROM " + fts5_table_name + " WHERE posts MATCH 'learn SQLite';", query_result)
+	cprint("result: {0}".format([str(query_result)]))
 
 
 # Example of "secure" database storage using AES encryption
@@ -507,11 +487,12 @@ func example_of_encrypted_database():
 	var table_dict : Dictionary = Dictionary()
 	table_dict["name"] = {"data_type":"text", "not_null": true}
 
-	db = SQLite.new()
+	var params = SQLiteConnectionParams.new()
 	# Use in-memory shared database to avoid storing database on disk
-	db.path = "file::memory:?cache=shared"
+	params.path = "file::memory:?cache=shared"
+
+	db = SQLiteConnection.open(params)
 	db.verbosity_level = verbosity_level
-	db.open_db()
 	db.create_table("agents", table_dict)
 
 	var row_array : Array = []
@@ -524,7 +505,8 @@ func example_of_encrypted_database():
 		row_dict.clear()
 
 	# Output original database
-	var agents_pre: Array = db.select_rows("agents", "", ["name"])
+	var agents_pre := Array()
+	db.select_rows("agents", "", ["name"], agents_pre)
 	var names_pre = agents_pre.map(func(agent): return agent["name"])
 	cprint("Agent names pre encryption: " + str(names_pre))
 
@@ -560,6 +542,7 @@ func example_of_encrypted_database():
 	db.import_from_buffer(decrypted)
 
 	# Output database after encryption and decryption
-	var agents_post: Array = db.select_rows("agents", "", ["name"])
+	var agents_post := Array()
+	db.select_rows("agents", "", ["name"], agents_post)
 	var names_post = agents_post.map(func(agent): return agent["name"])
 	cprint("Agent names post decryption: " + str(names_post))

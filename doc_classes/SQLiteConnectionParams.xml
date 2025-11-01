@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class name="SQLiteConnectionParams" inherits="RefCounted"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Connection parameters that are passed to the [code]open()[/code]-method of SQLiteConnection.
+	</brief_description>
+    <description>
+    </description>
+	<tutorials>
+	</tutorials>
+    <members>
+        <member name="read_only" type="bool" default="false">
+			Enabling this property opens the database in read-only modus &amp; allows databases to be packaged inside of the PCK. To make this possible, a custom [url=https://www.sqlite.org/vfs.html]VFS[/url] is employed which internally takes care of all the file handling using the Godot API.
+		</member>
+        <member name="verbosity_level" type="int" default="1">
+			The verbosity_level determines the amount of logging to the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
+			[i][b]NOTE:[/b] [constant VERBOSE] and higher levels might considerably slow down your queries due to excessive logging.[/i]
+		</member>
+    </members>
+	<constants>
+	</constants>
+</class>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<class name="SQLite" inherits="RefCounted"
+<class name="SQLiteConnection" inherits="RefCounted"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
 	<brief_description>
@@ -48,25 +48,25 @@
 	</tutorials>
 	<methods>
 		<method name="open_db">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Open a new database connection. Multiple concurrently open connections to the same database are possible.
 			</description>
 		</method>
 		<method name="close_db">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Close the current database connection.
 			</description>
 		</method>
 		<method name="query">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Query the database using the raw SQL statement defined in [code]query_string[/code].
 			</description>
 		</method>
 		<method name="query_with_bindings">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Binds the parameters contained in the [code]param_bindings[/code]-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [url=https://www.sqlite.org/c3ref/bind_blob.html]here[/url].
 				[b]Example usage[/b]:
@@ -74,7 +74,7 @@
 				var column_name : String = "name"
 				var query_string : String = "SELECT %s FROM company WHERE age &lt; ?;" % [column_name]
 				var param_bindings : Array = [24]
-				var success = db.query_with_bindings(query_string, param_bindings)
+				var rc = db.query_with_bindings(query_string, param_bindings)
 				# Executes following query: 
 				# SELECT name FROM company WHERE age &lt; 24;
 				[/codeblock]
@@ -83,7 +83,7 @@
 			</description>
 		</method>
 		<method name="create_table">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Each key/value pair of the [code]table_dictionary[/code]-variable defines a column of the table. Each key defines the name of a column in the database, while the value is a dictionary that contains further column specifications.
 				[b]Required fields[/b]:
@@ -111,7 +111,7 @@
 			</description>
 		</method>
 		<method name="drop_table">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Drop the table with name [code]table_name[/code]. This method is equivalent to the following query:
 				[codeblock]
@@ -120,14 +120,14 @@
 			</description>
 		</method>
 		<method name="insert_row">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Each key/value pair of the [code]row_dictionary[/code]-variable defines the column values of a single row.
 				Columns should adhere to the table schema as instantiated using the [code]table_dictionary[/code]-variable and are required if their corresponding [b]"not_null"[/b]-column value is set to [code]True[/code].
 			</description>
 		</method>
 		<method name="insert_rows">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Insert multiple rows into the given table. The [code]row_array[/code] input argument should be an array of dictionaries where each element is defined as in [method insert_row].
 			</description>
@@ -139,31 +139,31 @@
 			</description>
 		</method>
 		<method name="update_rows">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				With the [code]updated_row_dictionary[/code]-variable adhering to the same table schema &amp; conditions as the [code]row_dictionary[/code]-variable defined previously.
 			</description>
 		</method>
 		<method name="delete_rows">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Delete all rows of the table that match the given conditions.
 			</description>
 		</method>
 		<method name="import_from_json">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Drops all database tables and imports the database structure and content present inside of [code]import_path.json[/code].
 			</description>
 		</method>
 		<method name="export_to_json">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Exports the database structure and content to [code]export_path.json[/code] as a backup or for ease of editing.
 			</description>
 		</method>
 		<method name="import_from_buffer">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Drops all database tables and imports the database structure and content encoded in JSON-formatted input buffer.
 				Can be used together with [method SQLite.export_to_buffer] to implement database encryption.
@@ -177,7 +177,7 @@
 			</description>
 		</method>
 		<method name="create_function">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Bind a [url=https://www.sqlite.org/appfunc.html]scalar SQL function[/url] to the database that can then be used in subsequent queries.
 			</description>
@@ -189,13 +189,13 @@
 			</description>
 		</method>
 		<method name="backup_to">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Backup the current database to a path, see [url=https://www.sqlite.org/backup.html]here[/url]. This feature is useful if you are using a database as your save file and you want to easily implement a saving mechanic.
 			</description>
 		</method>
 		<method name="restore_from">
-			<return type="bool" />
+			<return type="ResultCode" />
 			<description>
 				Restore the current database from a path, see [url=https://www.sqlite.org/backup.html]here[/url]. This feature is useful if you are using a database as your save file and you want to easily implement a loading mechanic. Be warned that the original database will be overwritten entirely when restoring.
 			</description>
@@ -249,21 +249,8 @@
 		<member name="error_message" type="String" default="&quot;&quot;">
 			Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
 		</member>
-		<member name="default_extension" type="String" default="db">
-			Default extension that is automatically appended to the [code]path[/code]-variable whenever [b]no[/b] extension is detected/given.
-			[i][b]NOTE:[/b] If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.[/i]
-		</member>
 		<member name="foreign_keys" type="bool" default="false">
 			Enables or disables the availability of [url=https://www.sqlite.org/foreignkeys.html]foreign keys[/url] in the SQLite database.
-		</member>
-		<member name="read_only" type="bool" default="false">
-			Enabling this property opens the database in read-only modus &amp; allows databases to be packaged inside of the PCK. To make this possible, a custom [url=https://www.sqlite.org/vfs.html]VFS[/url] is employed which internally takes care of all the file handling using the Godot API.
-		</member>
-		<member name="query_result" type="Array" default="[]">
-			Contains the results from the latest query [b]by value[/b]; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.
-		</member>
-		<member name="query_result_by_reference" type="Array" default="[]">
-			Contains the results from the latest query [b]by reference[/b] and is, as a direct result, cleared and repopulated after every new query.
 		</member>
 		<member name="last_insert_rowid" type="int" default="0">
 			Exposes the [code]sqlite3_last_insert_rowid()[/code]-method to Godot as described [url=https://www.sqlite.org/c3ref/last_insert_rowid.html]here[/url].
@@ -277,17 +264,5 @@
 	<signals>
 	</signals>
 	<constants>
-		<constant name="QUIET" value="0">
-			Don't print anything to the console.
-		</constant>
-		<constant name="NORMAL" value="1">
-			Print essential information to the console.
-		</constant>
-		<constant name="VERBOSE" value="2">
-			Print additional information to the console.
-		</constant>
-		<constant name="VERY_VERBOSE" value="3">
-			Same as [constant VERBOSE].
-		</constant>
 	</constants>
 </class>

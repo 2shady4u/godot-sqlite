@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class name="SQLiteEnums" inherits="RefCounted"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Common enums used by the Godot SQLite plugin.
+	</brief_description>
+    <description>
+        Result codes starting with "RC_SQLITE_" come directly from SQLite. Detailed descriptions are available [url=https://sqlite.org/rescode.html]here[/url].
+    </description>
+	<tutorials>
+	</tutorials>
+	<constants>
+        <constant name="RC_GDSQLITE_ERROR" value="10000">
+			Error that does not correspond to any of the result codes defined by SQLite.
+		</constant>
+        <constant name="QUIET" value="0">
+			Don't print anything to the console.
+		</constant>
+		<constant name="NORMAL" value="1">
+			Print essential information to the console.
+		</constant>
+		<constant name="VERBOSE" value="2">
+			Print additional information to the console.
+		</constant>
+		<constant name="VERY_VERBOSE" value="3">
+			Same as [constant VERBOSE].
+		</constant>
+	</constants>
+</class>
