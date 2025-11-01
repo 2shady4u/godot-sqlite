@@ -32,14 +32,23 @@
             "skip": true
         },
         {
-            "name": "Ubuntu (GCC)",
+            "name": "Ubuntu (x86_64, GCC)",
             "os": "ubuntu-22.04",
             "platform": "linux",
             "artifact-extension": "so",
             "cache-name": "linux-x86_64"
         },
         {
-            "name": "Ubuntu (GCC, Double Precision)",
+            "name": "Ubuntu (arm64, GCC)",
+            "os": "ubuntu-22.04-arm",
+            "platform": "linux",
+            "artifact-extension": "so",
+            "flags": "arch=arm64",
+            "cache-name": "linux-arm64",
+            "skip": true
+        },
+        {
+            "name": "Ubuntu (x86_64, GCC, Double Precision)",
             "os": "ubuntu-22.04",
             "platform": "linux",
             "artifact-extension": "so",
