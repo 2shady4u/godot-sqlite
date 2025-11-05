@@ -12,7 +12,7 @@
 #include <godot_cpp/classes/project_settings.hpp>
 
 #include <sqlite/sqlite3.h>
-#include <vfs/gdsqlite_vfs.h>
+#include <vfs/gdsqlite_vfs.hpp>
 #include <cstring>
 #include <fstream>
 #include <memory>
