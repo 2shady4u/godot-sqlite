@@ -905,7 +905,7 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 
 	/* Find all tables that are present in this database */
 	/* We don't care about indexes or triggers here since they get dropped automatically when their table is dropped */
-	query(String("SELECT name FROM sqlite_master WHERE type = 'table';"));
+	query(String("SELECT name,type FROM sqlite_master WHERE type = 'table';"));
 	TypedArray<Dictionary> old_table_array = query_result.duplicate(true);
 #ifdef SQLITE_ENABLE_FTS5
 	/* FTS5 creates a bunch of shadow tables that cannot be dropped manually! */
