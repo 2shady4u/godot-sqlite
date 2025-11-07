@@ -8,7 +8,7 @@
 #include <godot_cpp/classes/time.hpp>
 
 #include "./sqlite/sqlite3.h"
-#include "gdsqlite_file.h"
+#include "gdsqlite_file.hpp"
 #include <iostream>
 #include <sstream>
 

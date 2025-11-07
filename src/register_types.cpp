@@ -1,4 +1,4 @@
-#include "register_types.h"
+#include "register_types.hpp"
 
 #include <gdextension_interface.h>
 
@@ -6,7 +6,7 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include "gdsqlite.h"
+#include "gdsqlite.hpp"
 
 using namespace godot;
 
