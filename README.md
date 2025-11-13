@@ -47,21 +47,25 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
   <a href="https://www.youtube.com/watch?v=j-BRiTrw_F0"><img src="https://img.youtube.com/vi/j-BRiTrw_F0/0.jpg"></a>
 </p>
 
-## Variables
+## Classes
 
-- **path** (String, default="default")
+- [SQLiteConnection](#sqlite-connection)
+- [SQLiteConnectionParams](#sqlite-connection-params)
+- [SQLiteEnums](#sqlite-enums)
 
-    Path to the database, should be set before opening the database with `open_db()`. If no database with this name exists, a new one at the supplied path will be created. Both `res://` and `user://` keywords can be used to define the path.
+### 🔗 <a name="sqlite-connection">SQLiteConnection</a>
+
+Represents a connection to an SQLite database.
+
+#### ~ Properties ~
+
+- **path** (String, default="database.db")
+
+    Path to the database. This is a read-only property that cannot be modified after opening the connection.
 
 - **error_message** (String, default="")
 
     Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
-
-- **default_extension** (String, default="db")
-
-    Default extension that is automatically appended to the `path`-variable whenever **no** extension is detected/given.
-
-    ***NOTE**: If database files without extension are desired, this variable has to be set to "" (= an empty string) as to skip this automatic procedure entirely.*
 
 - **foreign_keys** (Boolean, default=false)
 
@@ -69,49 +73,31 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - **read_only** (Boolean, default=false)
 
-    Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API.
-
-- **query_result** (Array, default=[])
-
-    Contains the results from the latest query **by value**; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.
-
-- **query_result_by_reference** (Array, default=[])
-
-    Contains the results from the latest query **by reference** and is, as a direct result, cleared and repopulated after every new query.
+	Was this database connection opened in read-only modus or not?
 
 - **last_insert_rowid** (Integer, default=0)
 
     Exposes the `sqlite3_last_insert_rowid()`-method to Godot as described [here](https://www.sqlite.org/c3ref/last_insert_rowid.html).  
     Attempting to modify this variable directly is forbidden and throws an error.
 
-- **verbosity_level** (Integer, default=1)
+- **verbosity_level** (VerbosityLevel, default=NORMAL)
 
     The verbosity_level determines the amount of logging to the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
 
-    | Level            | Description                                 |
-    |----------------- | ------------------------------------------- |
-    | QUIET (0)        | Don't print anything to the console         |
-    | NORMAL (1)       | Print essential information to the console  |
-    | VERBOSE (2)      | Print additional information to the console |
-    | VERY_VERBOSE (3) | Same as VERBOSE                             |
-
     ***NOTE**: VERBOSE and higher levels might considerably slow down your queries due to excessive logging.*
 
-## Methods
+#### ~ Methods ~
 
-- ResultCode rc = **open_db()**
+- SQLiteConnection conn = **open(** SQLiteConnectionParams connection_params **)**
 
-    Open a new database connection. Multiple concurrently open connections to the same database are possible.
+    Creates a new [bold]SQLiteConnection[/bold] object. Multiple concurrently open connections to the same database are possible.
+	Returns null if opening the connection failed. You can use [method get_open_error] to check the error that occurred.
 
-- ResultCode rc = **close_db()**
-
-    Close the current database connection.
-
-- ResultCode rc = **query(** String query_string **)**
+- ResultCode rc = **query(** String query_string, Array query_result **)**
 
     Query the database using the raw SQL statement defined in `query_string`.
 
-- ResultCode rc = **query_with_bindings(** String query_string, Array param_bindings **)**
+- ResultCode rc = **query_with_bindings(** String query_string, Array param_bindings, Array query_result **)**
 
     Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
 
@@ -189,23 +175,23 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     db.query("DROP TABLE "+ table_name + ";")
     ```
 
-- ResultCode rc = **insert_row(** String table_name, Dictionary row_dictionary **)**
+- ResultCode rc = **insert_row(** String table_name, Dictionary row_dictionary, Array query_result **)**
 
     Each key/value pair of the `row_dictionary`-variable defines the column values of a single row.  
 
     Columns should adhere to the table schema as instantiated using the `table_dictionary`-variable and are required if their corresponding **"not_null"**-column value is set to `True`.
 
-- ResultCode rc = **insert_rows(** String table_name, Array row_array **)**
+- ResultCode rc = **insert_rows(** String table_name, Array row_array, Array query_result **)**
 
-- Array selected_rows = **select_rows(** String table_name, String query_conditions, Array selected_columns **)**
+- Array selected_rows = **select_rows(** String table_name, String query_conditions, Array selected_columns, Array query_result **)**
 
     Returns the results from the latest query **by value**; meaning that this property does not get overwritten by any successive queries.
 
-- ResultCode rc = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary **)**
+- ResultCode rc = **update_rows(** String table_name, String query_conditions, Dictionary updated_row_dictionary, Array query_result **)**
 
     With the `updated_row_dictionary`-variable adhering to the same table schema & conditions as the `row_dictionary`-variable defined previously.
 
-- ResultCode rc = **delete_rows(** String table_name, String query_conditions **)**
+- ResultCode rc = **delete_rows(** String table_name, String query_conditions, Array query_result **)**
 
 - ResultCode rc = **import_from_json(** String import_path **)**
 
@@ -227,7 +213,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Can be used together with `import_from_buffer()` to implement database encryption.
 
-- ResultCode rc = **create_function(** String function_name, FuncRef function_reference, int number_of_arguments **)**
+- ResultCode rc = **create_function(** String function_name, Callable callable, int number_of_arguments **)**
 
     Bind a [scalar SQL function](https://www.sqlite.org/appfunc.html) to the database that can then be used in subsequent queries.
 
@@ -278,6 +264,81 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     ```gdscript
     db.load_extension("res://addons/godot-sqlite/extensions/spellfix.dll", "sqlite3_spellfix_init")
     ```
+
+### 📝 <a name="sqlite-connection-params">SQLiteConnectionParams</a>
+
+Connection parameters that have to be passed to `SQLiteConnection.open()`.
+
+#### ~ Properties ~
+
+- **path** (String, default="database.db")
+
+    Path to the database. A new database is automatically created if there is no existing database at the supplied path. Both `res://` and `user://` keywords can be used to define the path.
+
+- **read_only** (Boolean, default=false)
+
+    Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API.
+
+- **verbosity_level** (VerbosityLevel, default=NORMAL)
+
+    The verbosity_level determines the amount of logging to the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
+
+    ***NOTE**: VERBOSE and higher levels might considerably slow down your queries due to excessive logging.*
+
+### 🔢 <a name="sqlite-enums">SQLiteEnums</a>
+
+Common enums used by the Godot SQLite plugin.
+
+Result codes starting with "RC_SQLITE_" come directly from SQLite. Detailed descriptions for those result codes are available [here](https://sqlite.org/rescode.html).
+
+#### ~ Enumerations ~
+
+- **ResultCode**
+
+    - **RC_SQLITE_OK** = 0
+    - **RC_SQLITE_ERROR** = 1
+    - **RC_SQLITE_INTERNAL** = 2
+    - **RC_SQLITE_PERM** = 3
+    - **RC_SQLITE_ABORT** = 4
+    - **RC_SQLITE_BUSY** = 5
+    - **RC_SQLITE_LOCKED** = 6
+    - **RC_SQLITE_NOMEM** = 7
+    - **RC_SQLITE_READONLY** = 8
+    - **RC_SQLITE_INTERRUPT** = 9
+    - **RC_SQLITE_IOERR** = 10
+    - **RC_SQLITE_CORRUPT** = 11
+    - **RC_SQLITE_NOTFOUND** = 12
+    - **RC_SQLITE_FULL** = 13
+    - **RC_SQLITE_CANTOPEN** = 14
+    - **RC_SQLITE_PROTOCOL** = 15
+    - **RC_SQLITE_EMPTY** = 16
+    - **RC_SQLITE_SCHEMA** = 17
+    - **RC_SQLITE_TOOBIG** = 18
+    - **RC_SQLITE_CONSTRAINT** = 19
+    - **RC_SQLITE_MISMATCH** = 20
+    - **RC_SQLITE_MISUSE** = 21
+    - **RC_SQLITE_NOLFS** = 22
+    - **RC_SQLITE_AUTH** = 23
+    - **RC_SQLITE_FORMAT** = 24
+    - **RC_SQLITE_RANGE** = 25
+    - **RC_SQLITE_NOTADB** = 26
+    - **RC_SQLITE_NOTICE** = 27
+    - **RC_SQLITE_WARNING** = 28
+    - **RC_SQLITE_ROW** = 100
+    - **RC_SQLITE_DONE** = 101
+    - **RC_GDSQLITE_ERROR** = 10000  
+    Error that does not correspond to any of the result codes defined by SQLite.
+
+- **VerbosityLevel**
+
+    - **QUIET** = 0  
+    Don't print anything to the console.
+    - **NORMAL** = 1  
+    Print essential information to the console.
+    - **VERBOSE** = 2  
+    Print additional information to the console.
+    - **VERY_VERBOSE** = 3  
+    Same as **VERBOSE**.
 
 ## Frequently Asked Questions (FAQ)
 

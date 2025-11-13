@@ -26,7 +26,7 @@ void SQLiteConnection::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("update_rows", "table_name", "conditions", "row_data", "query_result"), &SQLiteConnection::update_rows, DEFVAL(Array()));
 	ClassDB::bind_method(D_METHOD("delete_rows", "table_name", "conditions", "query_result"), &SQLiteConnection::delete_rows, DEFVAL(Array()));
 
-	ClassDB::bind_method(D_METHOD("create_function", "function_name", "callable", "arguments"), &SQLiteConnection::create_function);
+	ClassDB::bind_method(D_METHOD("create_function", "function_name", "callable", "number_of_arguments"), &SQLiteConnection::create_function);
 
 	ClassDB::bind_method(D_METHOD("import_from_json", "import_path"), &SQLiteConnection::import_from_json);
 	ClassDB::bind_method(D_METHOD("export_to_json", "export_path"), &SQLiteConnection::export_to_json);

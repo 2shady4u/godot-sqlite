@@ -14,7 +14,7 @@ protected:
     static void _bind_methods();
 
 private:
-    String path = "default";
+    String path = "database.db";
 	bool read_only = false;
     SQLiteEnums::VerbosityLevel verbosity_level = SQLiteEnums::VerbosityLevel::NORMAL;
 

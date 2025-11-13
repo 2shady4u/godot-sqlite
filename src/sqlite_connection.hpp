@@ -53,7 +53,7 @@ private:
 	SQLiteEnums::VerbosityLevel verbosity_level = SQLiteEnums::VerbosityLevel::NORMAL;
 	bool foreign_keys = false;
 	bool read_only = false;
-	String path = "default";
+	String path = "database.db";
 	String error_message = "";
 
 protected:

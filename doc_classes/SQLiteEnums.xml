@@ -6,7 +6,7 @@
 		Common enums used by the Godot SQLite plugin.
 	</brief_description>
     <description>
-        Result codes starting with "RC_SQLITE_" come directly from SQLite. Detailed descriptions are available [url=https://sqlite.org/rescode.html]here[/url].
+        Result codes starting with "RC_SQLITE_" come directly from SQLite. Detailed descriptions for those result codes are available [url=https://sqlite.org/rescode.html]here[/url].
     </description>
 	<tutorials>
 	</tutorials>

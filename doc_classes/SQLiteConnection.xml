@@ -3,43 +3,47 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
 	<brief_description>
-		A SQLite wrapper class implemented in GDExtension.
+		Represents a connection to an SQLite database.
 	</brief_description>
 	<description>
 		[b]Example usage[/b]:
 		[codeblock]
 		extends Node
 
-		var db = SQLite.new()
+		var conn: SQLiteConnection = null
 
 		func _ready():
-		    var table_name: String = "players"
-		    var table_dict: Dictionary = {
-		        "id": {"data_type":"int", "primary_key": true, "not_null": true, "auto_increment": true},
-		        "name": {"data_type":"text", "not_null": true},
-		        "portrait": {"data_type":"blob", "not_null": true}
-		    }
+			var table_name: String = "players"
+			var table_dict: Dictionary = {
+				"id": {"data_type":"int", "primary_key": true, "not_null": true, "auto_increment": true},
+				"name": {"data_type":"text", "not_null": true},
+				"portrait": {"data_type":"blob", "not_null": true}
+			}
 
-		    db.path = "res://my_database"
-		    db.verbosity_level = SQLite.VerbosityLevel.NORMAL
-		    db.open_db()
+			var params := SQLiteConnectionParams.new()
+			params.path = "res://my_database"
+			params.verbosity_level = SQLiteEnums.VerbosityLevel.NORMAL
 
-		    # Check if the table already exists or not.
-		    db.query_with_bindings("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", [table_name])
-		    if not db.query_result.is_empty():
-		        db.drop_table(table_name)
-		    db.create_table(table_name, table_dict)
+			conn = SQLiteConnection.open(params)
 
-		    var texture := preload("res://icon.png")
-		    var tex_data: PackedByteArray = texture.get_image().save_png_to_buffer()
-		    var row_dict: Dictionary = {
-		        "name": "Doomguy",
-		        "portrait": tex_data
-		    }
-		    db.insert_row(table_name, row_dict)
+			# Check if the table already exists or not.
+			var query_result := []
+			var query_string := "SELECT name FROM sqlite_master WHERE type='table' AND name=?;"
+			conn.query_with_bindings(query_string, [table_name], query_result)
+			if not query_result.is_empty():
+				conn.drop_table(table_name)
+			conn.create_table(table_name, table_dict)
 
-		    db.select_rows(table_name, "name = 'Doomguy'", ["id", "name"])
-		    print(db.query_result)
+			var texture := preload("res://icon.png")
+			var tex_data: PackedByteArray = texture.get_image().save_png_to_buffer()
+			var row_dict: Dictionary = {
+				"name": "Doomguy",
+				"portrait": tex_data
+			}
+			conn.insert_row(table_name, row_dict)
+
+			conn.select_rows(table_name, "name = 'Doomguy'", ["id", "name"], query_result)
+			print(query_result)
 		[/codeblock]
 	</description>
 	<tutorials>
@@ -47,16 +51,11 @@
 		<link title="Script containing multiple usage examples">https://github.com/2shady4u/godot-sqlite/blob/master/demo/database.gd</link>
 	</tutorials>
 	<methods>
-		<method name="open_db">
+		<method name="open">
 			<return type="ResultCode" />
 			<description>
-				Open a new database connection. Multiple concurrently open connections to the same database are possible.
-			</description>
-		</method>
-		<method name="close_db">
-			<return type="ResultCode" />
-			<description>
-				Close the current database connection.
+				Creates a new [bold]SQLiteConnection[/bold] object. Multiple concurrently open connections to the same database are possible.
+				Returns null if opening the connection failed. You can use [method get_open_error] to check the error that occurred.
 			</description>
 		</method>
 		<method name="query">
@@ -122,7 +121,7 @@
 		<method name="insert_row">
 			<return type="ResultCode" />
 			<description>
-				Each key/value pair of the [code]row_dictionary[/code]-variable defines the column values of a single row.
+				Each key/value pair of the [code]row_data[/code]-variable defines the column values of a single row.
 				Columns should adhere to the table schema as instantiated using the [code]table_dictionary[/code]-variable and are required if their corresponding [b]"not_null"[/b]-column value is set to [code]True[/code].
 			</description>
 		</method>
@@ -135,7 +134,7 @@
 		<method name="select_rows">
 			<return type="Array" />
 			<description>
-				Returns the results from the latest query [b]by value[/b]; meaning that this property does not get overwritten by any successive queries.
+				Select specific rows from a table given the conditions defined in the conditions argument. The [code]columns[/code] input argument should be an array of strings where each string is a valid column name.
 			</description>
 		</method>
 		<method name="update_rows">
@@ -166,14 +165,14 @@
 			<return type="ResultCode" />
 			<description>
 				Drops all database tables and imports the database structure and content encoded in JSON-formatted input buffer.
-				Can be used together with [method SQLite.export_to_buffer] to implement database encryption.
+				Can be used together with [method export_to_buffer] to implement database encryption.
 			</description>
 		</method>
 		<method name="export_to_buffer">
 			<return type="PackedByteArray" />
 			<description>
 				Returns the database structure and content as JSON-formatted buffer.
-				Can be used together with [method SQLite.import_from_buffer] to implement database encryption.
+				Can be used together with [method import_from_buffer] to implement database encryption.
 			</description>
 		</method>
 		<method name="create_function">
@@ -186,6 +185,12 @@
 			<return type="int" />
 			<description>
 				Check if the given database connection is or is not in autocommit mode, see [url=https://sqlite.org/c3ref/get_autocommit.html]here[/url].
+			</description>
+		</method>
+		<method name="get_open_error">
+			<return type="ResultCode" />
+			<description>
+				Returns the result of the last [method open] call in the current thread.
 			</description>
 		</method>
 		<method name="backup_to">
@@ -232,7 +237,7 @@
 		<method name="load_extension">
 			<return type="int" />
 			<description>
-				Loads the extension in the given path. Does not require [method SQLite.enable_load_extension], as it only enables C-API during the call and disables it right after, utilizing the recommended extension loading method declared by the SQLite documentation ([url=https://www.sqlite.org/c3ref/load_extension.html]see[/url]). Returns the SQLite return code.
+				Loads the extension in the given path. Does not require [method enable_load_extension], as it only enables C-API during the call and disables it right after, utilizing the recommended extension loading method declared by the SQLite documentation ([url=https://www.sqlite.org/c3ref/load_extension.html]see[/url]). Returns the SQLite return code.
 				- [b]extension_path:[/b] the path to the compiled binary of the extension
 				- [b]entrypoint:[/b] the extension's entrypoint method (init function). It is defined in the .c file of the extension. 
 				Example for loading the spellfix module:
@@ -244,13 +249,16 @@
 	</methods>
 	<members>
 		<member name="path" type="String" default="default">
-			Path to the database, should be set before opening the database with [code]open_db()[/code]. If no database with this name exists, a new one at the supplied path will be created. Both [code]res://[/code] and [code]user://[/code] keywords can be used to define the path.
+			Path to the database. This is a read-only property that cannot be modified after opening the connection.
 		</member>
 		<member name="error_message" type="String" default="&quot;&quot;">
 			Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
 		</member>
 		<member name="foreign_keys" type="bool" default="false">
 			Enables or disables the availability of [url=https://www.sqlite.org/foreignkeys.html]foreign keys[/url] in the SQLite database.
+		</member>
+		<member name="read_only" type="bool" default="false">
+			Was this database connection opened in read-only modus or not?
 		</member>
 		<member name="last_insert_rowid" type="int" default="0">
 			Exposes the [code]sqlite3_last_insert_rowid()[/code]-method to Godot as described [url=https://www.sqlite.org/c3ref/last_insert_rowid.html]here[/url].

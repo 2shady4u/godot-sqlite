@@ -3,21 +3,35 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
 	<brief_description>
-		Connection parameters that are passed to the [code]open()[/code]-method of SQLiteConnection.
+		Connection parameters that have to be passed to [method SQLiteConnection.open].
 	</brief_description>
-    <description>
+	<description>
+		[b]Example usage[/b]:
+		[codeblock]
+		extends Node
+
+		func _ready():
+			var params := SQLiteConnectionParams.new()
+			params.path = "res://my_database"
+			params.verbosity_level = SQLiteEnums.VerbosityLevel.NORMAL
+
+			var conn := SQLiteConnection.open(params)
+		[/codeblock]
     </description>
 	<tutorials>
 	</tutorials>
-    <members>
-        <member name="read_only" type="bool" default="false">
+	<members>
+		<member name="path" type="String">
+			Path to the database. A new database is automatically created if there is no existing database at the supplied path. Both [code]res://[/code] and [code]user://[/code] keywords can be used to define the path.
+		</member>
+		<member name="read_only" type="bool">
 			Enabling this property opens the database in read-only modus &amp; allows databases to be packaged inside of the PCK. To make this possible, a custom [url=https://www.sqlite.org/vfs.html]VFS[/url] is employed which internally takes care of all the file handling using the Godot API.
 		</member>
-        <member name="verbosity_level" type="int" default="1">
+		<member name="verbosity_level" type="SQLiteEnums.VerbosityLevel">
 			The verbosity_level determines the amount of logging to the Godot console that is handy for debugging your (possibly faulty) SQLite queries.
-			[i][b]NOTE:[/b] [constant VERBOSE] and higher levels might considerably slow down your queries due to excessive logging.[/i]
+			[i][b]NOTE:[/b] [constant SQLiteEnums.VerbosityLevel.VERBOSE] and higher levels might considerably slow down your queries due to excessive logging.[/i]
 		</member>
-    </members>
+	</members>
 	<constants>
 	</constants>
 </class>
