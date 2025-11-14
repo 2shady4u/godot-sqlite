@@ -8,6 +8,7 @@ void SQLite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("close_db"), &SQLite::close_db);
 	ClassDB::bind_method(D_METHOD("query", "query_string"), &SQLite::query);
 	ClassDB::bind_method(D_METHOD("query_with_bindings", "query_string", "param_bindings"), &SQLite::query_with_bindings);
+	ClassDB::bind_method(D_METHOD("query_with_named_bindings", "query_string", "params"), &SQLite::query_with_named_bindings);
 
 	ClassDB::bind_method(D_METHOD("create_table", "table_name", "table_data"), &SQLite::create_table);
 	ClassDB::bind_method(D_METHOD("drop_table", "table_name"), &SQLite::drop_table);
@@ -365,6 +366,163 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 
 	if (!param_bindings.is_empty()) {
 		WARN_PRINT("GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))");
+	}
+
+	return true;
+}
+
+const char POTENTIAL_BIND_PRE_PLACEMENT[] = { ':', '?', '@', '$' };
+
+bool SQLite::query_with_named_bindings(const String &p_query, Dictionary params) {
+	const char *zErrMsg, *sql, *pzTail;
+	int rc;
+
+	if (verbosity_level > VerbosityLevel::NORMAL) {
+		UtilityFunctions::print(p_query);
+	}
+	// TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
+	const CharString dummy_query = p_query.utf8();
+	sql = dummy_query.get_data();
+	//sql = p_query.alloc_c_string();
+
+	/* Clear the previous query results */
+	query_result.clear();
+
+	sqlite3_stmt *stmt;
+	/* Prepare an SQL statement */
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &pzTail);
+	zErrMsg = sqlite3_errmsg(db);
+	error_message = String::utf8(zErrMsg);
+	if (rc != SQLITE_OK) {
+		ERR_PRINT(" --> SQL error: " + error_message);
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	int parameter_count = sqlite3_bind_parameter_count(stmt);
+	/* Bind any given parameters to the prepared statement */
+	for (int i = 0; i < parameter_count; i++) {
+		const char *param_name = sqlite3_bind_parameter_name(stmt, i + 1);
+		/* Sqlite will return the parameter name as prefixed for example ?, :, $, @ but we want user will just pass in the name itself */
+		const char *non_prefixed_name = param_name + 1;
+		/* This has side effect of rechecking the dictionary for same name if its used more than once */
+		if (!params.has(non_prefixed_name)) {
+			ERR_PRINT("GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement! Missing parameter: " + String::utf8(param_name));
+			sqlite3_finalize(stmt);
+			return false;
+		}
+		Variant binding_value = params[String::utf8(non_prefixed_name)];
+		switch (binding_value.get_type()) {
+			case Variant::NIL:
+				sqlite3_bind_null(stmt, i + 1);
+				break;
+
+			case Variant::BOOL:
+			case Variant::INT:
+				sqlite3_bind_int64(stmt, i + 1, int64_t(binding_value));
+				break;
+
+			case Variant::FLOAT:
+				sqlite3_bind_double(stmt, i + 1, binding_value);
+				break;
+
+			case Variant::STRING:
+				// TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
+				{
+					const CharString dummy_binding = (binding_value.operator String()).utf8();
+					const char *binding = dummy_binding.get_data();
+					sqlite3_bind_text(stmt, i + 1, binding, -1, SQLITE_TRANSIENT);
+				}
+				//sqlite3_bind_text(stmt, i + 1, (binding_value.operator String()).alloc_c_string(), -1, SQLITE_TRANSIENT);
+				break;
+
+			case Variant::PACKED_BYTE_ARRAY: {
+				PackedByteArray binding = ((const PackedByteArray &)binding_value);
+				/* Calling .ptr() on an empty PackedByteArray returns an error */
+				if (binding.size() == 0) {
+					sqlite3_bind_null(stmt, i + 1);
+					/* Identical to: `sqlite3_bind_blob64(stmt, i + 1, nullptr, 0, SQLITE_TRANSIENT);`*/
+				} else {
+					sqlite3_bind_blob64(stmt, i + 1, binding.ptr(), binding.size(), SQLITE_TRANSIENT);
+				}
+				break;
+			}
+
+			default:
+				ERR_PRINT("GDSQLite Error: Binding a parameter of type " + String(std::to_string(binding_value.get_type()).c_str()) + " (TYPE_*) is not supported!");
+				sqlite3_finalize(stmt);
+				return false;
+		}
+	}
+
+	if (verbosity_level > VerbosityLevel::NORMAL) {
+		char *expanded_sql = sqlite3_expanded_sql(stmt);
+		UtilityFunctions::print(String::utf8(expanded_sql));
+		sqlite3_free(expanded_sql);
+	}
+
+	// Execute the statement and iterate over all the resulting rows.
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		Dictionary column_dict;
+		int argc = sqlite3_column_count(stmt);
+
+		/* Loop over all columns and add them to the Dictionary */
+		for (int i = 0; i < argc; i++) {
+			Variant column_value;
+			/* Check the column type and do correct casting */
+			switch (sqlite3_column_type(stmt, i)) {
+				case SQLITE_INTEGER:
+					column_value = Variant((int64_t)sqlite3_column_int64(stmt, i));
+					break;
+
+				case SQLITE_FLOAT:
+					column_value = Variant(sqlite3_column_double(stmt, i));
+					break;
+
+				case SQLITE_TEXT:
+					column_value = Variant(String::utf8((char *)sqlite3_column_text(stmt, i)));
+					break;
+
+				case SQLITE_BLOB: {
+					int bytes = sqlite3_column_bytes(stmt, i);
+					PackedByteArray arr = PackedByteArray();
+					arr.resize(bytes);
+					memcpy((void *)arr.ptrw(), (char *)sqlite3_column_blob(stmt, i), bytes);
+					column_value = arr;
+					break;
+				}
+
+				case SQLITE_NULL:
+					break;
+
+				default:
+					break;
+			}
+
+			const char *azColName = sqlite3_column_name(stmt, i);
+			column_dict[String::utf8(azColName)] = column_value;
+		}
+		/* Add result to query_result Array */
+		query_result.append(column_dict);
+	}
+
+	/* Clean up and delete the resources used by the prepared statement */
+	sqlite3_finalize(stmt);
+
+	rc = sqlite3_errcode(db);
+	zErrMsg = sqlite3_errmsg(db);
+	error_message = String::utf8(zErrMsg);
+	if (rc != SQLITE_OK) {
+		ERR_PRINT(" --> SQL error: " + error_message);
+		return false;
+	} else if (verbosity_level > VerbosityLevel::NORMAL) {
+		UtilityFunctions::print(" --> Query succeeded");
+	}
+
+	/* Figure out if there's a subsequent statement which needs execution */
+	String sTail = String::utf8(pzTail).strip_edges();
+	if (!sTail.is_empty()) {
+		return query_with_named_bindings(sTail, params);
 	}
 
 	return true;
