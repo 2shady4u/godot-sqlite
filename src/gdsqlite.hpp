@@ -72,6 +72,7 @@ public:
 	bool close_db();
 	bool query(const String &p_query);
 	bool query_with_bindings(const String &p_query, Array param_bindings);
+	bool something(sqlite3_stmt *stmt, int &rc, const char *&zErrMsg, bool &retFlag);
 	bool query_with_named_bindings(const String &p_query, Dictionary params);
 
 	bool create_table(const String &p_name, const Dictionary &p_table_dict);
@@ -124,6 +125,7 @@ public:
 	String get_default_extension() const;
 
 	void set_query_result(const TypedArray<Dictionary> &p_query_result);
+	bool execute_statement(sqlite3_stmt *stmt, int &rc, const char *&zErrMsg);
 	TypedArray<Dictionary> get_query_result() const;
 
 	TypedArray<Dictionary> get_query_result_by_reference() const;
