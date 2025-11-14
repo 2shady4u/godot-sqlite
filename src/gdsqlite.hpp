@@ -72,7 +72,6 @@ public:
 	bool close_db();
 	bool query(const String &p_query);
 	bool query_with_bindings(const String &p_query, Array param_bindings);
-	bool something(sqlite3_stmt *stmt, int &rc, const char *&zErrMsg, bool &retFlag);
 	bool query_with_named_bindings(const String &p_query, Dictionary params);
 
 	bool create_table(const String &p_name, const Dictionary &p_table_dict);

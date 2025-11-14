@@ -418,7 +418,7 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary params)
 		const char *non_prefixed_name = param_name + 1;
 		/* This has side effect of rechecking the dictionary for same name if its used more than once */
 		if (!params.has(non_prefixed_name)) {
-			ERR_PRINT("GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement! Missing parameter: " + String::utf8(param_name));
+			ERR_PRINT("GDSQLite Error: Insufficient paramater names to satisfy bindings in statement! Missing parameter: " + String::utf8(param_name));
 			sqlite3_finalize(stmt);
 			return false;
 		}
