@@ -8,7 +8,7 @@ void SQLite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("close_db"), &SQLite::close_db);
 	ClassDB::bind_method(D_METHOD("query", "query_string"), &SQLite::query);
 	ClassDB::bind_method(D_METHOD("query_with_bindings", "query_string", "param_bindings"), &SQLite::query_with_bindings);
-	ClassDB::bind_method(D_METHOD("query_with_named_bindings", "query_string", "params"), &SQLite::query_with_named_bindings);
+	ClassDB::bind_method(D_METHOD("query_with_named_bindings", "query_string", "param_bindings"), &SQLite::query_with_named_bindings);
 
 	ClassDB::bind_method(D_METHOD("create_table", "table_name", "table_data"), &SQLite::create_table);
 	ClassDB::bind_method(D_METHOD("drop_table", "table_name"), &SQLite::drop_table);
@@ -384,7 +384,7 @@ bool SQLite::execute_statement(sqlite3_stmt *stmt, int &rc, const char *&zErrMsg
 	return true;
 }
 
-bool SQLite::query_with_named_bindings(const String &p_query, Dictionary params) {
+bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_bindings) {
 	const char *zErrMsg, *sql, *pzTail;
 	int rc;
 
@@ -414,15 +414,15 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary params)
 	/* Bind any given parameters to the prepared statement */
 	for (int i = 0; i < parameter_count; i++) {
 		const char *param_name = sqlite3_bind_parameter_name(stmt, i + 1);
-		/* Sqlite will return the parameter name as prefixed for example ?, :, $, @ but we want user will just pass in the name itself */
+		/* Sqlite will return the parameter name prefixed for example ?, :, $, @ but we want user to just pass in the name itself */
 		const char *non_prefixed_name = param_name + 1;
 		/* This has side effect of rechecking the dictionary for same name if its used more than once */
-		if (!params.has(non_prefixed_name)) {
+		if (!param_bindings.has(non_prefixed_name)) {
 			ERR_PRINT("GDSQLite Error: Insufficient paramater names to satisfy bindings in statement! Missing parameter: " + String::utf8(param_name));
 			sqlite3_finalize(stmt);
 			return false;
 		}
-		Variant binding_value = params[String::utf8(non_prefixed_name)];
+		Variant binding_value = param_bindings[String::utf8(non_prefixed_name)];
 		if (!bind_parameter(binding_value, stmt, i)) {
 			return false;
 		}
@@ -435,7 +435,7 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary params)
 	/* Figure out if there's a subsequent statement which needs execution */
 	String sTail = String::utf8(pzTail).strip_edges();
 	if (!sTail.is_empty()) {
-		return query_with_named_bindings(sTail, params);
+		return query_with_named_bindings(sTail, param_bindings);
 	}
 
 	return true;
