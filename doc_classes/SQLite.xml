@@ -82,6 +82,24 @@
 				[i][b]NOTE:[/b] Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the [code]query_string[/code]-variable itself (see [url=https://github.com/2shady4u/godot-sqlite/issues/41]https://github.com/2shady4u/godot-sqlite/issues/41[/url]).[/i]
 			</description>
 		</method>
+		<method name="query_with_named_bindings">
+			<return type="bool" />
+			<description>
+				Binds the parameters contained in the [code]param_bindings[/code]-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [url=https://www.sqlite.org/c3ref/bind_blob.html]here[/url].
+				[b]Example usage[/b]:
+				[codeblock]
+				var column_name : String = "name";
+    			var query_string : String = "SELECT %s FROM company WHERE age &lt; :age;" % [column_name]
+				var param_bindings : Dictionary = { "age": 24 }
+				var success = db.query_with_named_bindings(query_string, param_bindings)
+				# Executes following query: 
+				# SELECT name FROM company WHERE age &lt; 24;
+				[/codeblock]
+				This will support the use of `:`, `@`, `$`, `?` as prefixes for the names. These are all treated the same ?age, :age, $age, @age. When passing in the dictionary only provide the word `age` with no prefix.
+				Using bindings is optional, except for PackedByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+				[i][b]NOTE:[/b] Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the [code]query_string[/code]-variable itself (see [url=https://github.com/2shady4u/godot-sqlite/issues/41]https://github.com/2shady4u/godot-sqlite/issues/41[/url]).[/i]
+			</description>
+		</method>
 		<method name="create_table">
 			<return type="bool" />
 			<description>
@@ -107,7 +125,7 @@
 				    "auto_increment": true
 				}
 				[/codeblock]
-				For more concrete usage examples see the [code]database.gd[/code]-file as found [url=https://github.com/2shady4u/godot-sqlite/blob/master/demo/database.gd]here[url].
+				For more concrete usage examples see the [code]database.gd[/code]-file as found [url=https://github.com/2shady4u/godot-sqlite/blob/master/demo/database.gd]here[/url].
 			</description>
 		</method>
 		<method name="drop_table">
