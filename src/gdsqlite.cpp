@@ -256,72 +256,14 @@ static bool bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i) {
 
 		default:
 			ERR_PRINT("GDSQLite Error: Binding a parameter of type " + String(std::to_string(binding_value.get_type()).c_str()) + " (TYPE_*) is not supported!");
-			sqlite3_finalize(stmt);
 			return false;
 	}
 	return true;
 }
 
-bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
-	const char *zErrMsg, *sql, *pzTail;
-	int rc;
-
-	if (verbosity_level > VerbosityLevel::NORMAL) {
-		UtilityFunctions::print(p_query);
-	}
-	const CharString dummy_query = p_query.utf8();
-	sql = dummy_query.get_data();
-
-	/* Clear the previous query results */
-	query_result.clear();
-
-	sqlite3_stmt *stmt;
-	/* Prepare an SQL statement */
-	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &pzTail);
-	zErrMsg = sqlite3_errmsg(db);
-	error_message = String::utf8(zErrMsg);
-	if (rc != SQLITE_OK) {
-		ERR_PRINT(" --> SQL error: " + error_message);
-		sqlite3_finalize(stmt);
-		return false;
-	}
-
-	/* Check if the param_bindings size exceeds the required parameter count */
-	int parameter_count = sqlite3_bind_parameter_count(stmt);
-	if (param_bindings.size() < parameter_count) {
-		ERR_PRINT("GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement!");
-		sqlite3_finalize(stmt);
-		return false;
-	}
-
-	/* Bind any given parameters to the prepared statement */
-	for (int i = 0; i < parameter_count; i++) {
-		Variant binding_value = param_bindings.get(i);
-		if (!bind_parameter(binding_value, stmt, i)) {
-			return false;
-		}
-	}
-	param_bindings = param_bindings.slice(parameter_count, param_bindings.size());
-
-	if (!execute_statement(stmt, rc, zErrMsg)) {
-		return false;
-	}
-
-	/* Figure out if there's a subsequent statement which needs execution */
-	String sTail = String::utf8(pzTail).strip_edges();
-	if (!sTail.is_empty()) {
-		return query_with_bindings(sTail, param_bindings);
-	}
-
-	if (!param_bindings.is_empty()) {
-		WARN_PRINT("GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))");
-	}
-
-	return true;
-}
-
-bool SQLite::execute_statement(sqlite3_stmt *stmt, int &rc, const char *&zErrMsg) {
-	if (verbosity_level > VerbosityLevel::NORMAL) {
+static bool execute_statement(SQLite *sqlite, sqlite3 *db, TypedArray<Dictionary> query_result, sqlite3_stmt *stmt) {
+	int64_t verbosity_level = sqlite->get_verbosity_level();
+	if (verbosity_level > SQLite::VerbosityLevel::NORMAL) {
 		char *expanded_sql = sqlite3_expanded_sql(stmt);
 		UtilityFunctions::print(String::utf8(expanded_sql));
 		sqlite3_free(expanded_sql);
@@ -375,15 +317,75 @@ bool SQLite::execute_statement(sqlite3_stmt *stmt, int &rc, const char *&zErrMsg
 	/* Clean up and delete the resources used by the prepared statement */
 	sqlite3_finalize(stmt);
 
-	rc = sqlite3_errcode(db);
+	int rc = sqlite3_errcode(db);
+	const char *zErrMsg = sqlite3_errmsg(db);
+	String error_message = String::utf8(zErrMsg);
+	sqlite -> set_error_message(error_message);
+	if (rc != SQLITE_OK) {
+		ERR_PRINT(" --> SQL error: " + error_message);
+		return false;
+	} else if (verbosity_level > SQLite::VerbosityLevel::NORMAL) {
+		UtilityFunctions::print(" --> Query succeeded");
+	}
+	return true;
+}
+
+bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
+	const char *zErrMsg, *sql, *pzTail;
+	int rc;
+
+	if (verbosity_level > VerbosityLevel::NORMAL) {
+		UtilityFunctions::print(p_query);
+	}
+	const CharString dummy_query = p_query.utf8();
+	sql = dummy_query.get_data();
+
+	/* Clear the previous query results */
+	query_result.clear();
+
+	sqlite3_stmt *stmt;
+	/* Prepare an SQL statement */
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &pzTail);
 	zErrMsg = sqlite3_errmsg(db);
 	error_message = String::utf8(zErrMsg);
 	if (rc != SQLITE_OK) {
 		ERR_PRINT(" --> SQL error: " + error_message);
+		sqlite3_finalize(stmt);
 		return false;
-	} else if (verbosity_level > VerbosityLevel::NORMAL) {
-		UtilityFunctions::print(" --> Query succeeded");
 	}
+
+	/* Check if the param_bindings size exceeds the required parameter count */
+	int parameter_count = sqlite3_bind_parameter_count(stmt);
+	if (param_bindings.size() < parameter_count) {
+		ERR_PRINT("GDSQLite Error: Insufficient number of parameters to satisfy required number of bindings in statement!");
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	/* Bind any given parameters to the prepared statement */
+	for (int i = 0; i < parameter_count; i++) {
+		Variant binding_value = param_bindings.get(i);
+		if (!bind_parameter(binding_value, stmt, i)) {
+			sqlite3_finalize(stmt);
+			return false;
+		}
+	}
+	param_bindings = param_bindings.slice(parameter_count, param_bindings.size());
+
+	if (!execute_statement(this, db, query_result, stmt)) {
+		return false;
+	}
+
+	/* Figure out if there's a subsequent statement which needs execution */
+	String sTail = String::utf8(pzTail).strip_edges();
+	if (!sTail.is_empty()) {
+		return query_with_bindings(sTail, param_bindings);
+	}
+
+	if (!param_bindings.is_empty()) {
+		WARN_PRINT("GDSQLite Warning: Provided number of bindings exceeded the required number in statement! (" + String(std::to_string(param_bindings.size()).c_str()) + " unused parameter(s))");
+	}
+
 	return true;
 }
 
@@ -415,21 +417,33 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 	/* Bind any given parameters to the prepared statement */
 	for (int i = 0; i < parameter_count; i++) {
 		const char *param_name = sqlite3_bind_parameter_name(stmt, i + 1);
+		if (nullptr == param_name) {
+			ERR_PRINT(vformat(
+				"GDSQLite Error: Parameter index %d is most likely nameless and can't assign named parameter!",
+				i + 1
+			));			
+			sqlite3_finalize(stmt);
+			return false;
+		}
 		/* Sqlite will return the parameter name prefixed for example ?, :, $, @ but we want user to just pass in the name itself */
 		const char *non_prefixed_name = param_name + 1;
 		/* This has side effect of rechecking the dictionary for same name if its used more than once */
 		if (!param_bindings.has(non_prefixed_name)) {
-			ERR_PRINT("GDSQLite Error: Insufficient paramater names to satisfy bindings in statement! Missing parameter: " + String::utf8(param_name));
+			ERR_PRINT(vformat(
+				"GDSQLite Error: Insufficient parameter names to satisfy bindings in statement! Missing parameter: %s",
+				String::utf8(param_name)
+			));
 			sqlite3_finalize(stmt);
 			return false;
 		}
 		Variant binding_value = param_bindings[String::utf8(non_prefixed_name)];
 		if (!bind_parameter(binding_value, stmt, i)) {
+			sqlite3_finalize(stmt);
 			return false;
 		}
 	}
 
-	if (!execute_statement(stmt, rc, zErrMsg)) {
+	if (!execute_statement(this, db, query_result, stmt)) {
 		return false;
 	}
 
@@ -441,7 +455,6 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 
 	return true;
 }
-
 
 bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) {
 	if (!validate_table_dict(p_table_dict)) {

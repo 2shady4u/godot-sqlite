@@ -126,7 +126,6 @@ public:
 	String get_default_extension() const;
 
 	void set_query_result(const TypedArray<Dictionary> &p_query_result);
-	bool execute_statement(sqlite3_stmt *stmt, int &rc, const char *&zErrMsg);
 	TypedArray<Dictionary> get_query_result() const;
 
 	TypedArray<Dictionary> get_query_result_by_reference() const;
