@@ -89,13 +89,13 @@
 				[b]Example usage[/b]:
 				[codeblock]
 				var column_name : String = "name";
-    			var query_string : String = "SELECT %s FROM company WHERE age &lt; :age;" % [column_name]
+				var query_string : String = "SELECT %s FROM company WHERE age &lt; :age;" % [column_name]
 				var param_bindings : Dictionary = { "age": 24 }
 				var success = db.query_with_named_bindings(query_string, param_bindings)
 				# Executes following query: 
 				# SELECT name FROM company WHERE age &lt; 24;
 				[/codeblock]
-				This will support the use of `:`, `@`, `$`, `?` as prefixes for the names. These are all treated the same ?age, :age, $age, @age. When passing in the dictionary only provide the word `age` with no prefix.
+				This will support the use of [code]:[/code], [code]@[/code], [code]$[/code], [code]?[/code] as prefixes for the names. These are all treated the same [code]?age[/code], [code]:age[/code], [code]$age[/code], [code]@age[/code]. When passing in the dictionary only provide the word [code]age[/code] with no prefix.
 				Using bindings is optional, except for PackedByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 				[i][b]NOTE:[/b] Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the [code]query_string[/code]-variable itself (see [url=https://github.com/2shady4u/godot-sqlite/issues/41]https://github.com/2shady4u/godot-sqlite/issues/41[/url]).[/i]
 			</description>
