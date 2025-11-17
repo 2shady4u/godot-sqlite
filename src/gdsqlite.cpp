@@ -134,8 +134,6 @@ bool SQLite::open_db() {
 		return false;
 	}
 
-	char *zErrMsg = 0;
-	int rc;
 	if (path.find(":memory:") == -1) {
 		/* Add the default_extension to the database path if no extension is present */
 		/* Skip if the default_extension is an empty string to allow for paths without extension */
@@ -143,17 +141,13 @@ bool SQLite::open_db() {
 			String ending = String(".") + default_extension;
 			path += ending;
 		}
-
-		if (!read_only) {
-			/* Find the real path */
-			path = ProjectSettings::get_singleton()->globalize_path(path.strip_edges());
-		}
 	}
+	path = normalize_path(path, read_only);
 
-	// TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
-	const CharString dummy_path = path.utf8();
-	const char *char_path = dummy_path.get_data();
-	//const char *char_path = path.alloc_c_string();
+	int rc;
+	const CharString utf8_path = path.utf8();
+	const char *char_path = utf8_path.get_data();
+
 	/* Try to open the database */
 	if (read_only) {
 		if (path.find(":memory:") == -1) {
@@ -179,6 +173,7 @@ bool SQLite::open_db() {
 
 	/* Try to enable foreign keys. */
 	if (foreign_keys) {
+		char *zErrMsg = nullptr;
 		rc = sqlite3_exec(db, "PRAGMA foreign_keys=on;", NULL, NULL, &zErrMsg);
 		if (rc != SQLITE_OK) {
 			ERR_PRINT("GDSQLite Error: Can't enable foreign keys: " + String::utf8(zErrMsg));
@@ -209,6 +204,18 @@ bool SQLite::close_db() {
 	return false;
 }
 
+String SQLite::normalize_path(const String p_path, const bool p_read_only) const {
+	if (p_read_only) {
+		return p_path;
+	}
+	if (p_path.contains(":memory:")) {
+		return p_path;
+	}
+
+	/* Find the real path */
+	return ProjectSettings::get_singleton()->globalize_path(p_path.strip_edges());
+}
+
 bool SQLite::query(const String &p_query) {
 	return query_with_bindings(p_query, Array());
 }
@@ -228,13 +235,11 @@ static bool bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i) {
 			break;
 
 		case Variant::STRING:
-			// TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
 			{
 				const CharString dummy_binding = (binding_value.operator String()).utf8();
 				const char *binding = dummy_binding.get_data();
 				sqlite3_bind_text(stmt, i + 1, binding, -1, SQLITE_TRANSIENT);
 			}
-			//sqlite3_bind_text(stmt, i + 1, (binding_value.operator String()).alloc_c_string(), -1, SQLITE_TRANSIENT);
 			break;
 
 		case Variant::PACKED_BYTE_ARRAY: {
@@ -264,10 +269,8 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	if (verbosity_level > VerbosityLevel::NORMAL) {
 		UtilityFunctions::print(p_query);
 	}
-	// TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
 	const CharString dummy_query = p_query.utf8();
 	sql = dummy_query.get_data();
-	//sql = p_query.alloc_c_string();
 
 	/* Clear the previous query results */
 	query_result.clear();
@@ -391,10 +394,8 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 	if (verbosity_level > VerbosityLevel::NORMAL) {
 		UtilityFunctions::print(p_query);
 	}
-	// TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
 	const CharString dummy_query = p_query.utf8();
 	sql = dummy_query.get_data();
-	//sql = p_query.alloc_c_string();
 
 	/* Clear the previous query results */
 	query_result.clear();
@@ -826,13 +827,11 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 			break;
 
 		case Variant::STRING:
-			// TODO: Switch back to the `alloc_c_string()`-method once the API gets updated
 			{
 				const CharString dummy_binding = (output.operator String()).utf8();
 				const char *binding = dummy_binding.get_data();
 				sqlite3_result_text(context, binding, -1, SQLITE_STATIC);
 			}
-			//sqlite3_result_text(context, (output.operator String()).alloc_c_string(), -1, SQLITE_STATIC);
 			break;
 
 		case Variant::PACKED_BYTE_ARRAY: {
@@ -855,7 +854,6 @@ bool SQLite::create_function(const String &p_name, const Callable &p_callable, i
 	int rc;
 	CharString dummy_name = p_name.utf8();
 	const char *zFunctionName = dummy_name.get_data();
-	//const char *zFunctionName = p_name.alloc_c_string();
 	int nArg = p_argc;
 	int eTextRep = SQLITE_UTF8;
 
@@ -886,7 +884,6 @@ bool SQLite::import_from_json(String import_path) {
 	import_path = ProjectSettings::get_singleton()->globalize_path(import_path.strip_edges());
 	CharString dummy_path = import_path.utf8();
 	const char *char_path = dummy_path.get_data();
-	//const char *char_path = import_path.alloc_c_string();
 
 	/* Open the json-file and stream its content into a stringstream */
 	std::ifstream ifs(char_path);
@@ -919,7 +916,6 @@ bool SQLite::export_to_json(String export_path) {
 	export_path = ProjectSettings::get_singleton()->globalize_path(export_path.strip_edges());
 	CharString dummy_path = export_path.utf8();
 	const char *char_path = dummy_path.get_data();
-	//const char *char_path = export_path.alloc_c_string();
 
 	std::ofstream ofs(char_path, std::ios::trunc);
 	if (ofs.fail()) {
@@ -929,7 +925,6 @@ bool SQLite::export_to_json(String export_path) {
 
 	CharString dummy_string = json_string.utf8();
 	ofs << dummy_string.get_data();
-	//ofs << json_string.alloc_c_string();
 	ofs.close();
 
 	return true;
@@ -1314,7 +1309,7 @@ int SQLite::enable_load_extension(const bool &p_onoff) {
 int SQLite::load_extension(const String &p_path, const String &entrypoint) {
 	int rc;
 
-	char *zErrMsg = 0;
+	char *zErrMsg = nullptr;
 	String globalized_path = ProjectSettings::get_singleton()->globalize_path(p_path.strip_edges());
 	const CharString dummy_path = globalized_path.utf8();
 	const char *char_path = dummy_path.get_data();

@@ -41,6 +41,8 @@ private:
 	int backup_database(sqlite3 *source_db, sqlite3 *destination_db);
 	void remove_shadow_tables(Array &p_array);
 
+	String normalize_path(const String p_path, const bool read_only) const;
+
 	sqlite3 *db;
 	std::vector<std::unique_ptr<Callable>> function_registry;
 
