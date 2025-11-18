@@ -220,20 +220,8 @@ bool SQLite::query(const String &p_query) {
 	return query_with_bindings(p_query, Array());
 }
 
-static bool prepare_statement(
-    sqlite3 *db,
-    const String &p_query,
-    Array &query_result,
-    sqlite3_stmt **out_stmt,
-    const char **pzTail,
-    int64_t verbosity_level,
-    String &error_message,
-    CharString &out_dummy_query // <-- keep the utf8 string alive
-) {
-    const char *zErrMsg;
-    int rc;
-
-    if (verbosity_level > SQLite::VerbosityLevel::NORMAL) {
+bool SQLite::prepare_statement(const String &p_query, sqlite3_stmt **out_stmt, const char **pzTail, CharString &out_dummy_query) {
+    if (verbosity_level > VerbosityLevel::NORMAL) {
         UtilityFunctions::print(p_query);
     }
 
@@ -242,8 +230,8 @@ static bool prepare_statement(
 
     query_result.clear();
 
-    rc = sqlite3_prepare_v2(db, sql, -1, out_stmt, pzTail);
-    zErrMsg = sqlite3_errmsg(db);
+    int rc = sqlite3_prepare_v2(db, sql, -1, out_stmt, pzTail);
+    const char *zErrMsg = sqlite3_errmsg(db);
     error_message = String::utf8(zErrMsg);
 
     if (rc != SQLITE_OK) {
@@ -255,7 +243,7 @@ static bool prepare_statement(
     return true;
 }
 
-static bool bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i) {
+bool SQLite::bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i) {
 	switch (binding_value.get_type()) {
 		case Variant::NIL:
 			sqlite3_bind_null(stmt, i + 1);
@@ -296,9 +284,8 @@ static bool bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i) {
 	return true;
 }
 
-static bool execute_statement(SQLite *sqlite, sqlite3 *db, TypedArray<Dictionary> query_result, sqlite3_stmt *stmt) {
-	int64_t verbosity_level = sqlite->get_verbosity_level();
-	if (verbosity_level > SQLite::VerbosityLevel::NORMAL) {
+bool SQLite::execute_statement(sqlite3_stmt *stmt) {
+	if (verbosity_level > VerbosityLevel::NORMAL) {
 		char *expanded_sql = sqlite3_expanded_sql(stmt);
 		UtilityFunctions::print(String::utf8(expanded_sql));
 		sqlite3_free(expanded_sql);
@@ -354,8 +341,7 @@ static bool execute_statement(SQLite *sqlite, sqlite3 *db, TypedArray<Dictionary
 
 	int rc = sqlite3_errcode(db);
 	const char *zErrMsg = sqlite3_errmsg(db);
-	String error_message = String::utf8(zErrMsg);
-	sqlite -> set_error_message(error_message);
+	error_message = String::utf8(zErrMsg);
 	if (rc != SQLITE_OK) {
 		ERR_PRINT(" --> SQL error: " + error_message);
 		return false;
@@ -370,7 +356,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	sqlite3_stmt *stmt;
 	CharString dummy_query;
 
-	if (!prepare_statement(db, p_query, query_result, &stmt, &pzTail, verbosity_level, error_message, dummy_query)) {
+	if (!prepare_statement(p_query, &stmt, &pzTail, dummy_query)) {
 		return false;
 	}
 
@@ -392,7 +378,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	}
 	param_bindings = param_bindings.slice(parameter_count, param_bindings.size());
 
-	if (!execute_statement(this, db, query_result, stmt)) {
+	if (!execute_statement(stmt)) {
 		return false;
 	}
 
@@ -414,7 +400,7 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 	sqlite3_stmt *stmt;
 	CharString dummy_query;
 
-	if (!prepare_statement(db, p_query, query_result, &stmt, &pzTail, verbosity_level, error_message, dummy_query)) {
+	if (!prepare_statement(p_query, &stmt, &pzTail, dummy_query)) {
 		return false;
 	}
 
@@ -448,7 +434,7 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 		}
 	}
 
-	if (!execute_statement(this, db, query_result, stmt)) {
+	if (!execute_statement(stmt)) {
 		return false;
 	}
 

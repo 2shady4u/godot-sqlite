@@ -40,6 +40,9 @@ private:
 	bool validate_table_dict(const Dictionary &p_table_dict);
 	int backup_database(sqlite3 *source_db, sqlite3 *destination_db);
 	void remove_shadow_tables(Array &p_array);
+	bool prepare_statement(const String &p_query, sqlite3_stmt **out_stmt, const char **pzTail, CharString &out_dummy_query);
+	bool bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i);
+	bool execute_statement(sqlite3_stmt *stmt);
 
 	String normalize_path(const String p_path, const bool read_only) const;
 
