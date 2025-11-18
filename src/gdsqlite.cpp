@@ -345,7 +345,7 @@ bool SQLite::execute_statement(sqlite3_stmt *stmt) {
 	if (rc != SQLITE_OK) {
 		ERR_PRINT(" --> SQL error: " + error_message);
 		return false;
-	} else if (verbosity_level > SQLite::VerbosityLevel::NORMAL) {
+	} else if (verbosity_level > VerbosityLevel::NORMAL) {
 		UtilityFunctions::print(" --> Query succeeded");
 	}
 	return true;
