@@ -256,8 +256,8 @@ bool SQLite::bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i) {
 		case Variant::FLOAT:
 			sqlite3_bind_double(stmt, i + 1, binding_value);
 			break;
-
 		case Variant::STRING:
+		case Variant::STRING_NAME:
 			{
 				const CharString dummy_binding = (binding_value.operator String()).utf8();
 				const char *binding = dummy_binding.get_data();
@@ -291,10 +291,18 @@ bool SQLite::execute_statement(sqlite3_stmt *stmt) {
 		sqlite3_free(expanded_sql);
 	}
 
+	/* Column names don't change for every row -> Cache them! */
+	int argc = sqlite3_column_count(stmt);
+	Vector<StringName> column_names;
+	column_names.resize(argc);
+	for (int i = 0; i < argc; i++) {
+		const char *azColName = sqlite3_column_name(stmt, i);
+		column_names.write[i] = StringName(String::utf8(azColName));
+	}
+
 	// Execute the statement and iterate over all the resulting rows.
 	while (sqlite3_step(stmt) == SQLITE_ROW) {
 		Dictionary column_dict;
-		int argc = sqlite3_column_count(stmt);
 
 		/* Loop over all columns and add them to the Dictionary */
 		for (int i = 0; i < argc; i++) {
@@ -302,35 +310,35 @@ bool SQLite::execute_statement(sqlite3_stmt *stmt) {
 			/* Check the column type and do correct casting */
 			switch (sqlite3_column_type(stmt, i)) {
 				case SQLITE_INTEGER:
-					column_value = Variant((int64_t)sqlite3_column_int64(stmt, i));
+					column_value = (int64_t)sqlite3_column_int64(stmt, i);
 					break;
 
 				case SQLITE_FLOAT:
-					column_value = Variant(sqlite3_column_double(stmt, i));
+					column_value = sqlite3_column_double(stmt, i);
 					break;
 
 				case SQLITE_TEXT:
-					column_value = Variant(String::utf8((char *)sqlite3_column_text(stmt, i)));
+					column_value = String::utf8((const char *)sqlite3_column_text(stmt, i));
 					break;
 
 				case SQLITE_BLOB: {
 					int bytes = sqlite3_column_bytes(stmt, i);
 					PackedByteArray arr = PackedByteArray();
 					arr.resize(bytes);
-					memcpy((void *)arr.ptrw(), (char *)sqlite3_column_blob(stmt, i), bytes);
+					memcpy(arr.ptrw(), sqlite3_column_blob(stmt, i), bytes);
 					column_value = arr;
 					break;
 				}
 
 				case SQLITE_NULL:
+					column_value = Variant(); // explicit null
 					break;
 
 				default:
 					break;
 			}
 
-			const char *azColName = sqlite3_column_name(stmt, i);
-			column_dict[String::utf8(azColName)] = column_value;
+			column_dict[column_names[i]] = column_value;
 		}
 		/* Add result to query_result Array */
 		query_result.append(column_dict);
@@ -838,6 +846,7 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 			break;
 
 		case Variant::STRING:
+		case Variant::STRING_NAME:
 			{
 				const CharString dummy_binding = (output.operator String()).utf8();
 				const char *binding = dummy_binding.get_data();
