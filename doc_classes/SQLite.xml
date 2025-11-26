@@ -85,7 +85,9 @@
 		<method name="query_with_named_bindings">
 			<return type="bool" />
 			<description>
-				Binds the parameters contained in the [code]param_bindings[/code]-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [url=https://www.sqlite.org/c3ref/bind_blob.html]here[/url].
+				Binds the parameters contained in the [code]param_bindings[/code]-variable to the query. This will only work with String or StringName keys in the dictionary. 
+				If the named parameter is not found in the dictionary the query will fail. 
+				Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [url=https://www.sqlite.org/c3ref/bind_blob.html]here[/url].
 				[b]Example usage[/b]:
 				[codeblock]
 				var column_name : String = "name";

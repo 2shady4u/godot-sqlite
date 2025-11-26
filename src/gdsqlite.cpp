@@ -352,7 +352,7 @@ bool SQLite::execute_statement(sqlite3_stmt *stmt) {
 }
 
 bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
-	const char *sql, *pzTail;
+	const char *pzTail;
 	sqlite3_stmt *stmt;
 	CharString dummy_query;
 
@@ -396,7 +396,7 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 }
 
 bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_bindings) {
-	const char *sql, *pzTail;
+	const char *pzTail;
 	sqlite3_stmt *stmt;
 	CharString dummy_query;
 
@@ -418,16 +418,23 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 		}
 		/* Sqlite will return the parameter name prefixed for example ?, :, $, @ but we want user to just pass in the name itself */
 		const char *non_prefixed_name = param_name + 1;
+		Variant binding_value;
 		/* This has side effect of rechecking the dictionary for same name if its used more than once */
-		if (!param_bindings.has(non_prefixed_name)) {
-			ERR_PRINT(vformat(
-				"GDSQLite Error: Insufficient parameter names to satisfy bindings in statement! Missing parameter: %s",
-				String::utf8(param_name)
-			));
-			sqlite3_finalize(stmt);
-			return false;
+		if (param_bindings.has(non_prefixed_name)) {
+			binding_value = param_bindings[non_prefixed_name];
+		} else {
+			StringName missing_name = StringName(non_prefixed_name);
+			if (param_bindings.has(missing_name)) {
+				binding_value = param_bindings[missing_name];
+			} else {
+				ERR_PRINT(vformat(
+					"GDSQLite Error: Insufficient parameter names to satisfy bindings in statement! Missing parameter: %s",
+					String::utf8(non_prefixed_name)
+				));
+				sqlite3_finalize(stmt);
+				return false;
+			}
 		}
-		Variant binding_value = param_bindings[String::utf8(non_prefixed_name)];
 		if (!bind_parameter(binding_value, stmt, i)) {
 			sqlite3_finalize(stmt);
 			return false;

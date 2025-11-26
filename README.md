@@ -132,7 +132,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - Boolean success = **query_with_named_bindings(** String query_string, Dictionary param_bindings **)**
 
-    Binds the parameters using named variables contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
+    Binds the parameters using named variables contained in the `param_bindings`-variable to the query. This will only work with String or StringName keys in the dictionary. If the named parameter is not found in the dictionary the query will fail. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
 
     **Example usage**:
 
