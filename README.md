@@ -113,7 +113,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
 
-    Binds the parameters contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
+    Binds the parameters using nameless variables contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
 
     **Example usage**:
 
@@ -125,6 +125,27 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     # Executes following query: 
     # SELECT name FROM company WHERE age < 24;
     ```
+
+    Using bindings is optional, except for PackedByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
+
+    ***NOTE**: Binding column names is not possible due to SQLite restrictions. If dynamic column names are required, insert the column name directly into the `query_string`-variable itself (see https://github.com/2shady4u/godot-sqlite/issues/41).* 
+
+- Boolean success = **query_with_named_bindings(** String query_string, Dictionary param_bindings **)**
+
+    Binds the parameters using named variables contained in the `param_bindings`-variable to the query. This will only work with String or StringName keys in the dictionary. If the named parameter is not found in the dictionary the query will fail. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
+
+    **Example usage**:
+
+    ```gdscript
+    var column_name : String = "name";
+    var query_string : String = "SELECT %s FROM company WHERE age < :age;" % [column_name]
+    var param_bindings : Dictionary = { "age": 24 }
+    var success = db.query_with_named_bindings(query_string, param_bindings)
+    # Executes following query: 
+    # SELECT name FROM company WHERE age < 24;
+    ```
+
+    This will support the use of `:`, `@`, `$`, `?` as prefixes for the names. These are all treated the same ?age, :age, $age, @age. When passing in the dictionary only provide the word 'age' with no prefix.  
 
     Using bindings is optional, except for PackedByteArray (= raw binary data) which has to binded to allow the insertion and selection of BLOB data in the database.
 
