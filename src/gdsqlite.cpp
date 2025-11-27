@@ -220,13 +220,12 @@ bool SQLite::query(const String &p_query) {
 	return query_with_bindings(p_query, Array());
 }
 
-bool SQLite::prepare_statement(const String &p_query, sqlite3_stmt **out_stmt, const char **pzTail, CharString &out_dummy_query) {
+bool SQLite::prepare_statement(const CharString &p_query, sqlite3_stmt **out_stmt, const char** pzTail) {
     if (verbosity_level > VerbosityLevel::NORMAL) {
-        UtilityFunctions::print(p_query);
+        UtilityFunctions::print(p_query.get_data());
     }
 
-    out_dummy_query = p_query.utf8(); // store in caller-provided CharString
-    const char *sql = out_dummy_query.get_data();
+    const char *sql = p_query.get_data();
 
     query_result.clear();
 
@@ -362,9 +361,9 @@ bool SQLite::execute_statement(sqlite3_stmt *stmt) {
 bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 	const char *pzTail;
 	sqlite3_stmt *stmt;
-	CharString dummy_query;
 
-	if (!prepare_statement(p_query, &stmt, &pzTail, dummy_query)) {
+	CharString char_query = p_query.utf8();
+	if (!prepare_statement(char_query, &stmt, &pzTail)) {
 		return false;
 	}
 
@@ -406,9 +405,9 @@ bool SQLite::query_with_bindings(const String &p_query, Array param_bindings) {
 bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_bindings) {
 	const char *pzTail;
 	sqlite3_stmt *stmt;
-	CharString dummy_query;
 
-	if (!prepare_statement(p_query, &stmt, &pzTail, dummy_query)) {
+	CharString char_query = p_query.utf8();
+	if (!prepare_statement(char_query, &stmt, &pzTail)) {
 		return false;
 	}
 
@@ -431,17 +430,12 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 		if (param_bindings.has(non_prefixed_name)) {
 			binding_value = param_bindings[non_prefixed_name];
 		} else {
-			StringName missing_name = StringName(non_prefixed_name);
-			if (param_bindings.has(missing_name)) {
-				binding_value = param_bindings[missing_name];
-			} else {
-				ERR_PRINT(vformat(
-					"GDSQLite Error: Insufficient parameter names to satisfy bindings in statement! Missing parameter: %s",
-					String::utf8(non_prefixed_name)
-				));
-				sqlite3_finalize(stmt);
-				return false;
-			}
+			ERR_PRINT(vformat(
+				"GDSQLite Error: Insufficient parameter names to satisfy bindings in statement! Missing parameter: %s",
+				String::utf8(non_prefixed_name)
+			));
+			sqlite3_finalize(stmt);
+			return false;
 		}
 		if (!bind_parameter(binding_value, stmt, i)) {
 			sqlite3_finalize(stmt);
