@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleExecutable</key>
-	<string>libgdsqlite.template_release</string>
+	<string>libgdsqlite.macos.template_release</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.godotengine.libgdsqlite</string>
 	<key>CFBundleInfoDictionaryVersion</key>
