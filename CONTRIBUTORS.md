@@ -23,3 +23,4 @@ In chronological order based on the first contribution.
 - [youngminz](https://github.com/youngminz)
 - [versjon (Jon)](https://github.com/versjon)
 - [AdminCrystal](https://github.com/AdminCrystal)
+- [Yuri Sizov (YuriSizov)](https://github.com/YuriSizov)
