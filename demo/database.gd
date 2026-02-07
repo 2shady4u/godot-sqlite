@@ -34,6 +34,7 @@ func _ready():
 
 	# Enable/disable examples here:
 	example_of_basic_database_querying()
+	example_of_prepared_statements()
 	example_of_in_memory_and_foreign_key_support()
 	example_of_call_external_functions()
 	example_of_blob_io()
@@ -204,6 +205,80 @@ func example_of_basic_database_querying():
 
 	# Close the imported database
 	db.close_db()
+
+# Basic prepared statement example showing positional and named bindings.
+func example_of_prepared_statements():
+	db = SQLite.new()
+	db.path = ":memory:"
+	db.verbosity_level = verbosity_level
+	db.open_db()
+
+	db.query("CREATE TABLE prepared_demo(id INTEGER PRIMARY KEY, name TEXT NOT NULL, age INTEGER NOT NULL);")
+
+	var insert_statement = db.prepare("INSERT INTO prepared_demo(id, name, age) VALUES(?, ?, ?);")
+	if insert_statement == null:
+		cprint("Failed to create insert prepared statement: " + db.error_message)
+		db.close_db()
+		return
+	cprint("Insert statement status (property/method): " + str(insert_statement.status) + "/" + str(insert_statement.get_status()))
+
+	var prepared_names := ["Ivy", "Noah", "Mika", "Rhea"]
+	var prepared_ages := [28, 41, 19, 35]
+	for i in range(0, prepared_names.size()):
+		insert_statement.clear_bindings()
+		if not insert_statement.bind_all([i + 1, prepared_names[i], prepared_ages[i]]):
+			cprint("Insert bind failed: " + insert_statement.get_error_message())
+			break
+		if not insert_statement.execute():
+			cprint("Insert execution failed: " + insert_statement.get_error_message())
+			break
+		insert_statement.reset()
+
+	insert_statement.finalize()
+	cprint("Insert statement status after finalize: " + str(insert_statement.status))
+
+	var select_statement = db.prepare("SELECT id, name, age FROM prepared_demo WHERE age >= :min_age ORDER BY id;")
+	if select_statement == null:
+		cprint("Failed to create select prepared statement: " + db.error_message)
+		db.close_db()
+		return
+	cprint("Select statement status (property/method): " + str(select_statement.status) + "/" + str(select_statement.get_status()))
+
+	if select_statement.bind_named({"min_age": 30}):
+		var all_rows: Array = select_statement.fetch_all()
+		cprint("Prepared fetch_all (age >= 30): " + str(all_rows))
+	else:
+		cprint("Select named bind failed: " + select_statement.get_error_message())
+
+	select_statement.reset()
+	select_statement.clear_bindings()
+
+	if not select_statement.bind_named({"min_age": 20}):
+		cprint("Select re-bind failed: " + select_statement.get_error_message())
+	else:
+		var stepped_rows: Array = []
+		var step_result : int = select_statement.step()
+		while step_result == SQLite.SQLITE_ROW:
+			stepped_rows.append(select_statement.get_row())
+			step_result = select_statement.step()
+		if step_result != SQLite.SQLITE_DONE:
+			cprint("Prepared step failed (" + str(step_result) + "): " + select_statement.get_error_message())
+		cprint("Prepared step rows (age >= 20): " + str(stepped_rows))
+
+	select_statement.finalize()
+	cprint("Select statement status after finalize: " + str(select_statement.get_status()))
+
+	var connection_statement = db.prepare("SELECT 42;")
+	if connection_statement == null:
+		cprint("Failed to create connection status statement: " + db.error_message)
+		db.close_db()
+		return
+
+	cprint("Connection statement status before db.close_db(): " + str(connection_statement.status))
+	db.close_db()
+	cprint("Connection statement status after db.close_db(): " + str(connection_statement.get_status()))
+	connection_statement.bind(0, 0)
+	cprint("Connection statement error via getter: " + connection_statement.get_error_message())
 
 # This example demonstrates the in-memory and foreign key support. It's
 # rather contrived, but it gets the point across.

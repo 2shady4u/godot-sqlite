@@ -7,6 +7,7 @@
 #include <godot_cpp/godot.hpp>
 
 #include "gdsqlite.hpp"
+#include "gdsqlite_statement.hpp"
 
 using namespace godot;
 
@@ -15,6 +16,7 @@ void initialize_sqlite_module(ModuleInitializationLevel p_level) {
 		return;
 	}
 
+	GDREGISTER_CLASS(SQLiteStatement);
 	GDREGISTER_CLASS(SQLite);
 }
 

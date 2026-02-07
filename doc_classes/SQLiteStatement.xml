@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class name="SQLiteStatement" inherits="RefCounted"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Prepared statement handle returned by [code]SQLite.prepare()[/code].
+	</brief_description>
+	<description>
+		A handle to a reusable preparsed and precompiled SQL statement, designed efficient repeated execution.
+		Typical workflow: prepare once, bind parameters, execute or step rows, reset, repeat, then [method finalize].
+	</description>
+	<methods>
+		<method name="bind">
+			<return type="bool" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				Bind a positional parameter using zero-based parameter index.
+			</description>
+		</method>
+		<method name="bind_all">
+			<return type="bool" />
+			<param index="0" name="values" type="Array" />
+			<description>
+				Bind all positional parameters in order. Extra values are ignored.
+			</description>
+		</method>
+		<method name="bind_named">
+			<return type="bool" />
+			<param index="0" name="values" type="Dictionary" />
+			<description>
+				Bind named parameters from a dictionary. Keys are passed without SQL prefixes ([code]:[/code], [code]@[/code], [code]$[/code], [code]?[/code]).
+			</description>
+		</method>
+		<method name="clear_bindings">
+			<return type="void" />
+			<description>
+				Clear all currently bound parameters.
+			</description>
+		</method>
+		<method name="reset">
+			<return type="bool" />
+			<description>
+				Reset statement execution state so the statement can be executed again.
+			</description>
+		</method>
+		<method name="execute">
+			<return type="bool" />
+			<description>
+				Execute the statement until completion ([code]SQLITE_DONE[/code]). For row-producing queries this steps through all rows.
+			</description>
+		</method>
+		<method name="step">
+			<return type="int" />
+			<description>
+				Perform a single SQLite step and return SQLite status code (for example [code]SQLITE_ROW[/code], [code]SQLITE_DONE[/code], or an error code).
+			</description>
+		</method>
+		<method name="fetch_all">
+			<return type="Array" />
+			<description>
+				Step the statement until completion and return all resulting rows as an array of dictionaries.
+			</description>
+		</method>
+		<method name="get_row">
+			<return type="Dictionary" />
+			<description>
+				Return the row produced by the most recent [method step] call that returned [code]SQLITE_ROW[/code].
+			</description>
+		</method>
+		<method name="get_column_names">
+			<return type="PackedStringArray" />
+			<description>
+				Return the statement's column names in column order.
+			</description>
+		</method>
+		<method name="get_parameter_count">
+			<return type="int" />
+			<description>
+				Return the number of bind parameters defined by this statement.
+			</description>
+		</method>
+		<method name="finalize">
+			<return type="void" />
+			<description>
+				Release the underlying SQLite statement resources. After finalization, the statement is no longer usable.
+			</description>
+		</method>
+		<method name="get_status">
+			<return type="int" />
+			<description>
+				Return the current statement lifecycle status as one of [constant UNINITIALIZED], [constant INITIALIZED], [constant FINALIZED], or [constant CONNECTION_FINALIZED].
+			</description>
+		</method>
+		<method name="get_error_message">
+			<return type="String" />
+			<description>
+				Return the latest SQLite statement/query error message.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="status" type="int" default="1">
+			Current statement lifecycle status. Alias for [method get_status]. Possible values are [constant UNINITIALIZED], [constant INITIALIZED], [constant FINALIZED], and [constant CONNECTION_FINALIZED].
+		</member>
+		<member name="error_message" type="String" default="&quot;&quot;">
+			Contains the latest SQLite statement/query error message. Alias for [method get_error_message].
+		</member>
+	</members>
+	<signals>
+	</signals>
+	<constants>
+		<constant name="UNINITIALIZED" value="0">
+			Statement has not been initialized with a valid SQLite statement handle.
+		</constant>
+		<constant name="INITIALIZED" value="1">
+			Statement is initialized and can be used.
+		</constant>
+		<constant name="FINALIZED" value="2">
+			Statement has been finalized by script code.
+		</constant>
+		<constant name="CONNECTION_FINALIZED" value="3">
+			Statement was invalidated because the associated SQLite connection was closed.
+		</constant>
+	</constants>
+</class>

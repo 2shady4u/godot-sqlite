@@ -111,6 +111,21 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Query the database using the raw SQL statement defined in `query_string`.
 
+- SQLiteStatement = **prepare(** String query_string **)**
+
+    Prepare and compile `query_string` into an optimized reusable form.
+
+    **Example usage**:
+
+    ```gdscript
+    var statement = db.prepare("SELECT id, name FROM company WHERE age >= :min_age ORDER BY id;")
+    statement.bind_named({"min_age": 30})
+    var rows = statement.fetch_all()
+    statement.finalize() # Free the statement
+    ```
+
+    `SQLiteStatement` supports `bind()`, `bind_all()`, `bind_named()`, `step()`, `get_row()`, `fetch_all()`, `reset()`, and `finalize()`.
+
 - Boolean success = **query_with_bindings(** String query_string, Array param_bindings **)**
 
     Binds the parameters using nameless variables contained in the `param_bindings`-variable to the query. Using this function stops any possible attempts at SQL data injection as the parameters are sanitized. More information regarding parameter bindings can be found [here](https://www.sqlite.org/c3ref/bind_blob.html).
