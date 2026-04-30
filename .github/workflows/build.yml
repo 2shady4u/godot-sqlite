@@ -1,7 +1,8 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [master]
+    branches:
+      - "**"
     tags:
       - "v*"
 
