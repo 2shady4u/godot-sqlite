@@ -486,3 +486,5 @@ For uncertainties regarding compilation & building specifics, please do check ou
 
 Tutorials for making and extending GDExtension scripts are available [here](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html)
 in the Official Godot Documentation.
+
+30.04.2026
