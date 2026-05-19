@@ -295,6 +295,21 @@
 		</member>
 	</members>
 	<signals>
+		<signal name="row_deleted">
+			<description>
+				Emitted when a row is deleted.
+			</description>
+		</signal>
+		<signal name="row_inserted">
+			<description>
+				Emitted when a row is inserted.
+			</description>
+		</signal>
+		<signal name="row_updated">
+			<description>
+				Emitted when a row is updated.
+			</description>
+		</signal>
 	</signals>
 	<constants>
 		<constant name="QUIET" value="0">
