@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2019-2025 Piet Bronders & Jeroen De Geeter
+Copyright (c) 2019-2026 Piet Bronders & Jeroen De Geeter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

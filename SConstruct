@@ -14,6 +14,12 @@ options: list = [
         help="Enable SQLite's Built-in Mathematical SQL Functions",
         define="SQLITE_ENABLE_MATH_FUNCTIONS",
     ),
+    CompileTimeOption(
+        key="enable_rtree",
+        name="RTREE",
+        help="Enable SQLite's R*Tree Module",
+        define="SQLITE_ENABLE_RTREE",
+    ),
 ]
 
 target_path = ARGUMENTS.pop("target_path", "demo/addons/godot-sqlite/bin/")

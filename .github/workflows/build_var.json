@@ -32,6 +32,15 @@
             "skip": true
         },
         {
+            "name": "Windows (arm64, MinGW)",
+            "os": "windows-latest",
+            "platform": "windows",
+            "artifact-extension": "dll",
+            "flags": "use_mingw=yes arch=arm64",
+            "cache-name": "win-arm64-mingw",
+            "skip": true
+        },
+        {
             "name": "Ubuntu (x86_64, GCC)",
             "os": "ubuntu-22.04",
             "platform": "linux",
