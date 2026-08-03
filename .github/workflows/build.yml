@@ -123,6 +123,44 @@ jobs:
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
           if-no-files-found: error
 
+  test:
+    name: Test
+    runs-on: "ubuntu-22.04"
+    needs: [ build ]
+    container:
+      image: barichello/godot-ci:4.6.3 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
+
+    steps:
+      - name: Install fontconfig
+        run: apt-get update && apt-get install -y libfontconfig1
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          lfs: true
+          submodules: recursive
+
+      - name: Download Artifacts
+        id: download
+        uses: actions/download-artifact@v7
+        with:
+          name: linux-x86_64-template_debug
+          path: artifacts
+
+      - name: Copy binaries to bin/-folder
+        run: |
+          ls ${{steps.download.outputs.download-path}}/
+          cd ${{ env.PROJECT_FOLDER }}/demo/addons/godot-sqlite/
+          cp -r ${{steps.download.outputs.download-path}}/* bin/
+          ls bin/
+
+      # Initial editor load returns a segmentation fault due to race condition in doc unintialization -> Known issue! (#2024)
+      - name: Run
+        run: |
+          cd ${{ env.PROJECT_FOLDER }}/demo/
+          godot -e --headless --verbose --quit || true
+          godot --headless --verbose --quit
+
   web-deploy:
     name: Web Deploy
     runs-on: ubuntu-latest
