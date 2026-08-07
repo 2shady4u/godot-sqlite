@@ -11,13 +11,14 @@
 #include <godot_cpp/classes/marshalls.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 
+#include "gdsqlite_statement.hpp"
 #include <sqlite/sqlite3.h>
-#include <vfs/gdsqlite_vfs.hpp>
 #include <cstring>
 #include <fstream>
 #include <memory>
 #include <sstream>
 #include <vector>
+#include <vfs/gdsqlite_vfs.hpp>
 
 namespace godot {
 enum OBJECT_TYPE {
@@ -40,14 +41,18 @@ private:
 	bool validate_table_dict(const Dictionary &p_table_dict);
 	int backup_database(sqlite3 *source_db, sqlite3 *destination_db);
 	void remove_shadow_tables(Array &p_array);
-	bool prepare_statement(const CharString &p_query, sqlite3_stmt **out_stmt, const char** pzTail);
+	bool prepare_statement(const CharString &p_query, sqlite3_stmt **out_stmt, const char **pzTail);
 	bool bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i);
 	bool execute_statement(sqlite3_stmt *stmt);
+	void track_statement_instance(uint64_t p_instance_id);
+	void prune_statement_instances();
+	void finalize_statements();
 
 	String normalize_path(const String p_path, const bool read_only) const;
 
 	sqlite3 *db;
 	std::vector<std::unique_ptr<Callable>> function_registry;
+	std::vector<uint64_t> statement_instance_ids;
 
 	int64_t verbosity_level = 1;
 	bool foreign_keys = false;
@@ -76,6 +81,7 @@ public:
 	bool open_db();
 	bool close_db();
 	bool query(const String &p_query);
+	Ref<SQLiteStatement> prepare(const String &p_query);
 	bool query_with_bindings(const String &p_query, Array param_bindings);
 	bool query_with_named_bindings(const String &p_query, Dictionary param_bindings);
 

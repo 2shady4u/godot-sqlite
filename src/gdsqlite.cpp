@@ -1,4 +1,5 @@
 #include "gdsqlite.hpp"
+#include <godot_cpp/core/object.hpp>
 
 using namespace godot;
 
@@ -7,6 +8,7 @@ void SQLite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("open_db"), &SQLite::open_db);
 	ClassDB::bind_method(D_METHOD("close_db"), &SQLite::close_db);
 	ClassDB::bind_method(D_METHOD("query", "query_string"), &SQLite::query);
+	ClassDB::bind_method(D_METHOD("prepare", "query_string"), &SQLite::prepare);
 	ClassDB::bind_method(D_METHOD("query_with_bindings", "query_string", "param_bindings"), &SQLite::query_with_bindings);
 	ClassDB::bind_method(D_METHOD("query_with_named_bindings", "query_string", "param_bindings"), &SQLite::query_with_named_bindings);
 
@@ -187,6 +189,7 @@ bool SQLite::open_db() {
 
 bool SQLite::close_db() {
 	if (db) {
+		finalize_statements();
 		// Cannot close database!
 		if (sqlite3_close_v2(db) != SQLITE_OK) {
 			ERR_PRINT("GDSQLite Error: Can't close database!");
@@ -220,26 +223,105 @@ bool SQLite::query(const String &p_query) {
 	return query_with_bindings(p_query, Array());
 }
 
-bool SQLite::prepare_statement(const CharString &p_query, sqlite3_stmt **out_stmt, const char** pzTail) {
-    if (verbosity_level > VerbosityLevel::NORMAL) {
-        UtilityFunctions::print(p_query.get_data());
-    }
+Ref<SQLiteStatement> SQLite::prepare(const String &p_query) {
+	Ref<SQLiteStatement> statement;
+	if (!db) {
+		ERR_PRINT("GDSQLite Error: Can't prepare statement if connection is not open!");
+		return statement;
+	}
 
-    const char *sql = p_query.get_data();
+	sqlite3_stmt *prepared_stmt = nullptr;
+	const char *pzTail = nullptr;
+	CharString char_query = p_query.utf8();
 
-    query_result.clear();
+	int rc = sqlite3_prepare_v2(db, char_query.get_data(), -1, &prepared_stmt, &pzTail);
+	const char *zErrMsg = sqlite3_errmsg(db);
+	error_message = String::utf8(zErrMsg);
+	if (rc != SQLITE_OK) {
+		ERR_PRINT("GDSQLite Error: Failed to prepare statement: " + error_message);
+		sqlite3_finalize(prepared_stmt);
+		return statement;
+	}
 
-    int rc = sqlite3_prepare_v2(db, sql, -1, out_stmt, pzTail);
-    const char *zErrMsg = sqlite3_errmsg(db);
-    error_message = String::utf8(zErrMsg);
+	String sTail = String::utf8(pzTail).strip_edges();
+	if (!sTail.is_empty()) {
+		WARN_PRINT("GDSQLite Warning: The prepared statement contains additional SQL after the first statement. Only the first statement is prepared.");
+	}
 
-    if (rc != SQLITE_OK) {
-        ERR_PRINT(" --> SQL error: " + error_message);
-        sqlite3_finalize(*out_stmt);
-        return false;
-    }
+	statement.instantiate();
+	statement->initialize(db, prepared_stmt);
+	track_statement_instance(statement->get_instance_id());
+	return statement;
+}
 
-    return true;
+void SQLite::track_statement_instance(uint64_t p_instance_id) {
+	prune_statement_instances();
+	statement_instance_ids.push_back(p_instance_id);
+}
+
+void SQLite::prune_statement_instances() {
+	std::vector<uint64_t> active_instances;
+	active_instances.reserve(statement_instance_ids.size());
+
+	for (auto instance_id : statement_instance_ids) {
+		Object *obj = ObjectDB::get_instance(instance_id);
+
+		if (obj == nullptr) {
+			continue;
+		}
+
+		SQLiteStatement *statement = Object::cast_to<SQLiteStatement>(obj);
+
+		if (statement == nullptr) {
+			continue;
+		}
+
+		if (statement->is_valid()) {
+			active_instances.push_back(instance_id);
+		}
+	}
+
+	statement_instance_ids = active_instances;
+}
+
+void SQLite::finalize_statements() {
+	for (auto instance_id : statement_instance_ids) {
+		Object *obj = ObjectDB::get_instance(instance_id);
+		if (obj == nullptr) {
+			continue;
+		}
+
+		SQLiteStatement *statement = Object::cast_to<SQLiteStatement>(obj);
+		if (statement == nullptr) {
+			continue;
+		}
+
+		statement->connection_finalized();
+	}
+
+	statement_instance_ids.clear();
+}
+
+bool SQLite::prepare_statement(const CharString &p_query, sqlite3_stmt **out_stmt, const char **pzTail) {
+	if (verbosity_level > VerbosityLevel::NORMAL) {
+		UtilityFunctions::print(p_query.get_data());
+	}
+
+	const char *sql = p_query.get_data();
+
+	query_result.clear();
+
+	int rc = sqlite3_prepare_v2(db, sql, -1, out_stmt, pzTail);
+	const char *zErrMsg = sqlite3_errmsg(db);
+	error_message = String::utf8(zErrMsg);
+
+	if (rc != SQLITE_OK) {
+		ERR_PRINT(" --> SQL error: " + error_message);
+		sqlite3_finalize(*out_stmt);
+		return false;
+	}
+
+	return true;
 }
 
 bool SQLite::bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i) {
@@ -256,13 +338,12 @@ bool SQLite::bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i) {
 			sqlite3_bind_double(stmt, i + 1, binding_value);
 			break;
 		case Variant::STRING:
-		case Variant::STRING_NAME:
-			{
-				const CharString dummy_binding = (binding_value.operator String()).utf8();
-				const char *binding = dummy_binding.get_data();
-				sqlite3_bind_text(stmt, i + 1, binding, -1, SQLITE_TRANSIENT);
-			}
+		case Variant::STRING_NAME: {
+			const CharString dummy_binding = (binding_value.operator String()).utf8();
+			const char *binding = dummy_binding.get_data();
+			sqlite3_bind_text(stmt, i + 1, binding, -1, SQLITE_TRANSIENT);
 			break;
+		}
 
 		case Variant::PACKED_BYTE_ARRAY: {
 			PackedByteArray binding = ((const PackedByteArray &)binding_value);
@@ -417,9 +498,8 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 		const char *param_name = sqlite3_bind_parameter_name(stmt, i + 1);
 		if (nullptr == param_name) {
 			ERR_PRINT(vformat(
-				"GDSQLite Error: Parameter index %d is most likely nameless and can't assign named parameter!",
-				i + 1
-			));			
+					"GDSQLite Error: Parameter index %d is most likely nameless and can't assign named parameter!",
+					i + 1));
 			sqlite3_finalize(stmt);
 			return false;
 		}
@@ -431,9 +511,8 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 			binding_value = param_bindings[non_prefixed_name];
 		} else {
 			ERR_PRINT(vformat(
-				"GDSQLite Error: Insufficient parameter names to satisfy bindings in statement! Missing parameter: %s",
-				String::utf8(non_prefixed_name)
-			));
+					"GDSQLite Error: Insufficient parameter names to satisfy bindings in statement! Missing parameter: %s",
+					String::utf8(non_prefixed_name)));
 			sqlite3_finalize(stmt);
 			return false;
 		}
@@ -840,13 +919,12 @@ static void function_callback(sqlite3_context *context, int argc, sqlite3_value 
 			break;
 
 		case Variant::STRING:
-		case Variant::STRING_NAME:
-			{
-				const CharString dummy_binding = (output.operator String()).utf8();
-				const char *binding = dummy_binding.get_data();
-				sqlite3_result_text(context, binding, -1, SQLITE_STATIC);
-			}
+		case Variant::STRING_NAME: {
+			const CharString dummy_binding = (output.operator String()).utf8();
+			const char *binding = dummy_binding.get_data();
+			sqlite3_result_text(context, binding, -1, SQLITE_STATIC);
 			break;
+		}
 
 		case Variant::PACKED_BYTE_ARRAY: {
 			PackedByteArray arr = ((const PackedByteArray &)output);

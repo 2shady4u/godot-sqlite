@@ -65,6 +65,12 @@
 				Query the database using the raw SQL statement defined in [code]query_string[/code].
 			</description>
 		</method>
+		<method name="prepare">
+			<return type="SQLiteStatement" />
+			<description>
+				Prepare and compile a SQL statement for repeated execution. The returned [code]SQLiteStatement[/code] can be bound, stepped and reset multiple times without recompiling SQL.
+			</description>
+		</method>
 		<method name="query_with_bindings">
 			<return type="bool" />
 			<description>
