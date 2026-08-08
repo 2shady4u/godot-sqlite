@@ -81,6 +81,23 @@ jobs:
           python --version
           scons --version
 
+      - name: Build sqlite3.c (SQLite Amalgamation) [Not Windows]
+        if: runner.os != 'Windows'
+        run: |
+          cd src/sqlite
+          ./configure
+          make sqlite3.c
+
+      - name: Configure MSVC [Windows]
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build sqlite3.c (SQLite Amalgamation) [Windows]
+        if: runner.os == 'Windows'
+        run: |
+          cd src/sqlite
+          nmake /f makefile.msc sqlite3.c
+
       - name: Windows Compilation
         if: runner.os == 'Windows'
         run: |
