@@ -230,8 +230,7 @@ bool SQLite::prepare_statement(const CharString &p_query, sqlite3_stmt **out_stm
     query_result.clear();
 
     int rc = sqlite3_prepare_v2(db, sql, -1, out_stmt, pzTail);
-    const char *zErrMsg = sqlite3_errmsg(db);
-    error_message = String::utf8(zErrMsg);
+    update_error_message(rc);
 
     if (rc != SQLITE_OK) {
         ERR_PRINT(" --> SQL error: " + error_message);
@@ -347,8 +346,7 @@ bool SQLite::execute_statement(sqlite3_stmt *stmt) {
 	sqlite3_finalize(stmt);
 
 	int rc = sqlite3_errcode(db);
-	const char *zErrMsg = sqlite3_errmsg(db);
-	error_message = String::utf8(zErrMsg);
+	update_error_message(rc);
 	if (rc != SQLITE_OK) {
 		ERR_PRINT(" --> SQL error: " + error_message);
 		return false;
@@ -1265,17 +1263,21 @@ String SQLite::get_path() const {
 	return path;
 }
 
+void SQLite::update_error_message(int rc) {
+	/* The 'sqlite3_errmsg()'-method returns a non-empty string when rc is equal to SQLITE_OK, SQLITE_ROW or SQLITE_DONE. */
+	/* However, setting the message to an empty string makes much more sense. */
+	if (rc == SQLITE_OK || rc == SQLITE_ROW || rc == SQLITE_DONE) {
+		error_message = "";
+	}
+	const char *zErrMsg = sqlite3_errmsg(db);
+	error_message = String::utf8(zErrMsg);
+}
+
 void SQLite::set_error_message(const String &p_error_message) {
 	error_message = p_error_message;
 }
 
 String SQLite::get_error_message() const {
-	/* The 'sqlite3_errmsg()'-method returns "not an error" (SQLITE_OK) when the query is successful. */
-	/* Without any previous queries, the returned message is an empty string instead. */
-	/* Returning an empty string makes the most sense. */
-	if (error_message == String("not an error")) {
-		return "";
-	}
 	return error_message;
 }
 
