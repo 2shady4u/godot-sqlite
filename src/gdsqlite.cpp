@@ -986,7 +986,7 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 
 	/* Find all tables that are present in this database */
 	/* We don't care about indexes or triggers here since they get dropped automatically when their table is dropped */
-	query(String("SELECT name,type FROM sqlite_master WHERE type = 'table';"));
+	query(String("SELECT name,type FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';"));
 	TypedArray<Dictionary> old_table_array = query_result.duplicate(true);
 #ifdef SQLITE_ENABLE_FTS5
 	/* FTS5 creates a bunch of shadow tables that cannot be dropped manually! */
@@ -1058,7 +1058,7 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 
 PackedByteArray SQLite::export_to_buffer() {
 	/* Get all names and sql templates for all tables present in the database */
-	query(String("SELECT name,sql,type FROM sqlite_master;"));
+	query(String("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%';"));
 	TypedArray<Dictionary> database_array = query_result.duplicate(true);
 #ifdef SQLITE_ENABLE_FTS5
 	/* FTS5 creates a bunch of shadow tables that should NOT be exported! */
