@@ -43,6 +43,7 @@ private:
 	bool prepare_statement(const CharString &p_query, sqlite3_stmt **out_stmt, const char** pzTail);
 	bool bind_parameter(Variant binding_value, sqlite3_stmt *stmt, int i);
 	bool execute_statement(sqlite3_stmt *stmt);
+	void update_error_message(int rc);
 
 	String normalize_path(const String p_path, const bool read_only) const;
 
