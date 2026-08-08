@@ -13,7 +13,7 @@ env:
   VAR_PATH: .github/workflows/build_var.json
   SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
   EM_VERSION: 4.0.11
-  GODOT_VERSION: 4.6.3
+  GODOT_VERSION: 4.7.1
   EXPORT_NAME: ./demo/
 
 jobs:
@@ -128,7 +128,7 @@ jobs:
     runs-on: "ubuntu-22.04"
     needs: [ build ]
     container:
-      image: barichello/godot-ci:4.6.3 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
+      image: barichello/godot-ci:4.7.1 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
 
     steps:
       - name: Install fontconfig
@@ -167,7 +167,7 @@ jobs:
     needs: [build]
     if: github.ref == 'refs/heads/master'
     container:
-      image: barichello/godot-ci:4.6.3 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
+      image: barichello/godot-ci:4.7.1 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
 
     steps:
       - name: Checkout
