@@ -1270,6 +1270,12 @@ void SQLite::set_error_message(const String &p_error_message) {
 }
 
 String SQLite::get_error_message() const {
+	/* The 'sqlite3_errmsg()'-method returns "not an error" (SQLITE_OK) when the query is successful. */
+	/* Without any previous queries, the returned message is an empty string instead. */
+	/* Returning an empty string makes the most sense. */
+	if (error_message == String("not an error")) {
+		return "";
+	}
 	return error_message;
 }
 
