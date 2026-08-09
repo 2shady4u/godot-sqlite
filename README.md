@@ -55,7 +55,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
 - **error_message** (String, default="")
 
-    Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed succesfully.
+    Contains the zErrMsg returned by the SQLite query in human-readable form. An empty string corresponds with the case in which the query executed successfully.
 
 - **default_extension** (String, default="db")
 
