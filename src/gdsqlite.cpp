@@ -122,13 +122,13 @@ void update_hook_callback(void* db_ref, int notif_type, char const* db_name, cha
 	SQLite *sqlite = (SQLite *)db_ref;
 	switch (notif_type) {
 		case SQLITE_INSERT:
-			sqlite->emit_signal("row_inserted", String(table_name), row_id);
+			sqlite->emit_signal("row_inserted", String(table_name), static_cast<int64_t>(row_id));
 			break;
 		case SQLITE_UPDATE:
-			sqlite->emit_signal("row_updated", String(table_name), row_id);
+			sqlite->emit_signal("row_updated", String(table_name), static_cast<int64_t>(row_id));
 			break;
 		case SQLITE_DELETE:
-			sqlite->emit_signal("row_deleted", String(table_name), row_id);
+			sqlite->emit_signal("row_deleted", String(table_name), static_cast<int64_t>(row_id));
 			break;
 	}
 }
