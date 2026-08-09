@@ -300,6 +300,20 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     db.load_extension("res://addons/godot-sqlite/extensions/spellfix.dll", "sqlite3_spellfix_init")
     ```
 
+## Signals
+
+- **row_deleted(** String table_name, int rowid **)**
+
+    Emitted when a row is deleted.
+
+- **row_inserted(** String table_name, int rowid **)**
+
+    Emitted when a row is inserted.
+
+- **row_updated(** String table_name, int rowid **)**
+
+    Emitted when a row is updated.
+
 ## Frequently Asked Questions (FAQ)
 
 ### 1. My query fails and returns syntax errors, what should I do?

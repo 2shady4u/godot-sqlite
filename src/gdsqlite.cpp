@@ -111,6 +111,26 @@ void SQLite::_bind_methods() {
 	BIND_CONSTANT(SQLITE_ROW);
 	BIND_CONSTANT(SQLITE_DONE);
 	/* end-of-error-codes */
+
+	// Signals.
+	ADD_SIGNAL(MethodInfo("row_inserted", PropertyInfo(Variant::STRING, "table_name"), PropertyInfo(Variant::INT, "rowid")));
+	ADD_SIGNAL(MethodInfo("row_updated", PropertyInfo(Variant::STRING, "table_name"), PropertyInfo(Variant::INT, "rowid")));
+	ADD_SIGNAL(MethodInfo("row_deleted", PropertyInfo(Variant::STRING, "table_name"), PropertyInfo(Variant::INT, "rowid")));
+}
+
+void update_hook_callback(void* db_ref, int notif_type, char const* db_name, char const* table_name, sqlite3_int64 row_id) {
+	SQLite *sqlite = (SQLite *)db_ref;
+	switch (notif_type) {
+		case SQLITE_INSERT:
+			sqlite->emit_signal("row_inserted", String(table_name), row_id);
+			break;
+		case SQLITE_UPDATE:
+			sqlite->emit_signal("row_updated", String(table_name), row_id);
+			break;
+		case SQLITE_DELETE:
+			sqlite->emit_signal("row_deleted", String(table_name), row_id);
+			break;
+	}
 }
 
 SQLite::SQLite() {
@@ -181,6 +201,9 @@ bool SQLite::open_db() {
 			return false;
 		}
 	}
+
+	/* Connect data change notification callbacks to signals. */
+	sqlite3_update_hook(db, update_hook_callback, this);
 
 	return true;
 }
