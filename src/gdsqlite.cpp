@@ -477,6 +477,13 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 	return true;
 }
 
+String SQLite::sanitize_identifier(const String &p_name) const {
+	if (p_name.find("\"") == -1) {
+		return p_name;
+	}
+	return p_name.replace("\"", "\"\"");
+}
+
 bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) {
 	if (!validate_table_dict(p_table_dict)) {
 		return false;
@@ -485,7 +492,7 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) 
 	String query_string, type_string, key_string, primary_string;
 	String integer_datatype = "int";
 	/* Create SQL statement */
-	query_string = "CREATE TABLE IF NOT EXISTS " + p_name + " (";
+	query_string = vformat("CREATE TABLE IF NOT EXISTS \"%s\" (", sanitize_identifier(p_name));
 	key_string = "";
 	primary_string = "";
 
@@ -501,7 +508,7 @@ bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) 
 	}
 	for (int64_t i = 0; i <= number_of_columns - 1; i++) {
 		column_dict = p_table_dict[columns[i]];
-		query_string += (const String &)columns[i] + String(" ");
+		query_string += vformat("\"%s\" ", sanitize_identifier((const String &)columns[i]));
 		type_string = (const String &)column_dict["data_type"];
 		if (type_string.to_lower().begins_with(integer_datatype)) {
 			query_string += String("INTEGER");
@@ -626,7 +633,7 @@ bool SQLite::validate_table_dict(const Dictionary &p_table_dict) {
 bool SQLite::drop_table(const String &p_name) {
 	String query_string;
 	/* Create SQL statement */
-	query_string = "DROP TABLE " + p_name + ";";
+	query_string = vformat("DROP TABLE \"%s\";", sanitize_identifier(p_name));
 
 	return query(query_string);
 }
@@ -677,11 +684,11 @@ bool SQLite::insert_row(const String &p_name, const Dictionary &p_row_dict) {
 	Array param_bindings = p_row_dict.values();
 
 	/* Create SQL statement */
-	query_string = "INSERT INTO " + p_name;
+	query_string = vformat("INSERT INTO \"%s\"", sanitize_identifier(p_name));
 
 	int64_t number_of_keys = p_row_dict.size();
 	for (int64_t i = 0; i <= number_of_keys - 1; i++) {
-		key_string += (const String &)keys[i];
+		key_string += vformat("\"%s\"", sanitize_identifier((const String &)keys[i]));
 		value_string += "?";
 		if (i != number_of_keys - 1) {
 			key_string += ",";
@@ -734,7 +741,7 @@ Array SQLite::select_rows(const String &p_name, const String &p_conditions, cons
 			query_string += ", ";
 		}
 	}
-	query_string += " FROM " + p_name;
+	query_string += vformat(" FROM \"%s\"", sanitize_identifier(p_name));
 	if (!p_conditions.is_empty()) {
 		query_string += " WHERE " + p_conditions;
 	}
@@ -756,7 +763,7 @@ bool SQLite::update_rows(const String &p_name, const String &p_conditions, const
 
 	query("BEGIN TRANSACTION;");
 	/* Create SQL statement */
-	query_string += "UPDATE " + p_name + " SET ";
+	query_string += vformat("UPDATE \"%s\" SET ", sanitize_identifier(p_name));
 
 	for (int64_t i = 0; i <= number_of_keys - 1; i++) {
 		query_string += (const String &)keys[i] + String("=?");
@@ -781,7 +788,7 @@ bool SQLite::delete_rows(const String &p_name, const String &p_conditions) {
 
 	query("BEGIN TRANSACTION;");
 	/* Create SQL statement */
-	query_string = "DELETE FROM " + p_name;
+	query_string = vformat("DELETE FROM \"%s\"", sanitize_identifier(p_name));
 	/* If it's empty or * everything is to be deleted */
 	if (!p_conditions.is_empty() && (p_conditions != (const String &)"*")) {
 		query_string += " WHERE " + p_conditions;
@@ -1094,7 +1101,7 @@ PackedByteArray SQLite::export_to_buffer() {
 			String object_name = object_dict["name"];
 			String query_string;
 
-			query_string = "SELECT * FROM " + (const String &)object_name + ";";
+			query_string = vformat("SELECT * FROM \"%s\";", sanitize_identifier((const String &)object_name));
 			query(query_string);
 
 			/* Encode all columns of type PoolByteArray to base64 */

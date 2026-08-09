@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c2ckll61v16xo" path="res://database.gd" id="1"]
 [ext_resource type="Script" uid="uid://d1u6lbep66lom" path="res://Main.gd" id="2"]
+[ext_resource type="Script" uid="uid://ta4srjo68vd3" path="res://version_label.gd" id="3_r0du0"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45gfi"]
 content_margin_left = 24.0
@@ -18,6 +19,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2")
+metadata/_edit_lock_ = true
 
 [node name="Database" type="Node" parent="." unique_id=1522234245]
 script = ExtResource("1")
@@ -43,6 +45,23 @@ layout_mode = 2
 text = "Godot SQLite Demo"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="HB" type="VBoxContainer" parent="MarginContainer/VBoxContainer/Label" unique_id=50875952]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 2
+metadata/_edit_lock_ = true
+
+[node name="VersionLabel" type="Label" parent="MarginContainer/VBoxContainer/Label/HB" unique_id=436117303]
+layout_mode = 2
+text = "Godot: 4.7.1-stable (official)
+Godot-SQLite: 4.8"
+horizontal_alignment = 2
+script = ExtResource("3_r0du0")
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer" unique_id=1909412191]
 layout_mode = 2

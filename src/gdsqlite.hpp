@@ -46,6 +46,7 @@ private:
 	void update_error_message(int rc);
 
 	String normalize_path(const String p_path, const bool read_only) const;
+	String sanitize_identifier(const String &p_name) const;
 
 	sqlite3 *db;
 	std::vector<std::unique_ptr<Callable>> function_registry;
