@@ -25,3 +25,4 @@ In chronological order based on the first contribution.
 - [AdminCrystal](https://github.com/AdminCrystal)
 - [Yuri Sizov (YuriSizov)](https://github.com/YuriSizov)
 - [Kit (crwedman)](https://github.com/crwedman)
+- [PastMoments](https://github.com/PastMoments)

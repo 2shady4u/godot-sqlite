@@ -59,7 +59,7 @@ metadata/_edit_lock_ = true
 [node name="VersionLabel" type="Label" parent="MarginContainer/VBoxContainer/Label/HB" unique_id=436117303]
 layout_mode = 2
 text = "Godot: 4.7.1-stable (official)
-Godot-SQLite: 4.8"
+Godot-SQLite: 4.9"
 horizontal_alignment = 2
 script = ExtResource("3_r0du0")
 
