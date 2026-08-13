@@ -46,7 +46,10 @@ private:
 	void update_error_message(int rc);
 
 	String normalize_path(const String p_path, const bool read_only) const;
-	String sanitize_identifier(const String &p_name) const;
+	String quote_identifier(const String &p_name) const;
+	String quote_identifier_explicit(const String &p_name, const bool preserve) const;
+
+	bool insert_row_explicit(const String &p_name, const Dictionary &p_row_dict, const bool p_preserve);
 
 	sqlite3 *db;
 	std::vector<std::unique_ptr<Callable>> function_registry;
@@ -54,6 +57,7 @@ private:
 	int64_t verbosity_level = 1;
 	bool foreign_keys = false;
 	bool read_only = false;
+	bool preserve_raw_identifiers = false;
 	String path = "default";
 	String error_message = "";
 	String default_extension = "db";
@@ -120,6 +124,9 @@ public:
 
 	void set_read_only(const bool &p_read_only);
 	bool get_read_only() const;
+
+	void set_preserve_raw_identifiers(const bool &p_preserve_raw_identifiers);
+	bool get_preserve_raw_identifiers() const;
 
 	void set_path(const String &p_path);
 	String get_path() const;

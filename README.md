@@ -71,6 +71,18 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 
     Enabling this property opens the database in read-only modus & allows databases to be packaged inside of the PCK. To make this possible, a custom [VFS](https://www.sqlite.org/vfs.html) is employed which internally takes care of all the file handling using the Godot API.
 
+- **preserve_raw_identifiers** (Boolean, default=false)
+
+    By default, all user supplied table and column identifiers are encapsulated with double quotes (to allow for the usage of special characters in identifiers, see [here](https://www.sqlite.org/draft/tokenreq.html)) and any existing double quotes " are duplicated. Enabling this property skips this process and thus preserves the raw table and column identifiers.
+
+    This might be preferred, for example, in cases where the user tries to create a table in an attached instance: `create_table("game_data.currencies", ...)`
+    | Value of `preserve_raw_identifiers` | Resulting SQLite query                                  | Happy user         |
+    |------------------------------------ | ------------------------------------------------------- | ------------------ |
+    | false                               | `CREATE TABLE IF NOT EXISTS "game_data.currencies" ...` | :x:                |
+    | true                                | `CREATE TABLE IF NOT EXISTS game_data.currencies ...`   | :heavy_check_mark: |
+
+    This property only impacts behaviour of the following methods: `create_table`, `drop_table`, `insert_row`, `insert_rows`, `update_rows` and `delete_rows`.
+
 - **query_result** (Array, default=[])
 
     Contains the results from the latest query **by value**; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.

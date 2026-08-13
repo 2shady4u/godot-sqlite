@@ -279,6 +279,15 @@
 		<member name="read_only" type="bool" default="false">
 			Enabling this property opens the database in read-only modus &amp; allows databases to be packaged inside of the PCK. To make this possible, a custom [url=https://www.sqlite.org/vfs.html]VFS[/url] is employed which internally takes care of all the file handling using the Godot API.
 		</member>
+		<member name="preserve_raw_identifiers" type="bool" default="false">
+			By default, all user supplied table and column identifiers are encapsulated with double quotes (to allow for the usage of special characters in identifiers, see [url=https://www.sqlite.org/draft/tokenreq.html]here[/url]) and any existing double quotes " are duplicated. Enabling this property skips this process and thus preserves the raw table and column identifiers.
+
+			This might be preferred, for example, in cases where the user tries to create a table in an attached instance: [code]create_table("game_data.currencies", ...)[/code]
+			- [b]Value of [code]preserve_raw_identifiers[/code][/b]: false[br]    [b]Resulting SQLite query[/b]: [code]CREATE TABLE IF NOT EXISTS "game_data.currencies" ...[/code][br]    [b]Happy user?[/b] ❌
+			- [b]Value of [code]preserve_raw_identifiers[/code][/b]: true[br]    [b]Resulting SQLite query[/b]: [code]CREATE TABLE IF NOT EXISTS game_data.currencies ...[/code][br]    [b]Happy user?[/b] ✅
+
+			This property only impacts behaviour of the following methods: [code]create_table[/code], [code]drop_table[/code], [code]insert_row[/code], [code]insert_rows[/code], [code]update_rows[/code] and [code]delete_rows[/code].
+		</member>
 		<member name="query_result" type="Array" default="[]">
 			Contains the results from the latest query [b]by value[/b]; meaning that this property is safe to use when looping successive queries as it does not get overwritten by any future queries.
 		</member>
