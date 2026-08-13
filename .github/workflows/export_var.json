@@ -1,0 +1,38 @@
+{
+    "jobs": [
+        {
+            "name": "Ubuntu (x86_64, GCC)",
+            "export_preset": "Linux",
+            "os": "ubuntu-22.04",
+            "artifact_name": "linux",
+            "export_extension": "x86_64",
+            "run_cmd": [
+                "chmod +x \"$EXECUTABLE_FILE_NAME\"",
+                "./\"$EXECUTABLE_FILE_NAME\" --headless --verbose --quit"
+            ]
+        },
+        {
+            "name": "Windows (x86_64, MinGW)",
+            "export_preset": "Windows Desktop",
+            "os": "windows-latest",
+            "artifact_name": "windows",
+            "export_extension": "exe",
+            "run_cmd": "./\"$EXECUTABLE_FILE_NAME\" --headless --verbose --quit"
+        },
+        {
+            "name": "MacOS (universal)",
+            "export_preset": "macOS",
+            "os": "macos-latest",
+            "artifact_name": "macos",
+            "export_extension": "zip",
+            "run_cmd": [
+                "APP_NAME=\"${EXECUTABLE_FILE_NAME%.zip}\"",
+                "APP_PATH=\"${APP_NAME}.app\"",
+                "unzip -q -o \"$EXECUTABLE_FILE_NAME\"",
+                "xattr -rc \"$APP_PATH\"",
+                "chmod -R +x \"$APP_PATH\"",
+                "./\"$APP_PATH/Contents/MacOS/$APP_NAME\" --headless --verbose --quit"
+            ]
+        }
+    ]
+}

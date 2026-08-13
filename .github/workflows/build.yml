@@ -15,6 +15,7 @@ env:
   EM_VERSION: 4.0.11
   GODOT_VERSION: 4.7.1
   EXPORT_NAME: ./demo/
+  EXECUTABLE_BASE_NAME: "SQLite Demo"
 
 jobs:
   matrix:
@@ -22,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix-json: ${{ steps.set-matrix.outputs.matrix }}
+      job-names-json: ${{ steps.set-matrix.outputs.job_names }}
 
     steps:
       - uses: actions/checkout@v5
@@ -123,12 +125,36 @@ jobs:
           path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
           if-no-files-found: error
 
-  test:
-    name: Test
+  export-matrix:
+    name: Generate export matrix
+    runs-on: ubuntu-latest
+    needs: [ matrix, build ]
+    outputs:
+      matrix-json: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v5
+      - id: set-matrix
+        env:
+          JOB_NAMES_JSON: ${{ needs.matrix.outputs.job-names-json }}
+        shell: pwsh
+        # Use a small PowerShell script to generate the export matrix
+        run: |
+          $array = @($env:JOB_NAMES_JSON | ConvertFrom-Json)
+          & .github/workflows/create-export-matrix.ps1 -JobNames $array
+
+  export:
+    name: Export - ${{ matrix.export_preset }}
     runs-on: "ubuntu-22.04"
-    needs: [ build ]
+    needs: [ export-matrix ]
     container:
       image: barichello/godot-ci:4.7.1 # Ideally this would be ${GODOT_VERSION}, but Github Actions doesn't allow this! :(
+    env:
+      BUILD_DIR: "build/${{ matrix.artifact_name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.export-matrix.outputs.matrix-json) }}
 
     steps:
       - name: Install fontconfig
@@ -144,8 +170,8 @@ jobs:
         id: download
         uses: actions/download-artifact@v7
         with:
-          name: linux-x86_64-template_debug
           path: artifacts
+          merge-multiple: true
 
       - name: Copy binaries to bin/-folder
         run: |
@@ -154,12 +180,51 @@ jobs:
           cp -r ${{steps.download.outputs.download-path}}/* bin/
           ls bin/
 
-      # Initial editor load returns a segmentation fault due to race condition in doc unintialization -> Known issue! (#2024)
-      - name: Run
+      - name: Setup
         run: |
+          mkdir -v -p ~/.local/share/godot/export_templates/
+          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+
+      # Initial editor load returns a segmentation fault due to race condition in doc unintialization -> Known issue! (#2024)
+      - name: Export
+        env:
+          EXECUTABLE_FILE_NAME: "${{ env.EXECUTABLE_BASE_NAME }}.${{ matrix.export_extension }}"
+        run: |
+          mkdir -v -p ${{ env.BUILD_DIR }}
+          EXPORT_DIR="$(readlink -f ${{ env.BUILD_DIR }})"
           cd ${{ env.PROJECT_FOLDER }}/demo/
           godot -e --headless --verbose --quit || true
-          godot --headless --verbose --quit
+          godot --headless --verbose --export-release "${{ matrix.export_preset }}" "$EXPORT_DIR/$EXECUTABLE_FILE_NAME"
+          cp -a data/. "$EXPORT_DIR/data/"
+          ls "$EXPORT_DIR/data/"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ env.BUILD_DIR }}
+
+  run:
+    name: Run - ${{ matrix.export_preset }}
+    runs-on: ${{ matrix.os }}
+    needs: [ export-matrix, export ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.export-matrix.outputs.matrix-json) }}
+
+    steps:
+      - name: Download Artifacts
+        id: download
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ matrix.artifact_name }}
+
+      - name: Run
+        shell: bash
+        env:
+          EXECUTABLE_FILE_NAME: "${{ env.EXECUTABLE_BASE_NAME }}.${{ matrix.export_extension }}"
+        run: "${{ join(matrix.run_cmd, '\n') }}"
 
   web-deploy:
     name: Web Deploy
