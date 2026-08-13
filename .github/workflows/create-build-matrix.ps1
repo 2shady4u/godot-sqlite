@@ -3,10 +3,13 @@ $RawMatrix = Get-Content -Raw -Path .github/workflows/build_var.json | ConvertFr
 $Targets = $RawMatrix.targets
 $CommonFlags = $RawMatrix.common_flags
 $Jobs = $RawMatrix.jobs
+$DefaultSkip = if ($null -ne $RawMatrix.default_skip) { [bool]$RawMatrix.default_skip } else { $false }
 
 $Matrix = @()
+$JobNames = @()
 foreach ($job in $Jobs) {
-  if ($job.skip -eq $true) {
+  $Skip = if ($null -ne $job.skip) { [bool]$job.skip } else { $DefaultSkip }
+  if ($Skip -eq $true) {
     continue
   }
   foreach ($target in $Targets) {
@@ -23,7 +26,11 @@ foreach ($job in $Jobs) {
     }
     $Matrix += $MatrixJob
   }
+  $JobNames += $MatrixJob.name
 }
 
 Write-Host (ConvertTo-JSON -InputObject $Matrix)
 Write-Output "matrix=$(ConvertTo-JSON -InputObject $Matrix -Compress)" >> $env:GITHUB_OUTPUT
+
+Write-Host (ConvertTo-JSON -InputObject $JobNames)
+Write-Output "job_names=$(ConvertTo-JSON -InputObject $JobNames -Compress)" >> $env:GITHUB_OUTPUT

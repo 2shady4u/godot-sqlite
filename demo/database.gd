@@ -27,7 +27,8 @@ signal output_received(text)
 signal texture_received(texture)
 
 func _ready():
-	if OS.get_name() in ["Android", "iOS", "Web"]:
+	# NOTE: MacOS does not have write access to "res://" inside of the '.app' bundle
+	if OS.get_name() in ["Android", "iOS", "Web", "macOS"]:
 		copy_data_to_user()
 		db_name = "user://data/test"
 		json_name = "user://data/test_backup"
@@ -63,7 +64,8 @@ func copy_data_to_user() -> void:
 				dir.copy(data_path + "/" + file_name, copy_path + "/" + file_name)
 			file_name = dir.get_next()
 	else:
-		cprint("An error occurred when trying to access the path.")
+		var error := DirAccess.get_open_error()
+		cprint("An error occurred when trying to access the path '%s': %s (%s)" % [data_path, error_string(error), error])
 
 # Basic example that goes over all the basic features available in the addon, such
 # as creating and dropping tables, inserting and deleting rows and doing more elementary
