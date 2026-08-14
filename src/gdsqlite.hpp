@@ -46,7 +46,6 @@ private:
 	void update_error_message(int rc);
 
 	String normalize_path(const String p_path, const bool read_only) const;
-	String sanitize_identifier(const String &p_name) const;
 
 	sqlite3 *db;
 	std::vector<std::unique_ptr<Callable>> function_registry;
@@ -107,6 +106,8 @@ public:
 
 	int load_extension(const String &p_path, const String &p_init_func_name);
 	int enable_load_extension(const bool &p_onoff);
+
+	static String sanitize_identifier(const String &p_name);
 
 	// Properties.
 	void set_last_insert_rowid(const int64_t &p_last_insert_rowid);

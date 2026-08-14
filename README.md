@@ -300,6 +300,26 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
     db.load_extension("res://addons/godot-sqlite/extensions/spellfix.dll", "sqlite3_spellfix_init")
     ```
 
+- String sanitized_identifier = **sanitize_identifier(** String table_or_column_identifier **)**
+
+	Sanitizes a table or column name such that it can be used in subsequent queries without causing any errors. Following manipulations are executed on the original string:
+	- Encapsulation of the table or column name in double quotes.
+	- Doubling of any existing double quotes in the table or column name.
+
+	For example, given the following table: `27" Monitors`.
+    ```gdscript
+    var table_name := "27\" Monitors"
+    var table_dict := {}
+    print(table_name) # -> Prints: 27" Monitors
+    db.create_table(table_name, table_dict) # ERROR
+    # CREATE TABLE IF NOT EXISTS 27" Monitors ...
+
+    var sanitized_table_name := sanitize_identifier(table_name)
+    print(sanitized_table_name) # -> Prints: "27"" Monitors"
+    db.create_table(sanitized_table_name, table_dict) # SUCCESS!
+    # CREATE TABLE IF NOT EXISTS "27"" Monitors" ...
+    ```
+
 ## Signals
 
 - **row_deleted(** String table_name, int rowid **)**

@@ -36,6 +36,8 @@ void SQLite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("enable_load_extension", "onoff"), &SQLite::enable_load_extension);
 	ClassDB::bind_method(D_METHOD("load_extension", "extension_path", "entrypoint"), &SQLite::load_extension, DEFVAL("sqlite3_extension_init"));
 
+	ClassDB::bind_static_method("SQLite", D_METHOD("sanitize_identifier", "table_or_column_name"), &SQLite::sanitize_identifier);
+
 	// Properties.
 	ClassDB::bind_method(D_METHOD("set_last_insert_rowid", "last_insert_rowid"), &SQLite::set_last_insert_rowid);
 	ClassDB::bind_method(D_METHOD("get_last_insert_rowid"), &SQLite::get_last_insert_rowid);
@@ -477,8 +479,8 @@ bool SQLite::query_with_named_bindings(const String &p_query, Dictionary param_b
 	return true;
 }
 
-String SQLite::sanitize_identifier(const String &p_name) const {
-	return vformat("\"%s\"", p_name.replace("\"", "\"\""));
+String SQLite::sanitize_identifier(const String &p_identifier) {
+	return vformat("\"%s\"", p_identifier.replace("\"", "\"\""));
 }
 
 bool SQLite::create_table(const String &p_name, const Dictionary &p_table_dict) {
