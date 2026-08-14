@@ -676,24 +676,22 @@ int SQLite::backup_database(sqlite3 *source_db, sqlite3 *destination_db) {
 }
 
 bool SQLite::insert_row(const String &p_name, const Dictionary &p_row_dict) {
-	String query_string, key_string, value_string = "";
 	Array keys = p_row_dict.keys();
 	Array param_bindings = p_row_dict.values();
 
-	/* Create SQL statement */
-	query_string = vformat("INSERT INTO %s", p_name);
-
 	int64_t number_of_keys = p_row_dict.size();
-	for (int64_t i = 0; i <= number_of_keys - 1; i++) {
-		key_string += vformat("%s", (const String &)keys[i]);
-		value_string += "?";
-		if (i != number_of_keys - 1) {
-			key_string += ",";
-			value_string += ",";
-		}
-	}
-	query_string += " (" + key_string + ") VALUES (" + value_string + ");";
+	PackedStringArray key_strings;
+	key_strings.resize(number_of_keys);
+	PackedStringArray value_strings;
+	value_strings.resize(number_of_keys);
+	value_strings.fill("?");
 
+	for (int i = 0; i < number_of_keys; ++i) {
+		key_strings[i] = (const String &)keys[i];
+    }
+
+	/* Create SQL statement */
+	String query_string = vformat("INSERT INTO %s (%s) VALUES (%s);", p_name, String(", ").join(key_strings), String(", ").join(value_strings));
 	return query_with_bindings(query_string, param_bindings);
 }
 
@@ -722,35 +720,37 @@ bool SQLite::insert_rows(const String &p_name, const Array &p_row_array) {
 }
 
 Array SQLite::select_rows(const String &p_name, const String &p_conditions, const Array &p_columns_array) {
-	String query_string;
-	/* Create SQL statement */
-	query_string = "SELECT ";
+	if (p_columns_array.is_empty()) {
+		ERR_PRINT("GDSQLite Error: The columns array cannot be empty (HINT: Use [\"*\"] to select all columns)");
+		return query_result;
+	}
 
 	int64_t number_of_columns = p_columns_array.size();
-	for (int64_t i = 0; i <= number_of_columns - 1; i++) {
+	PackedStringArray key_strings;
+	key_strings.resize(number_of_columns);
+
+	for (int64_t i = 0; i < number_of_columns; i++) {
 		if (p_columns_array[i].get_type() != Variant::STRING) {
 			ERR_PRINT("GDSQLite Error: All elements of the Array should be of type String");
 			return query_result;
 		}
-		query_string += (const String &)p_columns_array[i];
-
-		if (i != number_of_columns - 1) {
-			query_string += ", ";
-		}
+		key_strings[i] = (const String &)p_columns_array[i];
 	}
-	query_string += vformat(" FROM %s", p_name);
-	if (!p_conditions.is_empty()) {
-		query_string += " WHERE " + p_conditions;
-	}
-	query_string += ";";
 
+	String query_string;
+	/* Create SQL statement */
+	if (p_conditions.is_empty()) {
+		query_string = vformat("SELECT %s FROM %s;", String(", ").join(key_strings), p_name);
+	}
+	else {
+		query_string = vformat("SELECT %s FROM %s WHERE %s;", String(", ").join(key_strings), p_name, p_conditions);
+	}
 	query(query_string);
 	/* Return the duplicated result */
 	return get_query_result();
 }
 
 bool SQLite::update_rows(const String &p_name, const String &p_conditions, const Dictionary &p_updated_row_dict) {
-	String query_string;
 	Array param_bindings;
 	bool success;
 
@@ -758,19 +758,23 @@ bool SQLite::update_rows(const String &p_name, const String &p_conditions, const
 	Array keys = p_updated_row_dict.keys();
 	Array values = p_updated_row_dict.values();
 
-	query("BEGIN TRANSACTION;");
-	/* Create SQL statement */
-	query_string += vformat("UPDATE %s SET ", p_name);
+	PackedStringArray key_strings;
+	key_strings.resize(number_of_keys);
 
-	for (int64_t i = 0; i <= number_of_keys - 1; i++) {
-		query_string += (const String &)keys[i] + String("=?");
+	for (int64_t i = 0; i < number_of_keys; i++) {
+		key_strings[i] = vformat("%s=?", (const String &)keys[i]);
 		param_bindings.append(values[i]);
-		if (i != number_of_keys - 1) {
-			query_string += ", ";
-		}
 	}
-	query_string += " WHERE " + p_conditions + ";";
 
+	String query_string;
+	/* Create SQL statement */
+	if (p_conditions.is_empty()) {
+		query_string = vformat("UPDATE %s SET %s;", p_name, String(", ").join(key_strings));
+	}
+	else {
+		query_string = vformat("UPDATE %s SET %s WHERE %s;", p_name, String(", ").join(key_strings), p_conditions);
+	}
+	query("BEGIN TRANSACTION;");
 	success = query_with_bindings(query_string, param_bindings);
 	/* Stop the error_message from being overwritten! */
 	String previous_error_message = error_message;
@@ -780,18 +784,18 @@ bool SQLite::update_rows(const String &p_name, const String &p_conditions, const
 }
 
 bool SQLite::delete_rows(const String &p_name, const String &p_conditions) {
-	String query_string;
 	bool success;
 
-	query("BEGIN TRANSACTION;");
+	String query_string;
 	/* Create SQL statement */
-	query_string = vformat("DELETE FROM %s", p_name);
 	/* If it's empty or * everything is to be deleted */
-	if (!p_conditions.is_empty() && (p_conditions != (const String &)"*")) {
-		query_string += " WHERE " + p_conditions;
+	if (p_conditions.is_empty() || p_conditions == (const String &)"*") {
+		query_string = vformat("DELETE FROM %s;", p_name);
 	}
-	query_string += ";";
-
+	else {
+		query_string = vformat("DELETE FROM %s WHERE %s;", p_name, p_conditions);
+	}
+	query("BEGIN TRANSACTION;");
 	success = query(query_string);
 	/* Stop the error_message from being overwritten! */
 	String previous_error_message = error_message;
@@ -1022,7 +1026,7 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 	/* Drop all old tables present in the database */
 	for (int64_t i = 0; i <= old_number_of_tables - 1; i++) {
 		Dictionary table_dict = old_table_array[i];
-		String table_name = table_dict["name"];
+		String table_name = sanitize_identifier(table_dict["name"]);
 
 		drop_table(table_name);
 	}
@@ -1067,7 +1071,8 @@ bool SQLite::import_from_buffer(PackedByteArray json_buffer) {
 				ERR_PRINT("GDSQLite Error: All elements of the Array should be of type Dictionary");
 				return false;
 			}
-			if (!insert_row(object.name, object.row_array[i])) {
+			String table_name = sanitize_identifier(object.name);
+			if (!insert_row(table_name, object.row_array[i])) {
 				/* Don't forget to close the transaction! */
 				/* Stop the error_message from being overwritten! */
 				String previous_error_message = error_message;
@@ -1098,7 +1103,7 @@ PackedByteArray SQLite::export_to_buffer() {
 			String object_name = object_dict["name"];
 			String query_string;
 
-			query_string = vformat("SELECT * FROM %s;", (const String &)object_name);
+			query_string = vformat("SELECT * FROM %s;", sanitize_identifier((const String &)object_name));
 			query(query_string);
 
 			/* Encode all columns of type PoolByteArray to base64 */
