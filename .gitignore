@@ -38,6 +38,8 @@ mono_crash.*.json
 *.pdb
 *.lib
 *.bc
+*.so
+*.dll
 
 # OS generated files #
 ######################
