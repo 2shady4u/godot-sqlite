@@ -339,7 +339,7 @@ Additionally, a video tutorial by [Mitch McCollum (finepointcgi)](https://github
 ### 1. My query fails and returns syntax errors, what should I do?
 
 There are a couple of things you can do before panicking, namely:
-- Test out if your query is valid by trying it out online at https://sqliteonline.com/.
+- Test whether your query is valid in a browser with [SQLiteOnline](https://sqliteonline.com/) or [DBConvert Streams SQLite Viewer](https://streams.dbconvert.com/sqlite-viewer).
 - Use the **query(** **)** or **query_with_bindings(** **)**-function instead of the more specialized wrapper function.
 - Your query might be missing some quotation marks. For example, following queries will fail due to missing encapsulation of the `default`-field:
 
