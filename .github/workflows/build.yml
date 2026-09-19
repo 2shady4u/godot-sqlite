@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [master]
+    branches: [ master, feature/simplify-ci ]
     tags:
       - "v*"
 
@@ -10,7 +10,6 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-sqlite/bin/
   TARGET_NAME: libgdsqlite
-  VAR_PATH: .github/workflows/build_var.json
   SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
   EM_VERSION: 4.0.11
   GODOT_VERSION: 4.7.1
@@ -83,16 +82,6 @@ jobs:
           python --version
           scons --version
 
-      - name: Windows Compilation
-        if: runner.os == 'Windows'
-        run: |
-          if(-Not (Test-Path -Path ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}))
-          {
-            mkdir ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}
-          }
-          cd ${{ env.PROJECT_FOLDER }}
-          scons platform=windows target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
-
       - name: iOS Compilation
         if: matrix.platform == 'ios'
         run: |
@@ -103,8 +92,9 @@ jobs:
           xcodebuild -create-xcframework -library ${{ env.TARGET_PATH }}/${{ env.TARGET_NAME }}.ios.${{ matrix.target }}.a -library ${{ env.TARGET_PATH }}/${{ env.TARGET_NAME }}.ios.${{ matrix.target }}.simulator.a -output ${{ env.TARGET_PATH }}/${{ env.TARGET_NAME }}.ios.${{ matrix.target }}.xcframework
           xcodebuild -create-xcframework -library godot-cpp/bin/libgodot-cpp.ios.${{ matrix.target }}.arm64.a -library godot-cpp/bin/libgodot-cpp.ios.${{ matrix.target }}.universal.simulator.a  -output ${{ env.TARGET_PATH }}/libgodot-cpp.ios.${{ matrix.target }}.xcframework
 
-      - name: Not Windows or iOS Compilation
-        if: runner.os != 'Windows' && matrix.platform != 'ios'
+      - name: Not iOS Compilation
+        shell: bash
+        if: matrix.platform != 'ios'
         run: |
           mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
           cd ${{ env.PROJECT_FOLDER }}
