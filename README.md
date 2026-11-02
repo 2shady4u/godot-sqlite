@@ -23,12 +23,12 @@ Re-building Godot from scratch is **NOT** required, the proper way of installing
 
 **Godot-SQLite** is available through the official Godot Asset Library, and can be installed in the following way:
 
-- Click on the 'AssetLib' button at the top of the editor.
+- Click on the 'Asset Store' button at the top of the editor.
 - Search for 'godot-sqlite' and click on the resulting element.
 - In the dialog pop-up, click 'Download'.
 - Once the download is complete, click on the install button...
 - Once more, click on the 'Install' button.
-- Activate the plugin in the 'Project Settings/Plugins'-menu.
+- Activate the plugin in the 'Project > Project Settings > Plugins'-menu.
 - All done!
 
 ### Manually
